@@ -47,7 +47,7 @@ function Draggable({ children, initialPos }: { children: React.ReactNode; initia
   );
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://124.222.133.106:8000';
 console.log('API_BASE:', API_BASE, process.env.NEXT_PUBLIC_API_BASE)
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
