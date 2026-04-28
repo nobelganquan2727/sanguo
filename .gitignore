@@ -1,0 +1,38 @@
+# 操作系统文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE/编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 构建输出目录 - 匹配任何位置的dist目录
+dist/
+**/dist/
+
+# 其他常见的构建目录
+build/
+**/build/
+out/
+**/out/
+coverage/
+**/coverage/
