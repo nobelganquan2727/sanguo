@@ -290,7 +290,18 @@ export default function Home() {
 
         {/* Map */}
         <div className="absolute inset-0 z-0 opacity-90 mix-blend-multiply">
-          <DeckGL viewState={viewState} onViewStateChange={({ viewState }) => setViewState(viewState)} controller={true} layers={layers}>
+          <DeckGL viewState={viewState} onViewStateChange={({ viewState: vs }) => {
+            // 只提取需要的字段，过滤掉 TransitionProps
+            if ('longitude' in vs && 'latitude' in vs && 'zoom' in vs) {
+              setViewState({
+                longitude: vs.longitude,
+                latitude: vs.latitude,
+                zoom: vs.zoom,
+                pitch: vs.pitch ?? 0,
+                bearing: vs.bearing ?? 0,
+              });
+            }
+          }} controller={true} layers={layers}>
             <MapGL mapStyle={MAP_STYLE} />
           </DeckGL>
         </div>
