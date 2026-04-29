@@ -12,41 +12,6 @@ import 'rc-slider/assets/index.css';
 const INITIAL_VIEW_STATE = { longitude: 108.5, latitude: 34.0, zoom: 4.2, pitch: 0, bearing: 0 };
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json';
 
-// ─── Draggable wrapper ─────────────────────────────────────────────────────────
-function Draggable({ children, initialPos }: { children: React.ReactNode; initialPos: { x: number; y: number } }) {
-  const [pos, setPos] = useState(initialPos);
-  const dragging = useRef(false);
-  const start = useRef({ mx: 0, my: 0, px: 0, py: 0 });
-
-  const onMouseDown = (e: React.MouseEvent) => {
-    // only drag via header (data-drag="true")
-    if (!(e.target as HTMLElement).closest('[data-drag="true"]')) return;
-    dragging.current = true;
-    start.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y };
-    e.preventDefault();
-  };
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!dragging.current) return;
-      setPos({ x: start.current.px + e.clientX - start.current.mx, y: start.current.py + e.clientY - start.current.my });
-    };
-    const onUp = () => { dragging.current = false; };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
-  }, []);
-
-  return (
-    <div
-      style={{ position: 'absolute', left: pos.x, top: pos.y, zIndex: 20 }}
-      onMouseDown={onMouseDown}
-    >
-      {children}
-    </div>
-  );
-}
-
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://124.222.133.106:8000';
 console.log('API_BASE:', API_BASE, process.env.NEXT_PUBLIC_API_BASE)
 
@@ -64,6 +29,8 @@ export default function Home() {
 
   // Filter panel
   const [showFilter, setShowFilter] = useState(false);
+  const [showEventPanel, setShowEventPanel] = useState(true);
+  const [showAgentPanel, setShowAgentPanel] = useState(true);
   const [filterMeta, setFilterMeta] = useState<{ locations: string[]; event_types: string[] }>({ locations: [], event_types: [] });
   const [filterPersonInclude, setFilterPersonInclude] = useState('');
   const [filterPersonOr, setFilterPersonOr] = useState('');
@@ -79,6 +46,8 @@ export default function Home() {
   // Person names for linkification + person timeline
   const [allPersons, setAllPersons] = useState<string[]>([]);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const eventPanelWrapperRef = useRef<HTMLDivElement | null>(null);
+  const [hoverTooltipTop, setHoverTooltipTop] = useState(0);
   // Tooltip 白话文/文言文切换
   const [tooltipMode, setTooltipMode] = useState<'classical' | 'modern'>('classical');
 
@@ -311,26 +280,35 @@ export default function Home() {
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
           <div className="px-16 py-3 bg-gradient-to-b from-[#1a2f4c] to-[#0a1628] border border-[#4a5f78] rounded-md shadow-lg flex items-center gap-6">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#4a5f78]" />
-            <h1 className="text-2xl font-bold text-white tracking-[0.2em] font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>三国历史数字地图系统</h1>
+            <h1 className="text-2xl font-bold text-white tracking-[0.2em] font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>三国志</h1>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#4a5f78]" />
           </div>
         </div>
 
-        {/* ── Draggable Event List ──────────────────────────────────────────── */}
-        <Draggable initialPos={{ x: 32, y: 96 }}>
-          <div className="w-80 bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md overflow-visible shadow-xl flex flex-col max-h-[580px] select-none">
+        {/* ── Left Event List (fixed top-left, collapsible) ─────────────────── */}
+        {showEventPanel ? (
+          <>
+            <div ref={eventPanelWrapperRef} className="absolute left-4 top-4 z-20 w-80 bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md overflow-visible shadow-xl flex flex-col max-h-[580px] select-none">
 
             {/* Header (drag handle) */}
-            <div data-drag="true" className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-2 px-3 border-b border-[#a4424b] flex items-center justify-between cursor-grab active:cursor-grabbing">
+            <div className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-2 px-3 border-b border-[#a4424b] flex items-center justify-between">
               <h2 className="text-sm font-bold text-white tracking-widest">事件列表</h2>
-              <button
-                data-drag="false"
-                onClick={(e) => { e.stopPropagation(); setShowFilter(v => !v); }}
-                title="过滤器"
-                className={`pointer-events-auto p-1 rounded transition-colors ${showFilter ? 'bg-amber-500 text-slate-900' : 'text-slate-300 hover:text-amber-400'}`}
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowFilter(v => !v); }}
+                  title="过滤器"
+                  className={`pointer-events-auto p-1 rounded transition-colors ${showFilter ? 'bg-amber-500 text-slate-900' : 'text-slate-300 hover:text-amber-400'}`}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setShowEventPanel(false)}
+                  title="隐藏事件列表"
+                  className="pointer-events-auto p-1 rounded text-slate-300 hover:text-white hover:bg-slate-700/60 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Filter Panel */}
@@ -432,8 +410,14 @@ export default function Home() {
                     <div
                       key={idx}
                       onClick={() => toggleEvent(evt)}
-                      onMouseEnter={() => {
+                      onMouseEnter={(e) => {
                         if (hideTimer.current) clearTimeout(hideTimer.current);
+                        const wrapperRect = eventPanelWrapperRef.current?.getBoundingClientRect();
+                        if (wrapperRect) {
+                          const itemRect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                          const rawTop = itemRect.top - wrapperRect.top;
+                          setHoverTooltipTop(Math.max(0, Math.min(rawTop, 360)));
+                        }
                         setHoveredEvent(evt);
                       }}
                       onMouseLeave={() => {
@@ -462,51 +446,69 @@ export default function Home() {
                 })
               )}
             </div>
-          </div>
-
-          {/* Hover tooltip — rendered outside list scroll */}
-          {hoveredEvent?.desc && (
-            <div
-              className="absolute left-[328px] top-0 z-50 w-[420px] bg-[#0c1821]/95 backdrop-blur-md border border-[#e53e3e] rounded-md shadow-[0_0_20px_rgba(229,62,62,0.4)] p-5"
-              onMouseEnter={() => { if (hideTimer.current) clearTimeout(hideTimer.current); }}
-              onMouseLeave={() => { hideTimer.current = setTimeout(() => setHoveredEvent(null), 100); }}
-            >
-              {/* Header */}
-              <div className="flex items-center gap-3 mb-3 border-b border-[#4a5f78] pb-2">
-                <span className="px-2 py-0.5 bg-amber-500/20 text-amber-500 text-xs rounded border border-amber-500/50">{hoveredEvent.year != null ? `${hoveredEvent.year}年` : '不详'}</span>
-                <h3 className="text-white font-bold flex-1 leading-snug">{hoveredEvent.title}</h3>
-                {/* Mode toggle */}
-                <div className="flex rounded overflow-hidden border border-[#4a5f78] shrink-0 text-[10px] font-bold">
-                  <button
-                    onClick={() => setTooltipMode('modern')}
-                    className={`px-2 py-1 transition-colors ${tooltipMode === 'modern' ? 'bg-amber-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
-                  >白话</button>
-                  <button
-                    onClick={() => setTooltipMode('classical')}
-                    className={`px-2 py-1 transition-colors ${tooltipMode === 'classical' ? 'bg-amber-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
-                  >文言</button>
-                </div>
-              </div>
-              {/* Content */}
-              {tooltipMode === 'classical' ? (
-                <p className="text-slate-300 text-sm leading-relaxed font-serif text-justify">
-                  {hoveredEvent.source_text || hoveredEvent.desc}
-                </p>
-              ) : (
-                <p className="text-slate-300 text-sm leading-relaxed text-justify">{linkifyText(hoveredEvent.desc)}</p>
-              )}
             </div>
-          )}
-        </Draggable>
 
-        {/* ── Agent Panel (right, draggable) ────────────────────────────────── */}
-        <Draggable initialPos={{ x: 900, y: 96 }}>
-          <div className="w-[340px] bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md shadow-xl flex flex-col max-h-[580px] select-none">
-            <div data-drag="true" className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-2 border-b border-[#a4424b] px-4 flex justify-between items-center cursor-grab active:cursor-grabbing">
+            {/* Hover tooltip — rendered outside list scroll */}
+            {hoveredEvent?.desc && (
+              <div
+                className="absolute left-[328px] z-50 w-[420px] bg-[#0c1821]/95 backdrop-blur-md border border-[#e53e3e] rounded-md shadow-[0_0_20px_rgba(229,62,62,0.4)] p-5"
+                style={{ top: hoverTooltipTop }}
+                onMouseEnter={() => { if (hideTimer.current) clearTimeout(hideTimer.current); }}
+                onMouseLeave={() => { hideTimer.current = setTimeout(() => setHoveredEvent(null), 100); }}
+              >
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-3 border-b border-[#4a5f78] pb-2">
+                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-500 text-xs rounded border border-amber-500/50">{hoveredEvent.year != null ? `${hoveredEvent.year}年` : '不详'}</span>
+                  <h3 className="text-white font-bold flex-1 leading-snug">{hoveredEvent.title}</h3>
+                  {/* Mode toggle */}
+                  <div className="flex rounded overflow-hidden border border-[#4a5f78] shrink-0 text-[10px] font-bold">
+                    <button
+                      onClick={() => setTooltipMode('modern')}
+                      className={`px-2 py-1 transition-colors ${tooltipMode === 'modern' ? 'bg-amber-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                    >白话</button>
+                    <button
+                      onClick={() => setTooltipMode('classical')}
+                      className={`px-2 py-1 transition-colors ${tooltipMode === 'classical' ? 'bg-amber-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                    >文言</button>
+                  </div>
+                </div>
+                {/* Content */}
+                {tooltipMode === 'classical' ? (
+                  <p className="text-slate-300 text-sm leading-relaxed font-serif text-justify">
+                    {hoveredEvent.source_text || hoveredEvent.desc}
+                  </p>
+                ) : (
+                  <p className="text-slate-300 text-sm leading-relaxed text-justify">{linkifyText(hoveredEvent.desc)}</p>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <button
+            onClick={() => setShowEventPanel(true)}
+            className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-md border border-[#4a5f78] bg-[#0a1526]/90 px-2.5 py-1.5 text-xs text-slate-200 hover:text-white hover:border-slate-400 transition-colors"
+            title="展开事件列表"
+          >
+            <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+            事件列表
+          </button>
+        )}
+
+        {/* ── Agent Panel (fixed right-lower, collapsible) ──────────────────── */}
+        {showAgentPanel ? (
+          <div className="absolute right-4 bottom-12 z-20 w-[340px] bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md shadow-xl flex flex-col max-h-[580px] select-none">
+            <div className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-2 border-b border-[#a4424b] px-4 flex justify-between items-center">
               <h2 className="text-sm font-bold text-white tracking-widest">幕僚</h2>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-green-400 font-mono">Neo4j</span>
                 <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
+                <button
+                  onClick={() => setShowAgentPanel(false)}
+                  title="隐藏幕僚"
+                  className="ml-1 p-1 rounded text-slate-300 hover:text-white hover:bg-slate-700/60 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 pointer-events-auto">
@@ -538,7 +540,16 @@ export default function Home() {
               />
             </div>
           </div>
-        </Draggable>
+        ) : (
+          <button
+            onClick={() => setShowAgentPanel(true)}
+            className="absolute right-4 bottom-12 z-20 flex items-center gap-1 rounded-md border border-[#4a5f78] bg-[#0a1526]/90 px-2.5 py-1.5 text-xs text-slate-200 hover:text-white hover:border-slate-400 transition-colors"
+            title="展开幕僚"
+          >
+            <ChevronDown className="w-3.5 h-3.5 rotate-90" />
+            幕僚
+          </button>
+        )}
 
       </div>
     </div>
