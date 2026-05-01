@@ -20,6 +20,37 @@ app.add_middleware(
 class AskRequest(BaseModel):
     question: str
 
+class FeedbackRequest(BaseModel):
+    event_id: str
+    event_title: str
+    field_name: str
+    proposed_value: str
+
+import pymysql
+import os
+
+def get_db_connection():
+    return pymysql.connect(
+        host=os.getenv('MYSQL_HOST', 'localhost'),
+        user=os.getenv('MYSQL_USER', 'root'),
+        password=os.getenv('MYSQL_PASSWORD', '123456'),
+        database=os.getenv('MYSQL_DB', 'sanguo'),
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+@app.post("/api/feedback")
+async def api_feedback(req: FeedbackRequest):
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            sql = "INSERT INTO feedback (event_id, event_title, field_name, proposed_value) VALUES (%s, %s, %s, %s)"
+            cursor.execute(sql, (req.event_id, req.event_title, req.field_name, req.proposed_value))
+        conn.commit()
+        conn.close()
+        return {"success": True, "message": "Feedback submitted successfully."}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
 @app.post("/api/ask")
 async def api_ask(req: AskRequest):
     # 调用大模型与图数据库交互

@@ -51,6 +51,12 @@ export default function Home() {
   // Tooltip 白话文/文言文切换
   const [tooltipMode, setTooltipMode] = useState<'classical' | 'modern'>('classical');
 
+  // Edit Modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<any>(null);
+  const [editField, setEditField] = useState<'locations' | 'std_start_year'>('locations');
+  const [editValue, setEditValue] = useState('');
+
   useEffect(() => {
     fetch('/geo.json').then(r => r.json()).then(data => {
       const uniqueLocs = new Map();
@@ -234,8 +240,8 @@ export default function Home() {
       data: visibleData,
       getPosition: (d: any) => [d.lng, d.lat],
       getFillColor: (d: any) => isHL(d.std_name) ? [252, 211, 77, 255] : [185, 28, 28, 200],
-      getRadius: (d: any) => isHL(d.std_name) ? 22000 : 10000,
-      radiusMinPixels: 4, radiusMaxPixels: 14,
+      getRadius: (d: any) => isHL(d.std_name) ? 18000 : 8000,
+      radiusMinPixels: 3, radiusMaxPixels: 10,
       pickable: true,
       updateTriggers: { getFillColor: [highlightedLocNames], getRadius: [highlightedLocNames] },
       // 点击地图据点：仅高亮，不触发Agent查询
@@ -480,6 +486,21 @@ export default function Home() {
                 ) : (
                   <p className="text-slate-300 text-sm leading-relaxed text-justify">{linkifyText(hoveredEvent.desc)}</p>
                 )}
+                {/* Actions */}
+                <div className="mt-3 pt-2 border-t border-[#4a5f78] flex justify-end">
+                  <button
+                    onClick={() => {
+                      setEditTarget(hoveredEvent);
+                      setEditField('locations');
+                      setEditValue(hoveredEvent.locations?.join(',') || '');
+                      setEditModalOpen(true);
+                      setHoveredEvent(null);
+                    }}
+                    className="text-xs text-amber-500 hover:text-amber-300 border border-amber-500/40 hover:border-amber-400 px-2 py-1 rounded transition-colors flex items-center gap-1"
+                  >
+                    ✏️ 修正
+                  </button>
+                </div>
               </div>
             )}
           </>
@@ -549,6 +570,94 @@ export default function Home() {
             <ChevronDown className="w-3.5 h-3.5 rotate-90" />
             幕僚
           </button>
+        )}
+
+        {/* ── Edit Modal ──────────────────────────────────────────────────────── */}
+        {editModalOpen && editTarget && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto">
+            <div className="w-[400px] bg-[#0c1821] border border-[#4a5f78] rounded-md shadow-2xl flex flex-col overflow-hidden">
+              <div className="bg-gradient-to-r from-[#1a2f4c] to-[#0a1628] py-3 px-4 border-b border-[#4a5f78] flex justify-between items-center">
+                <h2 className="text-white font-bold text-sm">提交数据修正</h2>
+                <button onClick={() => setEditModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="p-5 flex flex-col gap-4">
+                <div>
+                  <div className="text-xs text-slate-400 mb-1">正在修正事件：</div>
+                  <div className="text-sm text-amber-400 font-bold">{editTarget.title}</div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-slate-400">选择要修正的字段</label>
+                  <select
+                    value={editField}
+                    onChange={(e: any) => {
+                      setEditField(e.target.value);
+                      if (e.target.value === 'locations') {
+                        setEditValue(editTarget.locations?.join(',') || '');
+                      } else {
+                        setEditValue(editTarget.year != null ? String(editTarget.year) : '');
+                      }
+                    }}
+                    className="w-full bg-[#1a2f4c] border border-[#4a5f78] rounded py-2 px-3 text-sm text-white focus:outline-none focus:border-amber-500 appearance-none"
+                  >
+                    <option value="locations">地点 (多个地点请用逗号分隔)</option>
+                    <option value="std_start_year">发生年份 (如: 190)</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-slate-400">新的修正值</label>
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={e => setEditValue(e.target.value)}
+                    placeholder={editField === 'locations' ? '如: 洛阳,许昌' : '如: 190'}
+                    className="w-full bg-[#1a2f4c] border border-[#4a5f78] rounded py-2 px-3 text-sm text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-[#0a1526] py-3 px-5 border-t border-[#4a5f78] flex justify-end gap-3">
+                <button
+                  onClick={() => setEditModalOpen(false)}
+                  className="px-4 py-1.5 rounded text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`${API_BASE}/api/feedback`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          event_id: editTarget.id,
+                          event_title: editTarget.title,
+                          field_name: editField,
+                          proposed_value: editValue
+                        })
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        alert('反馈提交成功，感谢您的修正！');
+                        setEditModalOpen(false);
+                      } else {
+                        alert('提交失败: ' + data.message);
+                      }
+                    } catch (err) {
+                      alert('请求异常，请检查后端状态。');
+                    }
+                  }}
+                  className="px-4 py-1.5 rounded text-sm bg-amber-500 text-slate-900 font-bold hover:bg-amber-400 transition-colors flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" /> 提交
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
       </div>
