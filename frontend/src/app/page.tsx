@@ -246,7 +246,7 @@ export default function Home() {
       data: visibleData,
       getPosition: (d: any) => [d.lng, d.lat],
       getText: (d: any) => d.std_name,
-      getSize: (d: any) => isHL(d.std_name) ? 18 : 14,
+      getSize: (d: any) => isHL(d.std_name) ? 16 : 12,
       getColor: (d: any) => isHL(d.std_name) ? [245, 158, 11, 255] : [41, 37, 36, 255],
       getAlignmentBaseline: 'bottom', getPixelOffset: [0, -10],
       fontFamily: 'Noto Serif SC, serif', fontWeight: 'bold', characterSet: 'auto',
