@@ -30,9 +30,9 @@ jobs:
             npm install
             npm run build
 
-            echo "🐍 Updating backend dependencies..."
-            cd ../backend
-            pip3 install -r requirements.txt
+            # echo "🐍 Updating backend dependencies..."
+            # cd ../backend
+            # pip3 install -r requirements.txt
 
             echo "♻️ Reloading PM2 services..."
             pm2 reload all
