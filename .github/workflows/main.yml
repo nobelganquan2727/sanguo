@@ -1,0 +1,38 @@
+name: Deploy Sanguo (CentOS)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to CentOS Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /root/sanguo
+
+            echo "📥 Pulling code..."
+            git pull origin main
+
+            echo "📦 Building frontend (Next.js)..."
+            cd frontend
+            npm install
+            npm run build
+
+            echo "🐍 Updating backend dependencies..."
+            cd ../backend
+            pip3 install -r requirements.txt
+
+            echo "♻️ Reloading PM2 services..."
+            pm2 reload all
