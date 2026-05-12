@@ -1,6 +1,7 @@
 'use client';
 
-import { CheckCircle, X } from 'lucide-react';
+import { useState } from 'react';
+import { Check, CheckCircle, ChevronDown, X } from 'lucide-react';
 
 interface EditModalProps {
   open: boolean;
@@ -16,7 +17,26 @@ interface EditModalProps {
 export default function EditModal({
   open, target, editField, setEditField, editValue, setEditValue, onClose, onSubmit,
 }: EditModalProps) {
+  const [fieldMenuOpen, setFieldMenuOpen] = useState(false);
+
   if (!open || !target) return null;
+
+  const fieldOptions = [
+    { value: 'locations' as const, label: '地点（多个地点请用逗号分隔）' },
+    { value: 'std_start_year' as const, label: '发生年份（如：190）' },
+  ];
+
+  const currentField = fieldOptions.find(option => option.value === editField) ?? fieldOptions[0];
+
+  const selectField = (value: 'locations' | 'std_start_year') => {
+    setEditField(value);
+    setFieldMenuOpen(false);
+    if (value === 'locations') {
+      setEditValue(target.locations?.join(',') || '');
+    } else {
+      setEditValue(target.year != null ? String(target.year) : '');
+    }
+  };
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto">
@@ -37,21 +57,41 @@ export default function EditModal({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-slate-400">选择要修正的字段</label>
-            <select
-              value={editField}
-              onChange={(e: any) => {
-                setEditField(e.target.value);
-                if (e.target.value === 'locations') {
-                  setEditValue(target.locations?.join(',') || '');
-                } else {
-                  setEditValue(target.year != null ? String(target.year) : '');
-                }
-              }}
-              className="w-full bg-[#1a2f4c] border border-[#4a5f78] rounded py-2 px-3 text-sm text-white focus:outline-none focus:border-amber-500 appearance-none"
-            >
-              <option value="locations">地点 (多个地点请用逗号分隔)</option>
-              <option value="std_start_year">发生年份 (如: 190)</option>
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setFieldMenuOpen(open => !open)}
+                className={`w-full bg-[#1a2f4c] border rounded py-2 px-3 text-sm text-white focus:outline-none transition-colors flex items-center justify-between text-left ${
+                  fieldMenuOpen ? 'border-amber-500 shadow-[0_0_0_1px_rgba(245,158,11,0.45)]' : 'border-[#4a5f78] hover:border-[#6d87a5]'
+                }`}
+              >
+                <span>{currentField.label}</span>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${fieldMenuOpen ? 'rotate-180 text-amber-400' : ''}`} />
+              </button>
+
+              {fieldMenuOpen && (
+                <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-10 overflow-hidden rounded-md border border-[#4a5f78] bg-[#0a1526] shadow-[0_12px_30px_rgba(0,0,0,0.45)]">
+                  {fieldOptions.map(option => {
+                    const selected = option.value === editField;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => selectField(option.value)}
+                        className={`w-full px-3 py-2.5 text-left text-sm transition-colors flex items-center gap-2 ${
+                          selected
+                            ? 'bg-amber-500/15 text-amber-300'
+                            : 'text-slate-300 hover:bg-[#1a2f4c] hover:text-white'
+                        }`}
+                      >
+                        <Check className={`w-4 h-4 ${selected ? 'opacity-100' : 'opacity-0'}`} />
+                        <span>{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">

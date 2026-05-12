@@ -4,6 +4,65 @@ import { useState, useEffect } from 'react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://124.222.133.106:8000';
 
+type AdminPoint = {
+  name: string;
+  level: 'province' | 'commandery' | 'county';
+  center?: { lat?: number; lng?: number } | null;
+  lat?: number | null;
+  lng?: number | null;
+  aliases?: string[];
+  region?: string;
+};
+
+type AdminCommandery = AdminPoint & {
+  type?: string;
+  counties?: AdminPoint[];
+};
+
+type AdminProvince = AdminPoint & {
+  commanderies?: AdminCommandery[];
+};
+
+type AdminGeo = {
+  provinces?: AdminProvince[];
+};
+
+function flattenAdminGeo(data: AdminGeo) {
+  const uniqueLocs = new Map<string, any>();
+
+  const addPoint = (point: AdminPoint, province?: string, commandery?: string) => {
+    const lat = point.lat ?? point.center?.lat;
+    const lng = point.lng ?? point.center?.lng;
+    if (typeof lat !== 'number' || typeof lng !== 'number') return;
+
+    const key = `${point.level}:${province ?? ''}:${commandery ?? ''}:${point.name}`;
+    uniqueLocs.set(key, {
+      std_name: point.name,
+      lat,
+      lng,
+      level: point.level,
+      province,
+      commandery,
+      aliases: point.aliases ?? [],
+      region: point.region ?? [province, commandery].filter(Boolean).join('-'),
+    });
+  };
+
+  data.provinces?.forEach(province => {
+    addPoint(province, province.name);
+
+    province.commanderies?.forEach(commandery => {
+      addPoint(commandery, province.name, commandery.name);
+
+      commandery.counties?.forEach(county => {
+        addPoint(county, province.name, commandery.name);
+      });
+    });
+  });
+
+  return Array.from(uniqueLocs.values());
+}
+
 export function useMapData() {
   const [geoData, setGeoData] = useState<any[]>([]);
   const [eventsList, setEventsList] = useState<any[]>([]);
@@ -11,12 +70,8 @@ export function useMapData() {
   const [allPersons, setAllPersons] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch('/geo.json').then(r => r.json()).then(data => {
-      const uniqueLocs = new Map();
-      Object.values(data).flat().forEach((loc: any) => {
-        if (loc.lat && loc.lng) uniqueLocs.set(loc.std_name, loc);
-      });
-      setGeoData(Array.from(uniqueLocs.values()));
+    fetch('/eastern_han_admin.json').then(r => r.json()).then(data => {
+      setGeoData(flattenAdminGeo(data));
     });
 
     fetch(`${API_BASE}/api/filter-meta`).then(r => r.json()).then(setFilterMeta).catch(() => {});

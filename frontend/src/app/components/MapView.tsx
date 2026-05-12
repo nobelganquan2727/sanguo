@@ -34,16 +34,17 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
   for (const d of sortedGeo) {
     const name = d.std_name || '';
     const highlighted = isHL(name);
+    const level = d.level || 'county';
     let shouldShow = false;
 
     if (hasSelection) {
-      shouldShow = highlighted || name.endsWith('州') || ['洛阳', '长安', '建业', '成都', '邺城', '许昌'].includes(name);
+      shouldShow = highlighted || level === 'province' || ['洛阳', '长安', '建业', '成都', '邺城', '许昌'].includes(name);
     } else {
       if (viewState.zoom >= 5.0) {
-        shouldShow = name.endsWith('州') || name.endsWith('郡') || name.endsWith('国') ||
+        shouldShow = level === 'province' || level === 'commandery' ||
           ['洛阳', '长安', '邺城', '建业', '许昌', '成都', '襄阳', '江陵', '汉中', '宛城'].includes(name);
       } else {
-        shouldShow = name.endsWith('州') || ['洛阳', '长安', '建业', '成都', '邺城', '许昌'].includes(name);
+        shouldShow = level === 'province' || ['洛阳', '长安', '建业', '成都', '邺城', '许昌'].includes(name);
       }
     }
 
