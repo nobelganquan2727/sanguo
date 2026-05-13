@@ -8,6 +8,7 @@ import EventPanel from './components/EventPanel';
 import HoverTooltip from './components/HoverTooltip';
 import AgentPanel from './components/AgentPanel';
 import EditModal from './components/EditModal';
+import PersonRelationsModal from './components/PersonRelationsModal';
 
 const INITIAL_VIEW_STATE = { longitude: 108.5, latitude: 34.0, zoom: 4.2, pitch: 0, bearing: 0 };
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://124.222.133.106:8000';
@@ -48,7 +49,24 @@ export default function Home() {
   const [editField, setEditField] = useState<'locations' | 'std_start_year'>('locations');
   const [editValue, setEditValue] = useState('');
 
-  const { geoData, eventsList, setEventsList, filterMeta, allPersons, fetchEvents, sendMessage, submitFeedback } = useMapData();
+  // Person relations modal
+  const [relationsModalOpen, setRelationsModalOpen] = useState(false);
+  const [relationsPerson, setRelationsPerson] = useState('');
+  const [personRelations, setPersonRelations] = useState<any[]>([]);
+  const [relationsLoading, setRelationsLoading] = useState(false);
+
+  const {
+    geoData,
+    eventsList,
+    setEventsList,
+    filterMeta,
+    allPersons,
+    fetchEvents,
+    fetchLocationEvents,
+    fetchPersonRelations,
+    sendMessage,
+    submitFeedback,
+  } = useMapData();
   const allLocationNames = geoData.map((d: any) => d.std_name).filter(Boolean);
 
   const loadPersonEvents = async (name: string) => {
@@ -60,6 +78,17 @@ export default function Home() {
     setFilterPersonInclude(name);
   };
 
+  const handlePersonClick = async (name: string) => {
+    setRelationsPerson(name);
+    setRelationsModalOpen(true);
+    setRelationsLoading(true);
+    setPersonRelations([]);
+    await loadPersonEvents(name);
+    const relations = await fetchPersonRelations(name);
+    setPersonRelations(relations);
+    setRelationsLoading(false);
+  };
+
   const jumpToLocation = (locName: string) => {
     const target = geoData.find((d: any) => locName.includes(d.std_name) || d.std_name.includes(locName));
     if (target) {
@@ -68,7 +97,7 @@ export default function Home() {
     }
   };
 
-  const { linkifyText, linkifyChatText } = useLinkify(allPersons, allLocationNames, loadPersonEvents, jumpToLocation);
+  const { linkifyText, linkifyChatText } = useLinkify(allPersons, allLocationNames, handlePersonClick, jumpToLocation);
 
   const handleFetchEvents = async () => {
     const params = new URLSearchParams({
@@ -81,6 +110,15 @@ export default function Home() {
     setEventsList(events);
     setSelectedEventIds(new Set());
     setHighlightedLocNames(new Set());
+  };
+
+  const handleLocationClick = async (location: any) => {
+    const { events, expandedLocations } = await fetchLocationEvents(location, 180, 280);
+    setEventsList(events);
+    setSelectedEventIds(new Set());
+    setHighlightedLocNames(new Set(expandedLocations.length > 0 ? expandedLocations : [location.std_name]));
+    setShowEventPanel(true);
+    setViewState((vs: any) => ({ ...vs, longitude: location.lng, latitude: location.lat, zoom: Math.max(vs.zoom, 5.5), transitionDuration: 800 }));
   };
 
   const handleSendMessage = async (query: string) => {
@@ -148,6 +186,7 @@ export default function Home() {
           onViewStateChange={setViewState}
           geoData={geoData}
           highlightedLocNames={highlightedLocNames}
+          onLocationClick={handleLocationClick}
         />
 
         {/* Title */}
@@ -222,6 +261,14 @@ export default function Home() {
           setEditValue={setEditValue}
           onClose={() => setEditModalOpen(false)}
           onSubmit={handleSubmitEdit}
+        />
+
+        <PersonRelationsModal
+          open={relationsModalOpen}
+          name={relationsPerson}
+          relations={personRelations}
+          loading={relationsLoading}
+          onClose={() => setRelationsModalOpen(false)}
         />
 
       </div>

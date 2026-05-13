@@ -13,9 +13,10 @@ interface MapViewProps {
   onViewStateChange: (vs: any) => void;
   geoData: any[];
   highlightedLocNames: Set<string>;
+  onLocationClick?: (location: any) => void;
 }
 
-export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames }: MapViewProps) {
+export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick }: MapViewProps) {
   const isHL = useCallback(
     (name: string) => [...highlightedLocNames].some(l => l && (l.includes(name) || name.includes(l))),
     [highlightedLocNames],
@@ -66,7 +67,9 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       radiusMaxPixels: 10,
       pickable: true,
       updateTriggers: { getFillColor: [highlightedLocNames], getRadius: [highlightedLocNames] },
-      onClick: () => {},
+      onClick: (info: any) => {
+        if (info.object) onLocationClick?.(info.object);
+      },
     }),
     new TextLayer({
       id: 'cities-text-layer',
@@ -80,6 +83,10 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       fontFamily: 'Noto Serif SC, serif',
       fontWeight: 'bold',
       characterSet: 'auto',
+      pickable: true,
+      onClick: (info: any) => {
+        if (info.object) onLocationClick?.(info.object);
+      },
       updateTriggers: { getSize: [highlightedLocNames], getColor: [highlightedLocNames] },
     }),
   ];

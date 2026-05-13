@@ -97,6 +97,36 @@ export function useMapData() {
     }
   };
 
+  const fetchLocationEvents = async (location: any, start = 180, end = 280) => {
+    try {
+      const params = new URLSearchParams({
+        name: location.std_name,
+        level: location.level ?? 'county',
+        start: String(start),
+        end: String(end),
+        ...(location.province && { province: location.province }),
+        ...(location.commandery && { commandery: location.commandery }),
+      });
+      const res = await fetch(`${API_BASE}/api/location-events?${params}`);
+      const data = await res.json();
+      return { events: data.events || [], expandedLocations: data.expanded_locations || [] };
+    } catch (err) {
+      console.error(err);
+      return { events: [], expandedLocations: [] };
+    }
+  };
+
+  const fetchPersonRelations = async (name: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/person-relations/${encodeURIComponent(name)}`);
+      const data = await res.json();
+      return data.relations || [];
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  };
+
   const sendMessage = async (query: string, chatHistory: { role: string; content: string }[]) => {
     const res = await fetch(`${API_BASE}/api/ask`, {
       method: 'POST',
@@ -121,5 +151,16 @@ export function useMapData() {
     return res.json();
   };
 
-  return { geoData, eventsList, setEventsList, filterMeta, allPersons, fetchEvents, sendMessage, submitFeedback };
+  return {
+    geoData,
+    eventsList,
+    setEventsList,
+    filterMeta,
+    allPersons,
+    fetchEvents,
+    fetchLocationEvents,
+    fetchPersonRelations,
+    sendMessage,
+    submitFeedback,
+  };
 }

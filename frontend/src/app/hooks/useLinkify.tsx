@@ -8,7 +8,7 @@ export function useLinkify(
   onPersonClick: (name: string) => void,
   onLocationClick: (name: string) => void,
 ) {
-  /** 在纯文本中高亮人名（无点击，用于 tooltip desc） */
+  /** 在纯文本中高亮人名（可点击，用于 tooltip desc） */
   const linkifyText = (text: string) => {
     if (!text || allPersons.length === 0) return <>{text}</>;
     const escaped = allPersons.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
@@ -18,7 +18,16 @@ export function useLinkify(
       <>
         {parts.map((part, i) =>
           allPersons.includes(part)
-            ? <span key={i} className="text-amber-400 font-semibold">{part}</span>
+            ? (
+              <span
+                key={i}
+                onClick={() => onPersonClick(part)}
+                className="text-amber-400 underline cursor-pointer hover:text-amber-200 font-semibold transition-colors"
+                title={`查看${part}的人物关系`}
+              >
+                {part}
+              </span>
+            )
             : <React.Fragment key={i}>{part}</React.Fragment>
         )}
       </>
@@ -47,7 +56,7 @@ export function useLinkify(
                 key={i}
                 onClick={() => onPersonClick(part)}
                 className="text-amber-400 underline cursor-pointer hover:text-amber-200 font-semibold transition-colors"
-                title={`查看${part}的事件`}
+                title={`查看${part}的人物关系`}
               >
                 {part}
               </span>

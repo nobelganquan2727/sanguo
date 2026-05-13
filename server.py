@@ -1,5 +1,8 @@
 import os
+import json
 import uvicorn
+from functools import lru_cache
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -37,6 +40,70 @@ def get_db_connection():
         database=os.getenv('MYSQL_DB', 'sanguo'),
         cursorclass=pymysql.cursors.DictCursor
     )
+
+
+ADMIN_GEO_PATH = Path(__file__).resolve().parent / "frontend" / "public" / "eastern_han_admin.json"
+
+
+@lru_cache(maxsize=1)
+def load_admin_geo():
+    with ADMIN_GEO_PATH.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def expand_location_names(name: str, level: str, province: str = "", commandery: str = "") -> list[str]:
+    """Expand province/commandery clicks to descendant commandery/county names."""
+    names: set[str] = {name}
+    admin_geo = load_admin_geo()
+
+    for province_node in admin_geo.get("provinces", []):
+        if level == "province" and province_node.get("name") != name:
+            continue
+        if level != "province" and province and province_node.get("name") != province:
+            continue
+
+        for commandery_node in province_node.get("commanderies", []):
+            if level == "commandery" and commandery_node.get("name") != name:
+                continue
+            if level == "county" and commandery and commandery_node.get("name") != commandery:
+                continue
+
+            if level in {"province", "commandery"}:
+                names.add(commandery_node.get("name", ""))
+
+            for county_node in commandery_node.get("counties", []):
+                county_name = county_node.get("name", "")
+                if level == "county" and county_name != name:
+                    continue
+
+                names.add(county_name)
+                for alias in county_node.get("aliases", []):
+                    if alias:
+                        names.add(alias)
+
+            if level == "commandery":
+                break
+
+        if level in {"province", "commandery", "county"} and (level == "province" or province_node.get("name") == province):
+            break
+
+    return sorted(n for n in names if n)
+
+
+def serialize_event_rows(results: list[dict]) -> list[dict]:
+    return [
+        {
+            "id": r["id"],
+            "title": r["title"],
+            "year": r["year"],
+            "desc": r["desc"],
+            "source_text": r["source_text"],
+            "type": r["type"],
+            "locations": [x for x in r["locations"] if x],
+            **({"matched_locations": [x for x in r.get("matched_locations", []) if x]} if "matched_locations" in r else {}),
+        }
+        for r in results
+    ]
 
 @app.post("/api/feedback")
 async def api_feedback(req: FeedbackRequest):
@@ -113,17 +180,56 @@ async def api_events(
     print(f"[Cypher]\n{cypher}")
     try:
         results = run_query(cypher)
-        events = [
-            {"id": r["id"], "title": r["title"], "year": r["year"],
-             "desc": r["desc"], "source_text": r["source_text"], "type": r["type"],
-             "locations": [x for x in r["locations"] if x]}
-            for r in results
-        ]
+        events = serialize_event_rows(results)
         print(f"[Result] {len(events)} events returned")
         return {"events": events}
     except Exception as err:
         print(f"[Query error] {err}")
         return {"events": []}
+
+
+@app.get("/api/location-events")
+async def api_location_events(
+    name: str,
+    level: str = "county",
+    province: str = "",
+    commandery: str = "",
+    start: int = 180,
+    end: int = 280,
+    limit: int = 500,
+):
+    location_names = expand_location_names(name, level, province, commandery)
+    cypher = """
+    MATCH (e:Event)-[:HAPPENED_AT]->(matched:Location)
+    WHERE matched.name IN $location_names
+      AND (e.std_start_year IS NULL OR (e.std_start_year >= $start AND e.std_start_year <= $end))
+    WITH DISTINCT e, collect(DISTINCT matched.name) AS matched_locations
+    OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location)
+    WITH e, matched_locations, collect(DISTINCT l.name) AS locations
+    RETURN e.id AS id, e.title AS title, e.std_start_year AS year,
+           e.description AS desc, e.source_text AS source_text, e.type AS type,
+           locations, matched_locations
+    ORDER BY e.std_start_year ASC
+    LIMIT $limit
+    """
+    print(f"\n{'='*60}")
+    print(f"[/api/location-events] name={name!r} level={level!r} expanded={len(location_names)}")
+    try:
+        results = run_query(
+            cypher,
+            {
+                "location_names": location_names,
+                "start": start,
+                "end": end,
+                "limit": max(1, min(limit, 1000)),
+            },
+        )
+        events = serialize_event_rows(results)
+        print(f"[Result] {len(events)} events returned")
+        return {"location": name, "level": level, "expanded_locations": location_names, "events": events}
+    except Exception as err:
+        print(f"[Location query error] {err}")
+        return {"location": name, "level": level, "expanded_locations": location_names, "events": []}
 
 
 
@@ -165,6 +271,41 @@ async def api_person_timeline(name: str):
     except Exception as err:
         print(f"Person query error: {err}")
         return {"name": name, "events": []}
+
+
+@app.get("/api/person-relations/{name}")
+async def api_person_relations(name: str, limit: int = 80):
+    """返回与指定人物共同参与过事件的人物关系列表。"""
+    cypher = """
+    MATCH (center:Person {name: $name})-[:PARTICIPATED_IN]->(e:Event)<-[:PARTICIPATED_IN]-(other:Person)
+    WHERE other.name <> center.name
+    WITH other, e
+    ORDER BY e.std_start_year ASC
+    WITH other.name AS person,
+         collect(DISTINCT {
+           id: e.id,
+           title: e.title,
+           year: e.std_start_year,
+           type: e.type
+         }) AS events
+    RETURN person, events, size(events) AS count
+    ORDER BY count DESC, person ASC
+    LIMIT $limit
+    """
+    try:
+        results = run_query(cypher, {"name": name, "limit": max(1, min(limit, 200))})
+        relations = [
+            {
+                "person": r["person"],
+                "count": r["count"],
+                "events": [event for event in r["events"] if event.get("title")],
+            }
+            for r in results
+        ]
+        return {"name": name, "relations": relations}
+    except Exception as err:
+        print(f"Person relations query error: {err}")
+        return {"name": name, "relations": []}
 
 
 
