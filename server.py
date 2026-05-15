@@ -173,7 +173,6 @@ async def api_events(
     RETURN e.id AS id, e.title AS title, e.std_start_year AS year,
            e.description AS desc, e.source_text AS source_text, e.type AS type, locations
     ORDER BY e.std_start_year ASC
-    LIMIT 500
     """
     print(f"\n{'='*60}")
     print(f"[/api/events] AND={person_include!r} OR={person_or!r} type={event_type!r} range=[{start},{end}]")
