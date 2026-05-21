@@ -5,6 +5,7 @@ import MapGL from 'react-map-gl/maplibre';
 import { ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useCallback } from 'react';
+import { locationNameMatches } from '../utils/locationMatch';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json';
 
@@ -18,7 +19,7 @@ interface MapViewProps {
 
 export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick }: MapViewProps) {
   const isHL = useCallback(
-    (name: string) => [...highlightedLocNames].some(l => l && (l.includes(name) || name.includes(l))),
+    (name: string) => [...highlightedLocNames].some(l => l && locationNameMatches(l, name)),
     [highlightedLocNames],
   );
 

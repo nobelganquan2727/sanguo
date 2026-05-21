@@ -9,9 +9,11 @@ import HoverTooltip from './components/HoverTooltip';
 import AgentPanel from './components/AgentPanel';
 import EditModal from './components/EditModal';
 import PersonRelationsModal from './components/PersonRelationsModal';
+import { locationMatchesGeoName } from './utils/locationMatch';
 
 const INITIAL_VIEW_STATE = { longitude: 108.5, latitude: 34.0, zoom: 4.2, pitch: 0, bearing: 0 };
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://124.222.133.106:8000';
+const EVENT_PAGE_SIZE = 100;
 console.log('API_BASE:', API_BASE, process.env.NEXT_PUBLIC_API_BASE);
 
 export default function Home() {
@@ -31,6 +33,10 @@ export default function Home() {
   const [filterPersonInclude, setFilterPersonInclude] = useState('');
   const [filterPersonOr, setFilterPersonOr] = useState('');
   const [filterEventType, setFilterEventType] = useState('');
+  const [eventQueryParams, setEventQueryParams] = useState<URLSearchParams>(() => new URLSearchParams({ start: '190', end: '195' }));
+  const [eventOffset, setEventOffset] = useState(EVENT_PAGE_SIZE);
+  const [eventsHasMore, setEventsHasMore] = useState(true);
+  const [eventsLoadingMore, setEventsLoadingMore] = useState(false);
 
   // Agent chat
   const [showAgentPanel, setShowAgentPanel] = useState(true);
@@ -61,20 +67,28 @@ export default function Home() {
     setEventsList,
     filterMeta,
     allPersons,
-    fetchEvents,
+    fetchEventsPage,
     fetchLocationEvents,
     fetchPersonRelations,
+    fetchEventDetail,
     sendMessage,
     submitFeedback,
   } = useMapData();
   const allLocationNames = geoData.map((d: any) => d.std_name).filter(Boolean);
 
-  const loadPersonEvents = async (name: string) => {
-    const params = new URLSearchParams({ start: '180', end: '280', person_include: name });
-    const events = await fetchEvents(params);
+  const replaceEvents = async (params: URLSearchParams) => {
+    const { events, hasMore } = await fetchEventsPage(params, 0, EVENT_PAGE_SIZE);
     setEventsList(events);
+    setEventQueryParams(new URLSearchParams(params));
+    setEventOffset(events.length);
+    setEventsHasMore(hasMore);
     setSelectedEventIds(new Set());
     setHighlightedLocNames(new Set());
+  };
+
+  const loadPersonEvents = async (name: string) => {
+    const params = new URLSearchParams({ start: '180', end: '280', person_include: name });
+    await replaceEvents(params);
     setFilterPersonInclude(name);
   };
 
@@ -90,7 +104,7 @@ export default function Home() {
   };
 
   const jumpToLocation = (locName: string) => {
-    const target = geoData.find((d: any) => locName.includes(d.std_name) || d.std_name.includes(locName));
+    const target = geoData.find((d: any) => locationMatchesGeoName(locName, d));
     if (target) {
       setHighlightedLocNames(new Set([target.std_name]));
       setViewState((vs: any) => ({ ...vs, longitude: target.lng, latitude: target.lat, zoom: 6.5, transitionDuration: 1200 }));
@@ -106,15 +120,31 @@ export default function Home() {
       ...(filterPersonOr && { person_or: filterPersonOr }),
       ...(filterEventType && { event_type: filterEventType }),
     });
-    const events = await fetchEvents(params);
-    setEventsList(events);
-    setSelectedEventIds(new Set());
-    setHighlightedLocNames(new Set());
+    await replaceEvents(params);
+  };
+
+  const handleLoadMoreEvents = async () => {
+    if (!eventsHasMore || eventsLoadingMore) return;
+    setEventsLoadingMore(true);
+    try {
+      const { events, hasMore } = await fetchEventsPage(eventQueryParams, eventOffset, EVENT_PAGE_SIZE);
+      setEventsList(current => {
+        const existingIds = new Set(current.map((event: any) => event.id));
+        const nextEvents = events.filter((event: any) => !existingIds.has(event.id));
+        return [...current, ...nextEvents];
+      });
+      setEventOffset(current => current + events.length);
+      setEventsHasMore(hasMore);
+    } finally {
+      setEventsLoadingMore(false);
+    }
   };
 
   const handleLocationClick = async (location: any) => {
     const { events, expandedLocations } = await fetchLocationEvents(location, 180, 280);
     setEventsList(events);
+    setEventOffset(events.length);
+    setEventsHasMore(false);
     setSelectedEventIds(new Set());
     setHighlightedLocNames(new Set(expandedLocations.length > 0 ? expandedLocations : [location.std_name]));
     setShowEventPanel(true);
@@ -137,6 +167,35 @@ export default function Home() {
     }
   };
 
+  const focusEvent = (evt: any) => {
+    setShowEventPanel(true);
+    setRelationsModalOpen(false);
+    setSelectedEventIds(new Set([evt.id]));
+
+    const locs = new Set<string>();
+    evt.locations?.forEach((l: string) => { if (l) locs.add(l); });
+    setHighlightedLocNames(locs);
+
+    const firstTarget = geoData.find(d => evt.locations?.some((l: string) => l && locationMatchesGeoName(l, d)));
+    if (firstTarget) {
+      setViewState((vs: any) => ({ ...vs, longitude: firstTarget.lng, latitude: firstTarget.lat, zoom: 6.0, transitionDuration: 1200 }));
+    }
+  };
+
+  const handleRelationEventClick = async (eventId: string) => {
+    const target = eventsList.find(evt => evt.id === eventId);
+    if (target) {
+      focusEvent(target);
+      return;
+    }
+
+    const event = await fetchEventDetail(eventId);
+    if (event) {
+      setEventsList(current => current.some((evt: any) => evt.id === event.id) ? current : [event, ...current]);
+      focusEvent(event);
+    }
+  };
+
   const toggleEvent = (evt: any) => {
     const newSelected = new Set(selectedEventIds);
     newSelected.has(evt.id) ? newSelected.delete(evt.id) : newSelected.add(evt.id);
@@ -148,7 +207,7 @@ export default function Home() {
       if (newSelected.has(e.id) && e.locations?.length) {
         e.locations.forEach((l: string) => { if (l) allLocs.add(l); });
         if (!firstTarget) {
-          firstTarget = geoData.find(d => e.locations.some((l: string) => l && (l.includes(d.std_name) || d.std_name.includes(l))));
+          firstTarget = geoData.find(d => e.locations.some((l: string) => l && locationMatchesGeoName(l, d)));
         }
       }
     });
@@ -222,6 +281,9 @@ export default function Home() {
           setFilterEventType={setFilterEventType}
           filterMeta={filterMeta}
           onApplyFilter={() => { handleFetchEvents(); setShowFilter(false); }}
+          hasMore={eventsHasMore}
+          isLoadingMore={eventsLoadingMore}
+          onLoadMore={handleLoadMoreEvents}
         />
 
         <HoverTooltip
@@ -269,6 +331,7 @@ export default function Home() {
           relations={personRelations}
           loading={relationsLoading}
           onClose={() => setRelationsModalOpen(false)}
+          onEventClick={handleRelationEventClick}
         />
 
       </div>

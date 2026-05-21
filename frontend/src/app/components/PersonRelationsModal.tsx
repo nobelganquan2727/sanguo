@@ -21,6 +21,7 @@ interface PersonRelationsModalProps {
   relations: PersonRelation[];
   loading: boolean;
   onClose: () => void;
+  onEventClick?: (eventId: string) => void;
 }
 
 export default function PersonRelationsModal({
@@ -29,6 +30,7 @@ export default function PersonRelationsModal({
   relations,
   loading,
   onClose,
+  onEventClick,
 }: PersonRelationsModalProps) {
   if (!open) return null;
 
@@ -68,10 +70,16 @@ export default function PersonRelationsModal({
 
                   <div className="flex flex-col gap-1.5">
                     {relation.events.slice(0, 6).map(event => (
-                      <div key={event.id} className="text-xs text-slate-300 leading-relaxed flex gap-2">
+                      <button
+                        key={event.id}
+                        type="button"
+                        onClick={() => onEventClick?.(event.id)}
+                        className="text-xs text-slate-300 leading-relaxed flex gap-2 text-left rounded px-1 py-0.5 hover:bg-[#1a2f4c] hover:text-white transition-colors"
+                        title="跳转到该事件"
+                      >
                         <span className="text-amber-500 font-mono shrink-0">{event.year != null ? `${event.year}年` : '不详'}</span>
                         <span>{event.title}</span>
-                      </div>
+                      </button>
                     ))}
                     {relation.events.length > 6 && (
                       <div className="text-xs text-slate-500 pt-1">还有 {relation.events.length - 6} 件共同事件...</div>

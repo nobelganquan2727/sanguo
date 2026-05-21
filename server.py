@@ -131,8 +131,12 @@ async def api_events(
     person_or: str = "",
     person_exclude: str = "",
     location: str = "",
-    event_type: str = ""
+    event_type: str = "",
+    limit: int = 100,
+    offset: int = 0,
 ):
+    safe_limit = max(1, min(limit, 100))
+    safe_offset = max(0, offset)
     where_clauses = [
         # 有年份的事件才做时间范围过滤；没有年份的事件(std_start_year IS NULL)也包含进来
         f"(e.std_start_year IS NULL OR (e.std_start_year >= {start} AND e.std_start_year <= {end}))",
@@ -172,16 +176,18 @@ async def api_events(
     {loc_filter}
     RETURN e.id AS id, e.title AS title, e.std_start_year AS year,
            e.description AS desc, e.source_text AS source_text, e.type AS type, locations
-    ORDER BY e.std_start_year ASC
+    ORDER BY e.std_start_year ASC, e.seq_index ASC, e.id ASC
+    SKIP {safe_offset}
+    LIMIT {safe_limit}
     """
     print(f"\n{'='*60}")
-    print(f"[/api/events] AND={person_include!r} OR={person_or!r} type={event_type!r} range=[{start},{end}]")
+    print(f"[/api/events] AND={person_include!r} OR={person_or!r} type={event_type!r} range=[{start},{end}] offset={safe_offset} limit={safe_limit}")
     print(f"[Cypher]\n{cypher}")
     try:
         results = run_query(cypher)
         events = serialize_event_rows(results)
         print(f"[Result] {len(events)} events returned")
-        return {"events": events}
+        return {"events": events, "has_more": len(events) == safe_limit, "offset": safe_offset, "limit": safe_limit}
     except Exception as err:
         print(f"[Query error] {err}")
         return {"events": []}
@@ -229,6 +235,25 @@ async def api_location_events(
     except Exception as err:
         print(f"[Location query error] {err}")
         return {"location": name, "level": level, "expanded_locations": location_names, "events": []}
+
+
+@app.get("/api/events/{event_id}")
+async def api_event_detail(event_id: str):
+    cypher = """
+    MATCH (e:Event {id: $event_id})
+    OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location)
+    WITH e, collect(DISTINCT l.name) AS locations
+    RETURN e.id AS id, e.title AS title, e.std_start_year AS year,
+           e.description AS desc, e.source_text AS source_text, e.type AS type, locations
+    LIMIT 1
+    """
+    try:
+        results = run_query(cypher, {"event_id": event_id})
+        events = serialize_event_rows(results)
+        return {"event": events[0] if events else None}
+    except Exception as err:
+        print(f"Event detail query error: {err}")
+        return {"event": None}
 
 
 

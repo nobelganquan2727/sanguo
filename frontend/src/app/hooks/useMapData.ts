@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://124.222.133.106:8000';
+const DEFAULT_EVENT_PAGE_SIZE = 100;
 
 type AdminPoint = {
   name: string;
@@ -30,13 +31,29 @@ type AdminGeo = {
 function flattenAdminGeo(data: AdminGeo) {
   const uniqueLocs = new Map<string, any>();
 
-  const addPoint = (point: AdminPoint, province?: string, commandery?: string) => {
+  const levelRank = { province: 3, commandery: 2, county: 1 };
+
+  const shouldReplacePoint = (current: any | undefined, next: any) => {
+    if (!current) return true;
+    if (levelRank[next.level as keyof typeof levelRank] !== levelRank[current.level as keyof typeof levelRank]) {
+      return levelRank[next.level as keyof typeof levelRank] > levelRank[current.level as keyof typeof levelRank];
+    }
+    if ((next.childCount ?? 0) !== (current.childCount ?? 0)) {
+      return (next.childCount ?? 0) > (current.childCount ?? 0);
+    }
+    if ((next.aliasCount ?? 0) !== (current.aliasCount ?? 0)) {
+      return (next.aliasCount ?? 0) > (current.aliasCount ?? 0);
+    }
+    return false;
+  };
+
+  const addPoint = (point: AdminPoint, province?: string, commandery?: string, childCount = 0) => {
     const lat = point.lat ?? point.center?.lat;
     const lng = point.lng ?? point.center?.lng;
     if (typeof lat !== 'number' || typeof lng !== 'number') return;
 
-    const key = `${point.level}:${province ?? ''}:${commandery ?? ''}:${point.name}`;
-    uniqueLocs.set(key, {
+    const key = point.name;
+    const nextPoint = {
       std_name: point.name,
       lat,
       lng,
@@ -44,15 +61,25 @@ function flattenAdminGeo(data: AdminGeo) {
       province,
       commandery,
       aliases: point.aliases ?? [],
+      aliasCount: point.aliases?.length ?? 0,
+      childCount,
       region: point.region ?? [province, commandery].filter(Boolean).join('-'),
-    });
+    };
+
+    if (shouldReplacePoint(uniqueLocs.get(key), nextPoint)) {
+      uniqueLocs.set(key, nextPoint);
+    }
   };
 
   data.provinces?.forEach(province => {
-    addPoint(province, province.name);
+    const provinceChildCount = province.commanderies?.reduce(
+      (count, commandery) => count + (commandery.counties?.length ?? 0),
+      0,
+    ) ?? 0;
+    addPoint(province, province.name, undefined, provinceChildCount);
 
     province.commanderies?.forEach(commandery => {
-      addPoint(commandery, province.name, commandery.name);
+      addPoint(commandery, province.name, commandery.name, commandery.counties?.length ?? 0);
 
       commandery.counties?.forEach(county => {
         addPoint(county, province.name, commandery.name);
@@ -81,20 +108,28 @@ export function useMapData() {
       setAllPersons(sorted);
     }).catch(() => {});
 
-    fetch(`${API_BASE}/api/events?start=190&end=195`).then(r => r.json()).then((d: any) => {
+    fetch(`${API_BASE}/api/events?start=190&end=195&limit=${DEFAULT_EVENT_PAGE_SIZE}&offset=0`).then(r => r.json()).then((d: any) => {
       setEventsList(d.events || []);
     }).catch(() => {});
   }, []);
 
-  const fetchEvents = async (params: URLSearchParams) => {
+  const fetchEventsPage = async (params: URLSearchParams, offset = 0, limit = DEFAULT_EVENT_PAGE_SIZE) => {
     try {
-      const res = await fetch(`${API_BASE}/api/events?${params}`);
+      const pageParams = new URLSearchParams(params);
+      pageParams.set('limit', String(limit));
+      pageParams.set('offset', String(offset));
+      const res = await fetch(`${API_BASE}/api/events?${pageParams}`);
       const data = await res.json();
-      return data.events || [];
+      return { events: data.events || [], hasMore: Boolean(data.has_more) };
     } catch (err) {
       console.error(err);
-      return [];
+      return { events: [], hasMore: false };
     }
+  };
+
+  const fetchEvents = async (params: URLSearchParams) => {
+    const { events } = await fetchEventsPage(params, 0, DEFAULT_EVENT_PAGE_SIZE);
+    return events;
   };
 
   const fetchLocationEvents = async (location: any, start = 180, end = 280) => {
@@ -124,6 +159,17 @@ export function useMapData() {
     } catch (err) {
       console.error(err);
       return [];
+    }
+  };
+
+  const fetchEventDetail = async (eventId: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/events/${encodeURIComponent(eventId)}`);
+      const data = await res.json();
+      return data.event || null;
+    } catch (err) {
+      console.error(err);
+      return null;
     }
   };
 
@@ -158,8 +204,10 @@ export function useMapData() {
     filterMeta,
     allPersons,
     fetchEvents,
+    fetchEventsPage,
     fetchLocationEvents,
     fetchPersonRelations,
+    fetchEventDetail,
     sendMessage,
     submitFeedback,
   };
