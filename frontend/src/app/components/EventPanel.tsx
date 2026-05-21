@@ -138,6 +138,7 @@ interface EventPanelProps {
   setFilterEventType: (v: string) => void;
   filterMeta: { event_types: string[] };
   onApplyFilter: () => void;
+  onClearSelection?: () => void;
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
@@ -152,6 +153,7 @@ export default function EventPanel({
   filterPersonOr, setFilterPersonOr,
   filterEventType, setFilterEventType,
   filterMeta, onApplyFilter,
+  onClearSelection,
   hasMore, isLoadingMore, onLoadMore,
 }: EventPanelProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -211,6 +213,19 @@ export default function EventPanel({
           onApply={onApplyFilter}
           onClose={onToggleFilter}
         />
+      )}
+
+      {selectedEventIds.size > 0 && onClearSelection && (
+        <div className="px-3 pt-2 pb-1 flex justify-start border-b border-[#4a5f78]/60">
+          <button
+            type="button"
+            onClick={onClearSelection}
+            className="text-[11px] text-slate-400 hover:text-amber-300 transition-colors"
+            title="清除所有已勾选事件及地图高亮"
+          >
+            取消全部勾选（{selectedEventIds.size}）
+          </button>
+        </div>
       )}
 
       {/* Events list */}

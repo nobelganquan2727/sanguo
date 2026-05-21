@@ -196,6 +196,11 @@ export default function Home() {
     }
   };
 
+  const clearAllEventSelections = () => {
+    setSelectedEventIds(new Set());
+    setHighlightedLocNames(new Set());
+  };
+
   const toggleEvent = (evt: any) => {
     const newSelected = new Set(selectedEventIds);
     newSelected.has(evt.id) ? newSelected.delete(evt.id) : newSelected.add(evt.id);
@@ -281,6 +286,7 @@ export default function Home() {
           setFilterEventType={setFilterEventType}
           filterMeta={filterMeta}
           onApplyFilter={() => { handleFetchEvents(); setShowFilter(false); }}
+          onClearSelection={clearAllEventSelections}
           hasMore={eventsHasMore}
           isLoadingMore={eventsLoadingMore}
           onLoadMore={handleLoadMoreEvents}
