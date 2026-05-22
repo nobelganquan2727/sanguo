@@ -11,6 +11,7 @@ import EditModal from './components/EditModal';
 import PersonRelationsModal from './components/PersonRelationsModal';
 import TimelineSlider from './components/TimelineSlider';
 import { locationMatchesGeoName } from './utils/locationMatch';
+import { Calendar } from 'lucide-react';
 
 const INITIAL_VIEW_STATE = { longitude: 108.5, latitude: 34.0, zoom: 4.2, pitch: 0, bearing: 0 };
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://124.222.133.106:8000';
@@ -21,6 +22,7 @@ export default function Home() {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
   const [timeRange, setTimeRange] = useState([190, 195]);
   const [timelineYear, setTimelineYear] = useState(190);
+  const [showTimeline, setShowTimeline] = useState(true);
 
   // Selection & hover
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
@@ -283,14 +285,6 @@ export default function Home() {
           onEventHover={handleMapEventHover}
         />
 
-        {/* Title */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-          <div className="px-16 py-3 bg-gradient-to-b from-[#1a2f4c] to-[#0a1628] border border-[#4a5f78] rounded-md shadow-lg flex items-center gap-6">
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#4a5f78]" />
-            <h1 className="text-2xl font-bold text-white tracking-[0.2em] font-serif" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>三国志</h1>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#4a5f78]" />
-          </div>
-        </div>
 
         <EventPanel
           show={showEventPanel}
@@ -372,11 +366,24 @@ export default function Home() {
           onEventClick={handleRelationEventClick}
         />
 
-        <TimelineSlider
-          currentYear={timelineYear}
-          onYearChange={setTimelineYear}
-          onYearCommit={handleTimelineCommit}
-        />
+        {showTimeline ? (
+          <TimelineSlider
+            currentYear={timelineYear}
+            onYearChange={setTimelineYear}
+            onYearCommit={handleTimelineCommit}
+            onClose={() => setShowTimeline(false)}
+          />
+        ) : (
+          <button
+            onClick={() => setShowTimeline(true)}
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 px-5 py-2.5 bg-gradient-to-r from-[#0a1628]/95 to-[#1a2f4c]/95 hover:from-[#1a2f4c] hover:to-[#0a1628] text-[#e2ddce] hover:text-[#f59e0b] border border-[#4a5f78]/70 rounded-full shadow-[0_4px_25px_rgba(0,0,0,0.7)] backdrop-blur-md flex items-center gap-2 text-xs font-serif font-bold tracking-wider transition-all duration-300 cursor-pointer hover:scale-105"
+            title="点击展开时间轴"
+          >
+            <Calendar size={14} className="text-[#f59e0b]" />
+            <span>{timelineYear} 年</span>
+            <span className="text-[#8c9bab] font-sans font-normal border-l border-[#4a5f78]/60 pl-2 ml-1">展开时间轴</span>
+          </button>
+        )}
 
       </div>
     </div>
