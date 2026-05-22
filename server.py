@@ -3,7 +3,7 @@ import json
 import uvicorn
 from functools import lru_cache
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from agent.qa_agent import ask_question
@@ -28,6 +28,18 @@ class FeedbackRequest(BaseModel):
     event_title: str
     field_name: str
     proposed_value: str
+
+class AdminDeleteRequest(BaseModel):
+    ids: list[int]
+
+class AdminApplyItem(BaseModel):
+    id: int
+    event_id: str
+    field_name: str
+    proposed_value: str
+
+class AdminApplyRequest(BaseModel):
+    items: list[AdminApplyItem]
 
 import pymysql
 import os
@@ -117,6 +129,119 @@ async def api_feedback(req: FeedbackRequest):
         return {"success": True, "message": "Feedback submitted successfully."}
     except Exception as e:
         return {"success": False, "message": str(e)}
+
+
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "sanguo123")
+
+def verify_admin_password(x_admin_password: str = Header(None)):
+    if not x_admin_password or x_admin_password != ADMIN_PASSWORD:
+        raise HTTPException(
+            status_code=401,
+            detail="密码错误，军师请重新输入。"
+        )
+
+@app.get("/api/admin/feedback")
+async def get_admin_feedback(x_admin_password: str = Header(None)):
+    verify_admin_password(x_admin_password)
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            sql = "SELECT id, event_id, event_title, field_name, proposed_value, status, created_at FROM feedback WHERE status = 'pending' ORDER BY created_at DESC"
+            cursor.execute(sql)
+            results = cursor.fetchall()
+        conn.close()
+        for r in results:
+            if r.get("created_at"):
+                r["created_at"] = r["created_at"].isoformat()
+        return {"success": True, "feedbacks": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/admin/feedback/delete")
+async def delete_admin_feedback(req: AdminDeleteRequest, x_admin_password: str = Header(None)):
+    verify_admin_password(x_admin_password)
+    if not req.ids:
+        return {"success": True, "message": "No feedbacks to delete."}
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            format_strings = ','.join(['%s'] * len(req.ids))
+            sql = f"DELETE FROM feedback WHERE id IN ({format_strings})"
+            cursor.execute(sql, tuple(req.ids))
+        conn.commit()
+        conn.close()
+        return {"success": True, "message": f"Successfully deleted {len(req.ids)} feedback records."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/admin/feedback/apply")
+async def apply_admin_feedback(req: AdminApplyRequest, x_admin_password: str = Header(None)):
+    verify_admin_password(x_admin_password)
+    if not req.items:
+        return {"success": True, "message": "No feedbacks to apply."}
+    
+    success_count = 0
+    errors = []
+    
+    conn = get_db_connection()
+    try:
+        for item in req.items:
+            event_id = item.event_id
+            field_name = item.field_name
+            proposed_value = item.proposed_value.strip()
+            
+            try:
+                # 1. Apply to Neo4j
+                if field_name == 'locations':
+                    locs = [l.strip() for l in proposed_value.split(',') if l.strip()]
+                    # Delete old relationships
+                    del_cypher = "MATCH (e:Event {id: $event_id})-[r:HAPPENED_AT]->() DELETE r"
+                    run_query(del_cypher, {"event_id": event_id})
+                    
+                    # Create new relationships
+                    for loc in locs:
+                        merge_cypher = """
+                        MATCH (e:Event {id: $event_id})
+                        MERGE (l:Location {name: $loc})
+                        MERGE (e)-[:HAPPENED_AT]->(l)
+                        """
+                        run_query(merge_cypher, {"event_id": event_id, "loc": loc})
+                        
+                elif field_name in ('std_start_year', 'year'):
+                    try:
+                        val = int(proposed_value)
+                    except ValueError:
+                        val = proposed_value
+                    
+                    set_cypher = "MATCH (e:Event {id: $event_id}) SET e.std_start_year = $val"
+                    run_query(set_cypher, {"event_id": event_id, "val": val})
+                else:
+                    target_field = "description" if field_name == "desc" else field_name
+                    set_cypher = f"MATCH (e:Event {{id: $event_id}}) SET e.{target_field} = $val"
+                    run_query(set_cypher, {"event_id": event_id, "val": proposed_value})
+                
+                # 2. Update status in MySQL to 'approved'
+                with conn.cursor() as cursor:
+                    sql = "UPDATE feedback SET status = 'approved', proposed_value = %s WHERE id = %s"
+                    cursor.execute(sql, (proposed_value, item.id))
+                conn.commit()
+                success_count += 1
+                
+            except Exception as item_err:
+                errors.append(f"Feedback ID {item.id} failed: {str(item_err)}")
+                
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=str(e))
+        
+    conn.close()
+    
+    return {
+        "success": len(errors) == 0,
+        "applied_count": success_count,
+        "errors": errors,
+        "message": f"Successfully applied {success_count} feedbacks. Errors: {len(errors)}"
+    }
 
 @app.post("/api/ask")
 async def api_ask(req: AskRequest):
