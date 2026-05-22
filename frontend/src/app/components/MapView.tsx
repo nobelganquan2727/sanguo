@@ -192,6 +192,7 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       getBorderWidth: 1,
       background: true,
       backgroundPadding: [6, 4, 6, 4],
+      backgroundBorderRadius: 4,
       getAlignmentBaseline: 'top',
       getPixelOffset: [0, 15],
       fontFamily: 'Noto Serif SC, serif',
