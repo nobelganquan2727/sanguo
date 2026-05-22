@@ -5,7 +5,7 @@ import MapGL from 'react-map-gl/maplibre';
 import { ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useCallback } from 'react';
-import { locationNameMatches } from '../utils/locationMatch';
+import { locationNameMatches, locationMatchesGeoName } from '../utils/locationMatch';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json';
 
@@ -15,9 +15,12 @@ interface MapViewProps {
   geoData: any[];
   highlightedLocNames: Set<string>;
   onLocationClick?: (location: any) => void;
+  eventsList?: any[];
+  allPersons?: string[];
+  onEventHover?: (info: any) => void;
 }
 
-export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick }: MapViewProps) {
+export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick, eventsList, allPersons, onEventHover }: MapViewProps) {
   const isHL = useCallback(
     (name: string) => [...highlightedLocNames].some(l => l && locationNameMatches(l, name)),
     [highlightedLocNames],
@@ -57,6 +60,93 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
     if (!overlap) visibleData.push(d);
   }
 
+  const eventPoints: any[] = [];
+  if (eventsList && eventsList.length > 0) {
+    const TYPE_PRIORITY: Record<string, number> = {
+      '军事征伐': 3,
+      '政治谋虑': 2,
+      '政治谋略': 2,
+      '内政治理': 1,
+    };
+    const getPriority = (type?: string) => (type && TYPE_PRIORITY[type]) || 0;
+
+    const seenTitles = new Set<string>();
+    const validEvents: any[] = [];
+
+    for (const evt of eventsList) {
+      if (!evt.locations || evt.locations.length === 0) continue;
+      
+      if (seenTitles.has(evt.title)) continue;
+      seenTitles.add(evt.title);
+
+      if (evt.year == null) continue;
+
+      const prio = getPriority(evt.type);
+      if (prio === 0) continue;
+
+      const firstLoc = evt.locations.find((l: string) => l);
+      if (!firstLoc) continue;
+      
+      const geo = geoData.find(d => locationMatchesGeoName(firstLoc, d));
+      if (geo) {
+        validEvents.push({ ...evt, lng: geo.lng, lat: geo.lat, priority: prio });
+      }
+    }
+    
+    // 展示所有匹配类型的事件
+    validEvents.sort((a, b) => b.priority - a.priority);
+
+    // 计算重叠，将重叠的事件聚合
+    const lngThreshold = 6.0 / viewState.zoom;
+    const latThreshold = 2.0 / viewState.zoom;
+    const groupedEvents: any[][] = [];
+
+    for (const evt of validEvents) {
+      let placed = false;
+      for (const group of groupedEvents) {
+        const center = group[0];
+        if (Math.abs(center.lng - evt.lng) < lngThreshold && Math.abs(center.lat - evt.lat) < latThreshold) {
+          group.push(evt);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        groupedEvents.push([evt]);
+      }
+    }
+
+    const getShortLabel = (title: string) => {
+      if (allPersons && allPersons.length > 0) {
+        for (const p of allPersons) {
+          if (title.startsWith(p)) {
+            return p;
+          }
+        }
+      }
+      return title.length > 4 ? title.substring(0, 4) : title;
+    };
+
+    for (const group of groupedEvents) {
+      const topEvent = group[0];
+      const shortTitle = getShortLabel(topEvent.title);
+      
+      const type = topEvent.type || '';
+      const isRed = type === '军事征伐' || type === '政治谋略' || type === '政治谋虑';
+      const bgColor = isRed ? [185, 28, 28, 220] : [20, 83, 45, 220];
+      const borderColor = isRed ? [239, 68, 68, 255] : [34, 197, 94, 255];
+
+      eventPoints.push({
+        lng: topEvent.lng,
+        lat: topEvent.lat,
+        label: group.length > 1 ? `${shortTitle} 等${group.length}件` : shortTitle,
+        events: group,
+        bgColor,
+        borderColor,
+      });
+    }
+  }
+
   const layers = [
     new ScatterplotLayer({
       id: 'cities-layer',
@@ -89,6 +179,33 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
         if (info.object) onLocationClick?.(info.object);
       },
       updateTriggers: { getSize: [highlightedLocNames], getColor: [highlightedLocNames] },
+    }),
+    new TextLayer({
+      id: 'events-text-layer',
+      data: eventPoints,
+      getPosition: (d: any) => [d.lng, d.lat],
+      getText: (d: any) => d.label,
+      getSize: 13,
+      getColor: [255, 255, 255, 255],
+      getBackgroundColor: (d: any) => d.bgColor || [26, 47, 76, 230],
+      getBorderColor: (d: any) => d.borderColor || [245, 158, 11, 255],
+      getBorderWidth: 1,
+      background: true,
+      backgroundPadding: [6, 4, 6, 4],
+      getAlignmentBaseline: 'top',
+      getPixelOffset: [0, 15],
+      fontFamily: 'Noto Serif SC, serif',
+      fontWeight: 'bold',
+      characterSet: 'auto',
+      pickable: true,
+      onHover: (info: any) => {
+        if (onEventHover) onEventHover(info);
+      },
+      updateTriggers: {
+        getText: [eventsList],
+        getBackgroundColor: [eventsList],
+        getBorderColor: [eventsList],
+      }
     }),
   ];
 

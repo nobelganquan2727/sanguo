@@ -9,6 +9,7 @@ import HoverTooltip from './components/HoverTooltip';
 import AgentPanel from './components/AgentPanel';
 import EditModal from './components/EditModal';
 import PersonRelationsModal from './components/PersonRelationsModal';
+import TimelineSlider from './components/TimelineSlider';
 import { locationMatchesGeoName } from './utils/locationMatch';
 
 const INITIAL_VIEW_STATE = { longitude: 108.5, latitude: 34.0, zoom: 4.2, pitch: 0, bearing: 0 };
@@ -19,17 +20,19 @@ console.log('API_BASE:', API_BASE, process.env.NEXT_PUBLIC_API_BASE);
 export default function Home() {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
   const [timeRange, setTimeRange] = useState([190, 195]);
+  const [timelineYear, setTimelineYear] = useState(190);
 
   // Selection & hover
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [highlightedLocNames, setHighlightedLocNames] = useState<Set<string>>(new Set());
   const [hoveredEvent, setHoveredEvent] = useState<any>(null);
   const [hoverTooltipTop, setHoverTooltipTop] = useState(0);
+  const [hoverTooltipLeft, setHoverTooltipLeft] = useState<number | undefined>(undefined);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter panel
   const [showFilter, setShowFilter] = useState(false);
-  const [showEventPanel, setShowEventPanel] = useState(true);
+  const [showEventPanel, setShowEventPanel] = useState(false);
   const [filterPersonInclude, setFilterPersonInclude] = useState('');
   const [filterPersonOr, setFilterPersonOr] = useState('');
   const [filterEventType, setFilterEventType] = useState('');
@@ -47,7 +50,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Tooltip mode
-  const [tooltipMode, setTooltipMode] = useState<'classical' | 'modern'>('classical');
+  const [tooltipMode, setTooltipMode] = useState<'classical' | 'modern'>('modern');
 
   // Edit modal
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -123,6 +126,18 @@ export default function Home() {
     await replaceEvents(params);
   };
 
+  const handleTimelineCommit = async (year: number) => {
+    setTimelineYear(year);
+    setTimeRange([year, year]);
+    const params = new URLSearchParams({
+      start: String(year), end: String(year),
+      ...(filterPersonInclude && { person_include: filterPersonInclude }),
+      ...(filterPersonOr && { person_or: filterPersonOr }),
+      ...(filterEventType && { event_type: filterEventType }),
+    });
+    await replaceEvents(params);
+  };
+
   const handleLoadMoreEvents = async () => {
     if (!eventsHasMore || eventsLoadingMore) return;
     setEventsLoadingMore(true);
@@ -137,6 +152,18 @@ export default function Home() {
       setEventsHasMore(hasMore);
     } finally {
       setEventsLoadingMore(false);
+    }
+  };
+
+  const handleMapEventHover = (info: any) => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    if (info.object && info.object.events && info.object.events.length > 0) {
+      setHoveredEvent(info.object.events);
+      setTooltipMode('modern');
+      setHoverTooltipTop(info.y);
+      setHoverTooltipLeft(info.x + 15);
+    } else {
+      hideTimer.current = setTimeout(() => setHoveredEvent(null), 100);
     }
   };
 
@@ -251,6 +278,9 @@ export default function Home() {
           geoData={geoData}
           highlightedLocNames={highlightedLocNames}
           onLocationClick={handleLocationClick}
+          eventsList={eventsList}
+          allPersons={allPersons}
+          onEventHover={handleMapEventHover}
         />
 
         {/* Title */}
@@ -295,6 +325,7 @@ export default function Home() {
         <HoverTooltip
           event={hoveredEvent}
           top={hoverTooltipTop}
+          left={hoverTooltipLeft}
           tooltipMode={tooltipMode}
           setTooltipMode={setTooltipMode}
           onMouseEnter={() => { if (hideTimer.current) clearTimeout(hideTimer.current); }}
@@ -338,6 +369,12 @@ export default function Home() {
           loading={relationsLoading}
           onClose={() => setRelationsModalOpen(false)}
           onEventClick={handleRelationEventClick}
+        />
+
+        <TimelineSlider
+          currentYear={timelineYear}
+          onYearChange={setTimelineYear}
+          onYearCommit={handleTimelineCommit}
         />
 
       </div>
