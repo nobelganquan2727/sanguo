@@ -301,6 +301,7 @@ export default function Home() {
           onHoverEvent={(evt, top) => {
             if (hideTimer.current) clearTimeout(hideTimer.current);
             setHoverTooltipTop(top);
+            setHoverTooltipLeft(undefined); // 重置为 undefined 以便使用默认的 328px 靠左面板定位
             setHoveredEvent(evt);
           }}
           onLeaveEvent={() => { hideTimer.current = setTimeout(() => setHoveredEvent(null), 200); }}
