@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://124.222.133.106:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000';
 const DEFAULT_EVENT_PAGE_SIZE = 100;
 
 type AdminPoint = {
@@ -101,16 +101,16 @@ export function useMapData() {
       setGeoData(flattenAdminGeo(data));
     });
 
-    fetch(`${API_BASE}/api/filter-meta`).then(r => r.json()).then(setFilterMeta).catch(() => {});
+    fetch(`${API_BASE}/api/filter-meta`).then(r => r.json()).then(setFilterMeta).catch(() => { });
 
     fetch(`${API_BASE}/api/persons`).then(r => r.json()).then((d: any) => {
       const sorted = [...(d.persons || [])].sort((a: string, b: string) => b.length - a.length);
       setAllPersons(sorted);
-    }).catch(() => {});
+    }).catch(() => { });
 
     fetch(`${API_BASE}/api/events?start=190&end=195&limit=${DEFAULT_EVENT_PAGE_SIZE}&offset=0`).then(r => r.json()).then((d: any) => {
       setEventsList(d.events || []);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const fetchEventsPage = async (params: URLSearchParams, offset = 0, limit = DEFAULT_EVENT_PAGE_SIZE) => {

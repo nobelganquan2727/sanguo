@@ -14,7 +14,7 @@ import { locationMatchesGeoName } from './utils/locationMatch';
 import { Calendar } from 'lucide-react';
 
 const INITIAL_VIEW_STATE = { longitude: 108.5, latitude: 34.0, zoom: 4.2, pitch: 0, bearing: 0 };
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://124.222.133.106:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000';
 const EVENT_PAGE_SIZE = 100;
 console.log('API_BASE:', API_BASE, process.env.NEXT_PUBLIC_API_BASE);
 
@@ -415,7 +415,7 @@ export default function Home() {
                 animation: rotatePhone 3s infinite ease-in-out;
               }
             `}} />
-            
+
             <div className="relative w-16 h-28 border-4 border-[#f59e0b]/70 rounded-2xl flex items-center justify-center phone-rotate-anim shadow-[0_0_15px_rgba(245,158,11,0.2)] mb-8">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-[#f59e0b]/50 rounded-full" />
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 border border-[#f59e0b]/50 rounded-full" />
@@ -429,7 +429,7 @@ export default function Home() {
               三国疆域辽阔，军势非广阔视野不能容载。<br />
               请转动您的手机为<strong>横屏</strong>，以开启宏大的数字沙盘。
             </p>
-            
+
             <button
               onClick={async () => {
                 try {
@@ -449,7 +449,7 @@ export default function Home() {
             >
               一键尝试全屏旋转
             </button>
-            
+
             <span className="text-[10px] text-slate-500 font-sans mt-3 select-none">
               （若已横置，请确认手机系统的“自动旋转”或“方向锁定”已开启）
             </span>

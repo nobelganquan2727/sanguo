@@ -28,6 +28,7 @@ jobs:
             echo "📦 Building frontend (Next.js)..."
             cd frontend
             npm install
+            echo "NEXT_PUBLIC_API_BASE=http://124.222.133.106:8000" > .env.production
             npm run build
 
             # echo "🐍 Updating backend dependencies..."
