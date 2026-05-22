@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMapData } from './hooks/useMapData';
 import { useLinkify } from './hooks/useLinkify';
 import MapView from './components/MapView';
@@ -23,6 +23,23 @@ export default function Home() {
   const [timeRange, setTimeRange] = useState([190, 195]);
   const [timelineYear, setTimelineYear] = useState(190);
   const [showTimeline, setShowTimeline] = useState(true);
+  const [isPortraitMobile, setIsPortraitMobile] = useState(false);
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || (window.innerWidth < 768);
+      const isPortrait = window.innerHeight > window.innerWidth;
+      setIsPortraitMobile(!!(isMobileDevice && isPortrait));
+    };
+
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
 
   // Selection & hover
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
@@ -383,6 +400,60 @@ export default function Home() {
             <span>{timelineYear} 年</span>
             <span className="text-[#8c9bab] font-sans font-normal border-l border-[#4a5f78]/60 pl-2 ml-1">展开时间轴</span>
           </button>
+        )}
+
+        {/* Mobile Orientation Guide Overlay */}
+        {isPortraitMobile && (
+          <div className="absolute inset-0 z-50 bg-[#041527] flex flex-col items-center justify-center p-8 text-center backdrop-blur-md">
+            <style dangerouslySetInnerHTML={{
+              __html: `
+              @keyframes rotatePhone {
+                0%, 100% { transform: rotate(0deg); }
+                35%, 65% { transform: rotate(-90deg); }
+              }
+              .phone-rotate-anim {
+                animation: rotatePhone 3s infinite ease-in-out;
+              }
+            `}} />
+            
+            <div className="relative w-16 h-28 border-4 border-[#f59e0b]/70 rounded-2xl flex items-center justify-center phone-rotate-anim shadow-[0_0_15px_rgba(245,158,11,0.2)] mb-8">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-[#f59e0b]/50 rounded-full" />
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 border border-[#f59e0b]/50 rounded-full" />
+              <div className="text-[#f59e0b] font-serif text-[10px] font-bold tracking-widest uppercase rotate-90 select-none">Han Map</div>
+            </div>
+
+            <h2 className="text-xl font-bold text-[#e2ddce] tracking-[0.2em] font-serif mb-3 select-none">
+              「主公，请横屏观天下」
+            </h2>
+            <p className="text-slate-400 text-sm leading-relaxed max-w-sm font-serif select-none mb-6">
+              三国疆域辽阔，军势非广阔视野不能容载。<br />
+              请转动您的手机为<strong>横屏</strong>，以开启宏大的数字沙盘。
+            </p>
+            
+            <button
+              onClick={async () => {
+                try {
+                  const docEl = document.documentElement as any;
+                  if (docEl.requestFullscreen) {
+                    await docEl.requestFullscreen();
+                  }
+                  const anyScreen = screen as any;
+                  if (anyScreen.orientation && anyScreen.orientation.lock) {
+                    await anyScreen.orientation.lock('landscape');
+                  }
+                } catch (err) {
+                  // Fallback
+                }
+              }}
+              className="px-6 py-2.5 bg-gradient-to-r from-[#1a2f4c] to-[#0a1628] hover:from-[#1a2f4c] hover:to-[#1a2f4c] text-[#f59e0b] border border-[#f59e0b]/40 hover:border-[#f59e0b] rounded-md shadow-lg text-xs font-serif tracking-wider transition-all duration-200 cursor-pointer"
+            >
+              一键尝试全屏旋转
+            </button>
+            
+            <span className="text-[10px] text-slate-500 font-sans mt-3 select-none">
+              （若已横置，请确认手机系统的“自动旋转”或“方向锁定”已开启）
+            </span>
+          </div>
         )}
 
       </div>
