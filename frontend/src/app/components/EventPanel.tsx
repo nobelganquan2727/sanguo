@@ -163,7 +163,13 @@ export default function EventPanel({
   useEffect(() => {
     const selectedId = Array.from(selectedEventIds)[0];
     if (!selectedId) return;
-    eventRefs.current[selectedId]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const itemEl = eventRefs.current[selectedId];
+    const listEl = listRef.current;
+    if (itemEl && listEl) {
+      const relativeTop = itemEl.offsetTop - listEl.offsetTop;
+      const targetScrollTop = relativeTop - listEl.clientHeight / 2 + itemEl.clientHeight / 2;
+      listEl.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+    }
   }, [selectedEventIds]);
 
   if (!show) {
@@ -180,7 +186,7 @@ export default function EventPanel({
   }
 
   return (
-    <div ref={wrapperRef} className="absolute left-4 top-4 z-20 w-80 bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md overflow-visible shadow-xl flex flex-col max-h-[580px] select-none">
+    <div ref={wrapperRef} className="absolute left-4 top-4 z-20 w-[22vw] min-w-[280px] max-w-[360px] h-[72vh] max-h-[620px] bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md overflow-visible shadow-xl flex flex-col select-none">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-2 px-3 border-b border-[#a4424b] flex items-center justify-between">
         <h2 className="text-sm font-bold text-white tracking-widest">事件列表</h2>

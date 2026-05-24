@@ -34,7 +34,7 @@ export default function AgentPanel({
   }
 
   return (
-    <div className="absolute right-4 bottom-12 z-20 w-[340px] bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md shadow-xl flex flex-col max-h-[580px] select-none">
+    <div className="absolute right-4 bottom-12 z-20 w-[24vw] min-w-[290px] max-w-[370px] h-[72vh] max-h-[620px] bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md shadow-xl flex flex-col select-none">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-2 border-b border-[#a4424b] px-4 flex justify-between items-center">
         <h2 className="text-sm font-bold text-white tracking-widest">幕僚</h2>

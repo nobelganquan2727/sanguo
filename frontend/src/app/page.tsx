@@ -297,7 +297,7 @@ export default function Home() {
           geoData={geoData}
           highlightedLocNames={highlightedLocNames}
           onLocationClick={handleLocationClick}
-          eventsList={eventsList}
+          eventsList={showTimeline ? eventsList : []}
           allPersons={allPersons}
           onEventHover={handleMapEventHover}
         />
