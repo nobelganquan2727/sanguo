@@ -123,7 +123,7 @@ interface EventPanelProps {
   eventsList: any[];
   selectedEventIds: Set<string>;
   onToggleEvent: (evt: any) => void;
-  onHoverEvent: (evt: any, top: number) => void;
+  onHoverEvent: (evt: any, top: number, panelWidth?: number) => void;
   onLeaveEvent: () => void;
   showFilter: boolean;
   onToggleFilter: () => void;
@@ -260,7 +260,7 @@ export default function EventPanel({
                     if (wrapperRect) {
                       const itemRect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                       const rawTop = itemRect.top - wrapperRect.top;
-                      onHoverEvent(evt, Math.max(0, Math.min(rawTop, 360)));
+                      onHoverEvent(evt, Math.max(0, Math.min(rawTop, 360)), wrapperRect.width);
                     }
                   }}
                   onMouseLeave={onLeaveEvent}
