@@ -27,7 +27,7 @@ function FilterPanel({
   filterMeta, onApply, onClose,
 }: FilterPanelProps) {
   return (
-    <div className="bg-[#0c1821] border-b border-[#4a5f78] p-3 flex flex-col gap-3 text-xs pointer-events-auto">
+    <div className="bg-[#0c1821] border-b border-[#4a5f78] p-3 flex flex-col gap-3 text-xs pointer-events-auto overflow-y-auto max-h-[60vh] shrink-0">
       {/* Time range */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
