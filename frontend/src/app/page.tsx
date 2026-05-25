@@ -434,12 +434,23 @@ export default function Home() {
               onClick={async () => {
                 try {
                   const docEl = document.documentElement as any;
-                  if (docEl.requestFullscreen) {
-                    await docEl.requestFullscreen();
+                  // Android / Chrome / WebView / Safari vendor-prefixed fullscreen logic
+                  const reqFs = docEl.requestFullscreen || 
+                                docEl.webkitRequestFullscreen || 
+                                docEl.webkitRequestFullScreen || 
+                                docEl.mozRequestFullScreen || 
+                                docEl.msRequestFullscreen;
+                  if (reqFs) {
+                    await reqFs.call(docEl);
                   }
+                  
+                  // Vendor-prefixed orientation locking logic
                   const anyScreen = screen as any;
-                  if (anyScreen.orientation && anyScreen.orientation.lock) {
-                    await anyScreen.orientation.lock('landscape');
+                  const orientation = anyScreen.orientation || anyScreen.mozOrientation || anyScreen.msOrientation;
+                  if (orientation && orientation.lock) {
+                    await orientation.lock('landscape');
+                  } else if (anyScreen.lockOrientation) {
+                    anyScreen.lockOrientation('landscape');
                   }
                 } catch (err) {
                   // Fallback
