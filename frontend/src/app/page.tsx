@@ -80,7 +80,7 @@ export default function Home() {
   // Person relations modal
   const [relationsModalOpen, setRelationsModalOpen] = useState(false);
   const [relationsPerson, setRelationsPerson] = useState('');
-  const [personRelations, setPersonRelations] = useState<any[]>([]);
+  const [personRelations, setPersonRelations] = useState<any>(null);
   const [relationsLoading, setRelationsLoading] = useState(false);
 
   const {
@@ -118,10 +118,10 @@ export default function Home() {
     setRelationsPerson(name);
     setRelationsModalOpen(true);
     setRelationsLoading(true);
-    setPersonRelations([]);
+    setPersonRelations(null);
     await loadPersonEvents(name);
-    const relations = await fetchPersonRelations(name);
-    setPersonRelations(relations);
+    const relationsData = await fetchPersonRelations(name);
+    setPersonRelations(relationsData);
     setRelationsLoading(false);
   };
 
@@ -381,6 +381,7 @@ export default function Home() {
           loading={relationsLoading}
           onClose={() => setRelationsModalOpen(false)}
           onEventClick={handleRelationEventClick}
+          onPersonClick={handlePersonClick}
         />
 
         {showTimeline ? (

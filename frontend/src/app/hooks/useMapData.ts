@@ -155,10 +155,17 @@ export function useMapData() {
     try {
       const res = await fetch(`${API_BASE}/api/person-relations/${encodeURIComponent(name)}`);
       const data = await res.json();
-      return data.relations || [];
+      return data;
     } catch (err) {
       console.error(err);
-      return [];
+      return {
+        name,
+        hometown: null,
+        clan: null,
+        nodes: [{ id: name, label: name, type: 'center' }],
+        links: [],
+        relations: []
+      };
     }
   };
 

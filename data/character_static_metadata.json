@@ -1,0 +1,10099 @@
+[
+  {
+    "name": "黄权",
+    "hometown": "巴西阆中",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘璋",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "降将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "黄崇",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "濮阳兴",
+    "hometown": "陈留外黄",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙休",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙皓",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张布",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "万彧",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "王凌",
+    "hometown": "太原祁县",
+    "clan": "太原王氏",
+    "relations": [
+      {
+        "to": "王允",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "曹丕",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "令狐愚",
+        "type": "外甥",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "崔林",
+    "hometown": "清河郡东武城县",
+    "clan": "清河崔氏",
+    "relations": [
+      {
+        "to": "崔琰",
+        "type": "族兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陈群",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙霸",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙和",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙登",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙亮",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "全琮",
+        "type": "岳父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "步骘",
+        "type": "支持者",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "鲁王党羽",
+        "type": "党羽",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙和",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "吕范",
+    "hometown": "汝南细阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "心腹重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "周瑜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "胡质",
+    "hometown": "楚国寿春",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "胡威",
+        "type": "父子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "蒋济",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张辽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "明元郭皇后",
+    "hometown": "西平郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹叡",
+        "type": "皇后",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹芳",
+        "type": "太后",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹爽",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "司马懿",
+        "type": "政治盟友",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙瑜",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙皎",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙贲",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "周瑜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕蒙",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹奂",
+    "hometown": "沛国谯县",
+    "clan": "谯郡曹氏",
+    "relations": [
+      {
+        "to": "曹宇",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹髦",
+        "type": "族兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马昭",
+        "type": "权臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马炎",
+        "type": "篡位者",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "刘理",
+    "hometown": "涿郡涿县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘永",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "异母兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "周宣",
+    "hometown": "乐安",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹丕",
+        "type": "占梦官",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "占梦官",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "吕蒙",
+    "hometown": "汝南富陂",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "周瑜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "鲁肃",
+        "type": "继任者",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "关羽",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "孙策",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "夏侯尚",
+    "hometown": "沛国谯县",
+    "clan": "沛国夏侯氏",
+    "relations": [
+      {
+        "to": "夏侯渊",
+        "type": "族父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯玄",
+        "type": "从子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "挚友、托孤重臣",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹真",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹彰",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张郃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "徐晃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙綝",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙亮",
+        "type": "族兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙峻",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "滕胤",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "丁奉",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "王连",
+    "hometown": "南阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "刘备",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "贺齐",
+    "hometown": "会稽山阴",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "贺景",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "贺达",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "华佗",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "吴普",
+        "type": "弟子",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "樊阿",
+        "type": "弟子",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "骆统",
+    "hometown": "会稽乌伤",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "骆俊",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张温",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "常林",
+    "hometown": "河内温县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "司马懿",
+        "type": "同乡好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "常彧",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "明悼毛皇后",
+    "hometown": "河内郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹叡",
+        "type": "皇后",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "毛嘉",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "郭皇后",
+        "type": "情敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "陆凯",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡陆氏",
+    "relations": [
+      {
+        "to": "陆逊",
+        "type": "族子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "大臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙皓",
+        "type": "大臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆抗",
+        "type": "族兄弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "杜琼",
+    "hometown": "蜀郡成都",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "谯周",
+        "type": "学生",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "刘备",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘禅",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "曹睿",
+    "hometown": "沛国谯县",
+    "clan": "谯郡曹氏",
+    "relations": [
+      {
+        "to": "曹丕",
+        "type": "父子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "甄氏",
+        "type": "母子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹芳",
+        "type": "养子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹真",
+        "type": "族叔",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹休",
+        "type": "族叔",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陈群",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "孙登",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "周瑜",
+        "type": "岳父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "太子四友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张休",
+        "type": "太子四友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "顾谭",
+        "type": "太子四友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陈表",
+        "type": "太子四友",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "太史慈",
+    "hometown": "东莱黄县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孔融",
+        "type": "受其恩惠，单骑突围求救",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "曾为其部下，后归孙策",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙策",
+        "type": "君臣，收降后委以重任",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "君臣，委以南方之事",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘繇",
+        "type": "曾为其部下，后归孙策",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "马超",
+    "hometown": "扶风茂陵",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "马腾",
+        "type": "父亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "马休",
+        "type": "弟弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "马铁",
+        "type": "弟弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "马岱",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "刘备",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "韩遂",
+        "type": "盟友后反目",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "锺离牧",
+    "hometown": "会稽山阴",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "锺离绪",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕岱",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "刘璿",
+    "hometown": "蜀郡成都",
+    "clan": "涿郡刘氏",
+    "relations": [
+      {
+        "to": "刘禅",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "王贵人",
+        "type": "母",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘恂",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘谌",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "费祎",
+        "type": "太子舍人",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "谢夫人",
+    "hometown": "会稽山阴",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "妃嫔",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "徐夫人",
+        "type": "情敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "李严",
+    "hometown": "南阳郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "托孤同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘璋",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "费观",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孟达",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹棘",
+    "hometown": "沛国谯县",
+    "clan": "谯郡曹氏",
+    "relations": []
+  },
+  {
+    "name": "张飞",
+    "hometown": "涿郡涿县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "结拜兄弟",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "关羽",
+        "type": "结拜兄弟",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张苞",
+        "type": "长子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯氏",
+        "type": "妻子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张绍",
+        "type": "次子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "严颜",
+        "type": "义释",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙翊",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙朗",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "徐氏",
+        "type": "妻",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "妫览",
+        "type": "部将，后弑主",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "戴员",
+        "type": "部将，后弑主",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "郑浑",
+    "hometown": "河南开封",
+    "clan": "荥阳郑氏",
+    "relations": [
+      {
+        "to": "郑泰",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "属官",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "属官",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "贾逵",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "邓艾",
+    "hometown": "义阳棘阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "司马懿",
+        "type": "提拔重用",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "司马昭",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "钟会",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "姜维",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "诸葛瞻",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "邓忠",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "伊籍",
+    "hometown": "山阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘表",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙权",
+        "type": "出使对象",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "臧洪",
+    "hometown": "广陵射阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "张超",
+        "type": "故吏",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "袁绍",
+        "type": "故吏",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陈容",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "袁绍",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "曹邕",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彪",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "杨洪",
+    "hometown": "犍为武阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "下属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "何祗",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "公孙度",
+    "hometown": "辽东襄平",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "公孙康",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "公孙恭",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "公孙渊",
+        "type": "孙",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "徐荣",
+        "type": "同乡、举荐者",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "董卓",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "田豫",
+    "hometown": "渔阳雍奴",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "故主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "公孙瓒",
+        "type": "故主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "牵招",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "任峻",
+    "hometown": "河南中牟",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "枣祗",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "庞淯",
+    "hometown": "酒泉表氏",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "庞娥",
+        "type": "母",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "徐庶",
+        "type": "同乡好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "征辟为属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张猛",
+        "type": "故主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "韩遂",
+        "type": "仇敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "郤正",
+    "hometown": "河南偃师",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘禅",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "郤俭",
+        "type": "祖父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "郤揖",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "卫觊",
+    "hometown": "河东安邑",
+    "clan": "河东卫氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "卫瓘",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "荀彧",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "王粲",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "丁奉",
+    "hometown": "庐江安丰",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "甘宁",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陆逊",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙亮",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙休",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张悌",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "张翼",
+    "hometown": "犍为武阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "张良",
+        "type": "先祖",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘备",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "姜维",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "赵云",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "马谡",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "李通",
+    "hometown": "江夏平春",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "李绪",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "赵俨",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "关羽",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "孙奂",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙贲",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙辅",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙皎",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "刘馥",
+    "hometown": "沛国相县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "任命为扬州刺史",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘靖",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "杨阜",
+    "hometown": "天水冀县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "归顺之主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "马超",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "韦康",
+        "type": "故主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "姜叙",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "李典",
+    "hometown": "山阳钜野",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "李乾",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "李整",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张辽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "乐进",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "刘备",
+    "hometown": "涿郡涿县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "关羽",
+        "type": "结拜兄弟",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张飞",
+        "type": "结拜兄弟",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "孙吴",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘禅",
+        "type": "父子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "徐庶",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "温恢",
+    "hometown": "太原祁县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "裴潜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "贾诩",
+    "hometown": "武威姑臧",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "李傕",
+        "type": "献策者",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张绣",
+        "type": "谋主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "谋臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "太子太傅",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "阎忠",
+        "type": "同乡",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "陆瑁",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡陆氏",
+    "relations": [
+      {
+        "to": "陆逊",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陆凯",
+        "type": "从子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陆抗",
+        "type": "从子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张温",
+        "type": "好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙权",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆绩",
+        "type": "族兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "霍峻",
+    "hometown": "南郡枝江",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "霍弋",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "王平",
+    "hometown": "巴西宕渠",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "马谡",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "徐晃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张郃",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "曹爽",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "刘放",
+    "hometown": "涿郡方城",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙资",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "秘书",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹爽",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "赵云",
+    "hometown": "常山真定",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "关羽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张飞",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "公孙瓒",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "王朗",
+    "hometown": "东海郯县",
+    "clan": "东海王氏",
+    "relations": [
+      {
+        "to": "王肃",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "华歆",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "钟繇",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙策",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "曹操",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "虞翻",
+        "type": "被劝降",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "孙权",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "周瑜",
+        "type": "托孤重臣",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "鲁肃",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆逊",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "刘备",
+        "type": "盟友后敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "张昭",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "武宣卞皇后",
+    "hometown": "琅邪开阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "妻",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹熊",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "许靖",
+    "hometown": "汝南平舆",
+    "clan": "汝南许氏",
+    "relations": [
+      {
+        "to": "许劭",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘璋",
+        "type": "蜀郡太守",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "太傅",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "故交",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "王朗",
+        "type": "故交",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "华歆",
+        "type": "故交",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹蕤",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹协",
+        "type": "同母兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "杜畿",
+    "hometown": "京兆杜陵",
+    "clan": "京兆杜氏",
+    "relations": [
+      {
+        "to": "荀彧",
+        "type": "举荐人",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "杜恕",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张既",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "卫固",
+        "type": "对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "夏侯玄",
+    "hometown": "沛国谯县",
+    "clan": "谯郡夏侯氏",
+    "relations": [
+      {
+        "to": "夏侯尚",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯霸",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹爽",
+        "type": "表兄弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "司马师",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "李丰",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张缉",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙奋",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙亮",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙休",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙和",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙霸",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙皓",
+        "type": "侄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹子棘",
+    "hometown": "未知",
+    "clan": "无",
+    "relations": []
+  },
+  {
+    "name": "全琮",
+    "hometown": "吴郡钱唐",
+    "clan": "吴郡全氏",
+    "relations": [
+      {
+        "to": "全柔",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "全公主",
+        "type": "女",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "全怿",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "全绪",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "全尚",
+        "type": "族弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "朱据",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙虑",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙登",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙和",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙霸",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "费诗",
+    "hometown": "犍为南安",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘璋",
+        "type": "益州牧",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "蜀汉皇帝",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "关羽",
+        "type": "出使荆州",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "袁涣",
+    "hometown": "陈郡扶乐",
+    "clan": "陈郡袁氏",
+    "relations": [
+      {
+        "to": "袁绍",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘备",
+        "type": "故主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "袁术",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "主君",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "吕布",
+        "type": "被迫效力",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陈群",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹幹",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "庶子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "崔琰",
+    "hometown": "清河郡东武城县",
+    "clan": "清河崔氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马朗",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孔融",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "杨训",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "曹丕",
+        "type": "教导",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "崔林",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "桓阶",
+    "hometown": "长沙临湘",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "故吏",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张羡",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘表",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "满宠",
+    "hometown": "山阳昌邑",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "杨彪",
+        "type": "审讯对象",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "徐晃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "田豫",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙韶",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "宗室将领",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙河",
+        "type": "伯父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "徐盛",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹贡",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": []
+  },
+  {
+    "name": "孙乾",
+    "hometown": "北海郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "从龙之臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "郑玄",
+        "type": "师从",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "糜竺",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "简雍",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹真",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "养子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "辅政大臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "曹休",
+        "type": "族弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹爽",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹均",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹昂",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹琬",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "周鲂",
+    "hometown": "吴郡阳羡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "周处",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹休",
+        "type": "诈降诱敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "刘封",
+    "hometown": "长沙郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "养子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "劝杀者",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "孟达",
+        "type": "同僚后反目",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "关羽",
+        "type": "叔侄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "兄弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "文德郭皇后",
+    "hometown": "安平广宗",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹丕",
+        "type": "皇后",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "郭表",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "养子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "甄氏",
+        "type": "情敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "张邈",
+    "hometown": "东平寿张",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "袁绍",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "吕布",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陈宫",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张超",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "孙贲",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙辅",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "袁术",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙策",
+        "type": "豫章太守（受孙策节制）",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "邴原",
+    "hometown": "北海朱虚",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "管宁",
+        "type": "同乡好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "华歆",
+        "type": "同乡好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "征辟为司空掾",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "荀彧",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "孔融",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "许褚",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "贴身护卫",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "典韦",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "马超",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "许仪",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "黄盖",
+    "hometown": "零陵泉陵",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙策",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "宿将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "周瑜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "火攻对象",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "张嶷",
+    "hometown": "巴郡南充国",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "马忠",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "费祎",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘禅",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张翼",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "苏则",
+    "hometown": "扶风武功",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "苏愉",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张既",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "裴潜",
+    "hometown": "河东闻喜",
+    "clan": "河东裴氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "丞相府属官",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "裴徽",
+        "type": "弟弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "裴秀",
+        "type": "儿子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "王昶",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "刘惇",
+    "hometown": "平原郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘繇",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "孙邻",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "祖父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙贲",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙辅",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "文聘",
+    "hometown": "南阳宛县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘表",
+        "type": "旧将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "降将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "关羽",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "乐进",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹仁",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "尹默",
+    "hometown": "梓潼涪县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "司马徽",
+        "type": "师从",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "宋忠",
+        "type": "师从",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "刘备",
+        "type": "属臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "谯周",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹操",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹嵩",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯惇",
+        "type": "族亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "荀彧",
+        "type": "谋主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "郭嘉",
+        "type": "谋士",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "袁绍",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "公孙瓒",
+    "hometown": "辽西令支",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "公孙度",
+        "type": "族子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘备",
+        "type": "同门",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "袁绍",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "刘虞",
+        "type": "上级后反目",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "公孙范",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "是仪",
+    "hometown": "北海营陵",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "步骘",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "华覈",
+    "hometown": "吴郡武进",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙皓",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "韦昭",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "薛莹",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "凉茂",
+    "hometown": "山阳昌邑",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "司空掾属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "荀彧",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "钟繇",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "高堂隆",
+    "hometown": "泰山平阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "魏明帝",
+        "type": "谏臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "高堂生",
+        "type": "先祖",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陈矫",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙辅",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "兄长",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "通敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "曹芳",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹叡",
+        "type": "养子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹爽",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马师",
+        "type": "权臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马昭",
+        "type": "权臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "夏侯玄",
+        "type": "姻亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张缉",
+        "type": "岳父",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "荀攸",
+    "hometown": "颍川颍阴",
+    "clan": "颍川荀氏",
+    "relations": [
+      {
+        "to": "荀彧",
+        "type": "从子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "谋主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "钟繇",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "何颙",
+        "type": "举荐人",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "袁绍",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张绣",
+        "type": "劝降对象",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "赵达",
+    "hometown": "河南",
+    "clan": "无",
+    "relations": []
+  },
+  {
+    "name": "吕岱",
+    "hometown": "广陵海陵",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "步骘",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "士徽",
+        "type": "讨伐对象",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "廖式",
+        "type": "讨伐对象",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "徐原",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "曹整",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹均",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹范",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹琮",
+        "type": "嗣子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "刘廙",
+    "hometown": "南阳安众",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘望之",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "丞相掾属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘表",
+        "type": "故主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹矩",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": []
+  },
+  {
+    "name": "于禁",
+    "hometown": "泰山钜平",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "五子良将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "关羽",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "庞德",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹丕",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "潘璋",
+    "hometown": "东郡发干",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "吕蒙",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "关羽",
+        "type": "擒获者",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "甘宁",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "凌统",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹林",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "侄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "邓芝",
+    "hometown": "义阳新野",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙权",
+        "type": "外交使节",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张翼",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "宗预",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "杨戏",
+    "hometown": "犍为武阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "蒋琬",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "费祎",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "姜维",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "滕胤",
+    "hometown": "北海剧县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "女婿",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙亮",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙峻",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "孙綝",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "张鲁",
+    "hometown": "沛国丰县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "张陵",
+        "type": "祖父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张衡",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘璋",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "降服之主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "马超",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "阎圃",
+        "type": "谋士",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "张郃",
+    "hometown": "河间鄚县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "降将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "袁绍",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "上司",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "张飞",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "徐晃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "典韦",
+    "hometown": "陈留己吾",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "贴身护卫",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "许褚",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张绣",
+        "type": "战场死敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "何夔",
+    "hometown": "陈郡阳夏",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "司空掾属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "袁术",
+        "type": "故吏",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "何曾",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "鲍勋",
+    "hometown": "泰山平阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "鲍信",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "郭皇后",
+        "type": "姻亲",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "孟光",
+    "hometown": "河南洛阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘禅",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "费祎",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "董允",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "郤正",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "王蕃",
+    "hometown": "庐江",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙皓",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆凯",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "徐夫人",
+    "hometown": "吴郡富春",
+    "clan": "吴郡徐氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "妃",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "徐琨",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "周泰",
+    "hometown": "九江下蔡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "贴身护卫",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙策",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "蒋钦",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "李恢",
+    "hometown": "建宁俞元",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "邓方",
+        "type": "前任",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "爨习",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "马忠",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "傅嘏",
+    "hometown": "北地泥阳",
+    "clan": "北地傅氏",
+    "relations": [
+      {
+        "to": "傅巽",
+        "type": "族父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "荀粲",
+        "type": "姻亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马师",
+        "type": "谋主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马昭",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "钟会",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "何晏",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "刘表",
+    "hometown": "山阳高平",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘琦",
+        "type": "长子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘琮",
+        "type": "次子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "蔡夫人",
+        "type": "继妻",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘备",
+        "type": "同宗兄弟",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙坚",
+        "type": "战场死敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "蒯越",
+        "type": "谋士",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "蔡瑁",
+        "type": "妻弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "董和",
+    "hometown": "南郡枝江",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "董允",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘备",
+        "type": "主君",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "杨俊",
+    "hometown": "河内获嘉",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "曹丕",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "王象",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "杨仪",
+    "hometown": "襄阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "长史",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "魏延",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "蒋琬",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "费祎",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "主簿",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "曹霖",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹髦",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "简雍",
+    "hometown": "涿郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "同乡、从龙之臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "糜竺",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "华歆",
+    "hometown": "平原高唐",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "管宁",
+        "type": "割席断义",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "邴原",
+        "type": "同窗好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "王朗",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙策",
+        "type": "曾为部下",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "曹协",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "李夫人",
+        "type": "母",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹寻",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "孙破虏吴夫人",
+    "hometown": "吴郡富春",
+    "clan": "吴郡吴氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "夫妻",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "母子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "母子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙翊",
+        "type": "母子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙匡",
+        "type": "母子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙朗",
+        "type": "母子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "刘焉",
+    "hometown": "江夏竟陵",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘璋",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘表",
+        "type": "同宗兄弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "董扶",
+        "type": "好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "灵帝",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张鲁",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "刘永",
+    "hometown": "涿郡涿县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘理",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "孙皎",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙静",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙瑜",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙奂",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "甘宁",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕蒙",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "诸葛瑾",
+    "hometown": "琅邪阳都",
+    "clan": "琅邪诸葛氏",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "胞弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "长子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "步骘",
+        "type": "同僚好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛融",
+        "type": "次子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "朱建平",
+    "hometown": "沛国",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "相术对象",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "相术对象",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "夏侯威",
+        "type": "相术对象",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "应璩",
+        "type": "相术对象",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "贾逵",
+    "hometown": "河东襄陵",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹休",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张既",
+        "type": "举荐人",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "郭援",
+        "type": "俘虏与仇敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "朱然",
+    "hometown": "丹杨故鄣",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "朱治",
+        "type": "养父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "潘璋",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹真",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "诸葛瑾",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "潘濬",
+    "hometown": "武陵汉寿",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "关羽",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "蒋琬",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "步骘",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕壹",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "周群",
+    "hometown": "巴西阆中",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘璋",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "周舒",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "周巨",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "吕虔",
+    "hometown": "任城国",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "王祥",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "程秉",
+    "hometown": "汝南南顿",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "郑玄",
+        "type": "师从",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "孙权",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张温",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹子京",
+    "hometown": "沛国谯县",
+    "clan": "谯郡曹氏",
+    "relations": []
+  },
+  {
+    "name": "董允",
+    "hometown": "南郡枝江",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "费祎",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘禅",
+        "type": "侍中",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "董和",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "黄皓",
+        "type": "压制对象",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "王基",
+    "hometown": "东莱曲城",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "王允",
+        "type": "族父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "举荐人",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "毌丘俭",
+        "type": "讨伐对象",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "诸葛诞",
+        "type": "讨伐对象",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "司马师",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马昭",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "曹植",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹冲",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "侄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "杨修",
+        "type": "挚友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "丁仪",
+        "type": "党羽",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹丕",
+        "type": "政治对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "吕布",
+    "hometown": "五原郡九原县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "丁原",
+        "type": "义父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "董卓",
+        "type": "义父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "王允",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "刘备",
+        "type": "反复无常的盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "袁术",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陈宫",
+        "type": "谋士",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张辽",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "曹玹",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "胡综",
+    "hometown": "汝南固始",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "心腹重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "徐详",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "是仪",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "王粲",
+    "hometown": "山阳高平",
+    "clan": "山阳王氏",
+    "relations": [
+      {
+        "to": "蔡邕",
+        "type": "忘年之交",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "属臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "文学挚友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹植",
+        "type": "文学挚友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘表",
+        "type": "属臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "王凯",
+        "type": "族兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹叡",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹丕",
+        "type": "父亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "甄氏",
+        "type": "母亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹芳",
+        "type": "养子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹真",
+        "type": "族叔",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹休",
+        "type": "族叔",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陈群",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "敌国丞相",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "杜袭",
+    "hometown": "颍川定陵",
+    "clan": "颍川杜氏",
+    "relations": [
+      {
+        "to": "荀彧",
+        "type": "被举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张既",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "夏侯尚",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "程普",
+    "hometown": "右北平土垠",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙策",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "周瑜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "黄盖",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "杜夔",
+    "hometown": "河南尹",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "雅乐郎",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "太乐令",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "柴玉",
+        "type": "乐律之争对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "刘巴",
+    "hometown": "零陵烝阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘璋",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张飞",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "陆绩",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡陆氏",
+    "relations": [
+      {
+        "to": "陆康",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "虞翻",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张昭",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "顾雍",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "和洽",
+    "hometown": "汝南西平",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "毛玠",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "崔琰",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "法正",
+    "hometown": "扶风郿县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "谋主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张松",
+        "type": "同谋",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "弃主",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "刘璋",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "司马朗",
+    "hometown": "河内温县",
+    "clan": "河内司马氏",
+    "relations": [
+      {
+        "to": "司马防",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马孚",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "董卓",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "王允",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "仓慈",
+    "hometown": "淮南郡",
+    "clan": "无",
+    "relations": []
+  },
+  {
+    "name": "步骘",
+    "hometown": "临淮淮阴",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "步练师",
+        "type": "族妹",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "步阐",
+        "type": "次子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "步协",
+        "type": "长子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛瑾",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕蒙",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "夏侯惇",
+    "hometown": "沛国谯县",
+    "clan": "谯郡夏侯氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "族弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯渊",
+        "type": "族弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯楙",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "从龙之臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "吕布",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "程昱",
+    "hometown": "东郡东阿",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "谋士",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "荀彧",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "郭嘉",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "程延",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "程晓",
+        "type": "孙",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹俨",
+    "hometown": "沛国谯县",
+    "clan": "谯郡曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "同母弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "姜维",
+    "hometown": "天水冀县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "弟子",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "费祎",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "邓艾",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "钟会",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘禅",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "马谡",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "赵俨",
+    "hometown": "颍川阳翟",
+    "clan": "颍川赵氏",
+    "relations": [
+      {
+        "to": "荀彧",
+        "type": "举荐人",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "李通",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张辽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "乐进",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "于禁",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "管辂",
+    "hometown": "平原郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘邠",
+        "type": "同乡好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "被其赏识",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "何晏",
+        "type": "为其占卜",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "邓飏",
+        "type": "为其占卜",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "王基",
+        "type": "被其称赞",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "毛玠",
+    "hometown": "陈留平丘",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "崔琰",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "徐奕",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "顾雍",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡顾氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "丞相",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "顾邵",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张昭",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "蔡邕",
+        "type": "师",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "辛毗",
+    "hometown": "颍川阳翟",
+    "clan": "颍川辛氏",
+    "relations": [
+      {
+        "to": "辛评",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "袁绍",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "张辽",
+    "hometown": "雁门马邑",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "吕布",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "关羽",
+        "type": "好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "乐进",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "李典",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙权",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "陆抗",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡陆氏",
+    "relations": [
+      {
+        "to": "陆逊",
+        "type": "父子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙皓",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "羊祜",
+        "type": "对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "步阐",
+        "type": "叛将",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "陆景",
+        "type": "父子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陆机",
+        "type": "父子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "徐邈",
+    "hometown": "燕国蓟县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "凉州刺史",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "尚书郎",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "司空",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "来敏",
+    "hometown": "义阳新野",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "来艳",
+        "type": "父亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘璋",
+        "type": "外戚",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘备",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孟光",
+        "type": "好友",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "王昶",
+    "hometown": "太原晋阳",
+    "clan": "太原王氏",
+    "relations": [
+      {
+        "to": "王泽",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "王沈",
+        "type": "从子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "王浑",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "魏明帝",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "毌丘俭",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛诞",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "士燮",
+    "hometown": "苍梧广信",
+    "clan": "苍梧士氏",
+    "relations": [
+      {
+        "to": "士壹",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "士徽",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "士匡",
+        "type": "从子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "士祗",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "士干",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "士颂",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "名义臣服",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘表",
+        "type": "名义臣服",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "费祎",
+    "hometown": "江夏鄳县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "丞相参军、司马",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "董允",
+        "type": "同僚、齐名",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "蒋琬",
+        "type": "同僚、继任者",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘禅",
+        "type": "尚书令、大将军",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "郭循",
+        "type": "刺杀者",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "梁习",
+    "hometown": "陈郡柘县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "王思",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "后主张皇后",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "张飞",
+        "type": "父女",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯氏",
+        "type": "母女",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "皇后",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "敬哀皇后",
+        "type": "姐妹",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "杜微",
+    "hometown": "梓潼涪县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "征辟为主簿",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "曾拒绝其征辟",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "吕凯",
+    "hometown": "永昌不韦",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "王伉",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "雍闿",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "步夫人",
+    "hometown": "临淮淮阴",
+    "clan": "临淮步氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "宠妃",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "步骘",
+        "type": "同族",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙登",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙和",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙霸",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "荀彧",
+    "hometown": "颍川颍阴",
+    "clan": "颍川荀氏",
+    "relations": [
+      {
+        "to": "荀绲",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "荀攸",
+        "type": "从子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "首席谋臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "郭嘉",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "钟繇",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "司马懿",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "陈群",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "吴范",
+    "hometown": "会稽上虞",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘惇",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "赵达",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "相殇王铄",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "同母兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "同母兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "同母兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹熊",
+        "type": "同母兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "张绣",
+    "hometown": "武威祖厉",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "张济",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "降将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "贾诩",
+        "type": "谋主",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹丕",
+        "type": "姻亲",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "全夫人",
+    "hometown": "吴郡钱唐",
+    "clan": "吴郡全氏",
+    "relations": [
+      {
+        "to": "全琮",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙亮",
+        "type": "夫",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "全尚",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "全纪",
+        "type": "从兄弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙峻",
+        "type": "姻亲",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "阎温",
+    "hometown": "天水西城",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "马超",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "张恭",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "韩遂",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "曹仁",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹纯",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "徐晃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "周瑜",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "关羽",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "先主穆皇后",
+    "hometown": "陈留郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "皇后",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "吴懿",
+        "type": "兄长",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "继母",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘瑁",
+        "type": "前夫",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "谯周",
+    "hometown": "巴西西充国",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "劝学从事",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘禅",
+        "type": "光禄大夫",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陈寿",
+        "type": "老师",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "秦宓",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "杜琼",
+        "type": "老师",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "麋竺",
+    "hometown": "东海朐县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "麋芳",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "麋夫人",
+        "type": "妹",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘备",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张飞",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "关羽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "管宁",
+    "hometown": "北海朱虚",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "华歆",
+        "type": "同窗好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "邴原",
+        "type": "同窗好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "公孙度",
+        "type": "避乱辽东时依附",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "征辟不就",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "征召不就",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "征召不就",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "曹峻",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "兄弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "兄弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彪",
+        "type": "兄弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹宇",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "叔父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹奂",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "徐宣",
+    "hometown": "广陵海西",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陈矫",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "桓范",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "臧霸",
+    "hometown": "泰山华县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "吕布",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "降将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙观",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吴敦",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "尹礼",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "严畯",
+    "hometown": "彭城",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛瑾",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "步骘",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "乐进",
+    "hometown": "阳平卫国",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "帐下吏",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张辽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "李典",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "于禁",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张郃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "徐晃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "张温",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡张氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "出使蜀汉，受命于孙权",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "出使蜀汉时与诸葛亮交好",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "秦宓",
+        "type": "与秦宓辩论，被其折服",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙亮",
+        "type": "孙亮时期被贬黜",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "郭淮",
+    "hometown": "太原阳曲",
+    "clan": "太原郭氏",
+    "relations": [
+      {
+        "to": "郭缊",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "郭配",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "主君",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "上司",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "姜维",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "曹子乘",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "董卓",
+    "hometown": "陇西临洮",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "吕布",
+        "type": "义子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "袁绍",
+        "type": "敌对诸侯",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "曹操",
+        "type": "敌对诸侯",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "何进",
+        "type": "征召入京",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "刘辩",
+        "type": "废立皇帝",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘协",
+        "type": "拥立皇帝",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "牛辅",
+        "type": "女婿",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹据",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彪",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹宇",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹林",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹衮",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "许慈",
+    "hometown": "南阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "胡潜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "许勋",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "诸葛亮",
+    "hometown": "琅邪阳都",
+    "clan": "琅邪诸葛氏",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘禅",
+        "type": "相父",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛瑾",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛均",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "黄月英",
+        "type": "妻",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "庞统",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "徐庶",
+        "type": "好友",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "朱夫人",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡朱氏",
+    "relations": [
+      {
+        "to": "孙皓",
+        "type": "皇后",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "朱据",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙休",
+        "type": "前夫",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张布",
+        "type": "被推荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "孙坚",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "长子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "次子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙静",
+        "type": "幼弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "吴夫人",
+        "type": "正妻",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "朱儁",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "袁术",
+        "type": "假节督豫州诸军事",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "董卓",
+        "type": "讨伐对象",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "刘表",
+        "type": "战场死敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "张昭",
+    "hometown": "彭城",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张纮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "周瑜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "顾雍",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "韦曜",
+    "hometown": "吴郡云阳",
+    "clan": "吴郡韦氏",
+    "relations": [
+      {
+        "to": "孙皓",
+        "type": "君主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "华核",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "薛莹",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "司马芝",
+    "hometown": "河内温县",
+    "clan": "河内司马氏",
+    "relations": [
+      {
+        "to": "司马朗",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "曹洪",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "族父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹休",
+        "type": "族子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹仁",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "董袭",
+    "hometown": "会稽余姚",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "凌统",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "黄祖",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "张裔",
+    "hometown": "蜀郡成都",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张飞",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "雍闿",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "曹髦",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹丕",
+        "type": "祖父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马昭",
+        "type": "权臣与君主",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "王沈",
+        "type": "近臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "王经",
+        "type": "忠臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "成济",
+        "type": "弑君者",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "卢毓",
+    "hometown": "涿郡涿县",
+    "clan": "范阳卢氏",
+    "relations": [
+      {
+        "to": "卢植",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "崔琰",
+        "type": "举荐人",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹爽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "张皇后",
+    "hometown": "涿郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "张飞",
+        "type": "父女",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "夫妻",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯氏",
+        "type": "母女",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "马良",
+    "hometown": "襄阳宜城",
+    "clan": "襄阳马氏",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "挚友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "马谡",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "关羽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "向朗",
+    "hometown": "襄阳宜城",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "向宠",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "向条",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘备",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "马谡",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "凌统",
+    "hometown": "吴郡余杭",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "凌操",
+        "type": "父亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "甘宁",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕蒙",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "周瑜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "徐盛",
+    "hometown": "琅邪莒县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "周瑜",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹休",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "廖化",
+    "hometown": "襄阳中卢",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "关羽",
+        "type": "主簿",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "姜维",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹熊",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "刘琰",
+    "hometown": "鲁国",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "宗室重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "魏延",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "胡氏",
+        "type": "妻",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "锺会",
+    "hometown": "颍川长社",
+    "clan": "颍川锺氏",
+    "relations": [
+      {
+        "to": "锺繇",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "锺毓",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马昭",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "邓艾",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "姜维",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "夏侯玄",
+        "type": "好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "王弼",
+        "type": "好友",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "刘禅",
+    "hometown": "涿郡涿县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "相父",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张飞",
+        "type": "岳父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "关羽",
+        "type": "叔父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘谌",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "姜维",
+        "type": "大将军",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "黄皓",
+        "type": "宠臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马昭",
+        "type": "灭国者",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "陆逊",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡陆氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆抗",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "吕蒙",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "战场死敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "诸葛瑾",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "步骘",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "顾雍",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "李譔",
+    "hometown": "梓潼涪县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "尹默",
+        "type": "师从",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "谯周",
+        "type": "同门",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "下属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘禅",
+        "type": "太子家令",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "袁绍",
+    "hometown": "汝南汝阳",
+    "clan": "汝南袁氏",
+    "relations": [
+      {
+        "to": "袁术",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "袁逢",
+        "type": "生父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "袁成",
+        "type": "嗣父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "盟友后为宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "何进",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "田丰",
+        "type": "谋士",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "审配",
+        "type": "谋士",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "袁谭",
+        "type": "长子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "孙亮",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙休",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙峻",
+        "type": "权臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙綝",
+        "type": "权臣",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "全公主",
+        "type": "姐",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "全琮",
+        "type": "岳父",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "诸葛诞",
+    "hometown": "琅邪阳都",
+    "clan": "琅邪诸葛氏",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "族弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛瑾",
+        "type": "族兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "族侄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "举荐人",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "司马昭",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "文钦",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "司马氏",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "韩暨",
+    "hometown": "南阳堵阳",
+    "clan": "南阳韩氏",
+    "relations": [
+      {
+        "to": "韩术",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "韩纯",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "属官",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "属官",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘表",
+        "type": "故吏",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "孙桓",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "关羽",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "刘繇",
+    "hometown": "东莱牟平",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘岱",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "笮融",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "许劭",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "太史慈",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "董昭",
+    "hometown": "济阴定陶",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "谋士",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "袁绍",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张杨",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹丕",
+        "type": "劝进大臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "董袭",
+        "type": "族亲",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "虞翻",
+    "hometown": "会稽余姚",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "功曹",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "骑都尉",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "虞汜",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "虞耸",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "虞昺",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孔融",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "曹铄",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹昂",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "刘璿",
+    "hometown": "涿郡涿县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘禅",
+        "type": "父子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "费祎",
+        "type": "辅政大臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "姜维",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "钟会",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "蒋琬",
+    "hometown": "零陵湘乡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘禅",
+        "type": "丞相",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "费祎",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "杨戏",
+        "type": "下属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "州书佐",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "孙峻",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "从祖父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "从伯父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙亮",
+        "type": "族兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "孙綝",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "全公主",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "蒋钦",
+    "hometown": "九江寿春",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "周泰",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陈武",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "王观",
+    "hometown": "东郡廪丘",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "丞相府属官",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "尚书郎",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "治书侍御史",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹芳",
+        "type": "少府、尚书",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "高柔",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "毌丘俭",
+    "hometown": "河东闻喜",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "毌丘甸",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "毌丘秀",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹芳",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "司马师",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "文钦",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛诞",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "庞德",
+    "hometown": "南安狟道",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "马腾",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "马超",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "降将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "关羽",
+        "type": "战场死敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "庞会",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "孙策",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "周瑜",
+        "type": "义兄弟",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "袁术",
+        "type": "故主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张昭",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "太史慈",
+        "type": "降将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "黄祖",
+        "type": "杀父仇人",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "许贡",
+        "type": "刺杀者",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "国渊",
+    "hometown": "乐安盖县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "管宁",
+        "type": "同窗",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "邴原",
+        "type": "同窗",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "属官",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "田畴",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙皓",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "祖父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙和",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙休",
+        "type": "叔父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陆抗",
+        "type": "镇军大将军",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张悌",
+        "type": "丞相",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马炎",
+        "type": "灭吴之主",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "岑昏",
+        "type": "宠臣",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "穆皇后",
+    "hometown": "陈留",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "皇后",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "吴懿",
+        "type": "兄长",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "继母",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘瑁",
+        "type": "前夫",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "张既",
+    "hometown": "冯翊高陵",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "征辟",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "张缉",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯渊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张郃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹丕",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "袁术",
+    "hometown": "汝南汝阳",
+    "clan": "汝南袁氏",
+    "relations": [
+      {
+        "to": "袁绍",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "袁逢",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙坚",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "吕布",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "袁谭",
+        "type": "从子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "徐奕",
+    "hometown": "东莞姑幕",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "毛玠",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "何夔",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "桓阶",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "陈武",
+    "hometown": "庐江松滋",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "主将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "主将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陈脩",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陈表",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "张杨",
+    "hometown": "云中",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "吕布",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "袁绍",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "董卓",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "丁原",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "鲁肃",
+    "hometown": "临淮东城",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "周瑜",
+        "type": "挚友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙权",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "关羽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕蒙",
+        "type": "继任者",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "高柔",
+    "hometown": "陈留圉县",
+    "clan": "陈留高氏",
+    "relations": [
+      {
+        "to": "高干",
+        "type": "从兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陈群",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "魏延",
+    "hometown": "义阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "杨仪",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "王平",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙礼",
+    "hometown": "涿郡容城",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "司空府属官",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "尚书郎",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹爽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹休",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "族子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "族兄弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "族叔",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张辽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹仁",
+        "type": "族兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陆逊",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "曹子上",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": []
+  },
+  {
+    "name": "邢颙",
+    "hometown": "河间鄚县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "臣属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "田畴",
+        "type": "同乡好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹植",
+        "type": "家丞",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘桢",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "刘璋",
+    "hometown": "江夏竟陵",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘焉",
+        "type": "父子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘备",
+        "type": "同宗，后为敌对",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "张鲁",
+        "type": "部将，后叛变",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "赵韪",
+        "type": "部将，后叛变",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "庞羲",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张松",
+        "type": "部下，后叛变引刘备入蜀",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "法正",
+        "type": "部下，后叛变投刘备",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "曹子勤",
+    "hometown": "未知",
+    "clan": "无",
+    "relations": []
+  },
+  {
+    "name": "先主甘皇后",
+    "hometown": "沛国",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "妾室",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "生母",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "糜夫人",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹徽",
+    "hometown": "沛国谯县",
+    "clan": "谯郡曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "侄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "关羽",
+    "hometown": "河东解县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "结拜兄弟",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张飞",
+        "type": "结拜兄弟",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "关平",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "关兴",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "周瑜",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕蒙",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "楼玄",
+    "hometown": "沛郡蕲县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙皓",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "贺邵",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "华覈",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "牵招",
+    "hometown": "安平观津",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "刎颈之交",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "乐进",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张辽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹衮",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彪",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹宇",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹彪",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹宇",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹林",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹衮",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹峻",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹宇",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹奂",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "侄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹芳",
+        "type": "侄孙",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "夏侯渊",
+    "hometown": "沛国谯县",
+    "clan": "沛国夏侯氏",
+    "relations": [
+      {
+        "to": "夏侯惇",
+        "type": "族兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "从妹夫",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "夏侯霸",
+        "type": "次子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯惠",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯和",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯称",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯荣",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "潘夫人",
+    "hometown": "会稽句章",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "夫人",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙亮",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹鉴",
+    "hometown": "沛国谯县",
+    "clan": "谯郡曹氏",
+    "relations": []
+  },
+  {
+    "name": "田畴",
+    "hometown": "右北平无终",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘虞",
+        "type": "故主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "从征",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "徐无山中百姓",
+        "type": "率众归附",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "王脩",
+    "hometown": "北海营陵",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孔融",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "袁谭",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "王仪",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "周瑜",
+    "hometown": "庐江舒县",
+    "clan": "庐江周氏",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "义兄弟",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙权",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "鲁肃",
+        "type": "挚友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "程普",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "曹操",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "周尚",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "卫臻",
+    "hometown": "陈留襄邑",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "卫兹",
+        "type": "父亲",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "廖立",
+    "hometown": "武陵临沅",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘禅",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "庞统",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "马忠",
+    "hometown": "巴西阆中",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张嶷",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "黄权",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "徐晃",
+    "hometown": "河东杨县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "关羽",
+        "type": "同乡兼对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "杨奉",
+        "type": "旧主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "满宠",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张辽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹仁",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "秦宓",
+    "hometown": "广汉绵竹",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "益州别驾",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张温",
+        "type": "辩难对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "刘璋",
+        "type": "益州牧",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "刘备",
+        "type": "益州牧",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "甘皇后",
+    "hometown": "沛国",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "妻子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "母亲",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "朱桓",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡朱氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "主将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "朱据",
+        "type": "从弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "朱异",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "周鲂",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹仁",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "吾粲",
+    "hometown": "吴郡乌程",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙策",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕范",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "张燕",
+    "hometown": "常山真定",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "吕布",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "降将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "袁绍",
+        "type": "敌对",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "孙皓滕夫人",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡滕氏",
+    "relations": [
+      {
+        "to": "孙皓",
+        "type": "皇后",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "滕胤",
+        "type": "祖父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙和",
+        "type": "公公",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "何姬",
+        "type": "婆婆",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹冲",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "周不疑",
+        "type": "挚友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "华佗",
+        "type": "医治者",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "敬哀皇后",
+    "hometown": "琅邪阳都",
+    "clan": "琅邪诸葛氏",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "父女",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "夫妻",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张飞",
+        "type": "岳母",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "王夫人（南阳）",
+    "hometown": "南阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙和",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "妃嫔",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙霸",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "全公主",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "蒋济",
+    "hometown": "楚国平阿",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹叡",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹爽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "夏侯玄",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "刘劭",
+    "hometown": "广平邯郸",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘放",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "夏侯惠",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陈群",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹叡",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "荀彧",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      }
+    ]
+  },
+  {
+    "name": "陈矫",
+    "hometown": "广陵东阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "陈登",
+        "type": "从子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹操",
+        "type": "功曹",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "尚书令",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "徐宣",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘晔",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "朱据",
+    "hometown": "吴郡吴县",
+    "clan": "吴郡朱氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙鲁育",
+        "type": "尚公主",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "朱桓",
+        "type": "族兄弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "朱异",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "吕蒙",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陆逊",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙静",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "同母弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "叔父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "叔父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙暠",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙瑜",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹丕",
+    "hometown": "沛国谯县",
+    "clan": "沛国曹氏",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "弟弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "弟弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "儿子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "司马懿",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "夏侯惇",
+        "type": "族叔",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "吴质",
+        "type": "文学挚友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "汉献帝",
+        "type": "篡位对象",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "王夫人（琅邪）",
+    "hometown": "琅邪",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙和",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "妃嫔",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙霸",
+        "type": "政敌之子",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "全公主",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "孙休",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙亮",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙和",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙皓",
+        "type": "侄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "濮阳兴",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张布",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "丁奉",
+        "type": "大将",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "吕乂",
+    "hometown": "南阳郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕常",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "吕辰",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "吕雅",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "贺邵",
+    "hometown": "会稽山阴",
+    "clan": "会稽贺氏",
+    "relations": [
+      {
+        "to": "贺齐",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙皓",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "韦昭",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "华核",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "郭嘉",
+    "hometown": "颍川阳翟",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "谋主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "荀彧",
+        "type": "举荐人",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "戏志才",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "陈群",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "贾诩",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "曹礼",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹冲",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "黄忠",
+    "hometown": "南阳郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "刘备",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "关羽",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "张飞",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "赵云",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "马超",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "魏延",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "法正",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "夏侯渊",
+        "type": "战场对手",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "曹茂",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彪",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "庞统",
+    "hometown": "襄阳",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "齐名好友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "军师中郎将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马徽",
+        "type": "被赏识者",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "庞德公",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "周瑜",
+        "type": "功曹",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张飞",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "彭羕",
+    "hometown": "广汉",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "庞统",
+        "type": "举荐",
+        "relation_type": "RECOMMENDED"
+      },
+      {
+        "to": "法正",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "马超",
+        "type": "密友",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "刘晔",
+    "hometown": "淮南成德",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "谋主",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹睿",
+        "type": "重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "鲁肃",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "蒋济",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "诸葛恪",
+    "hometown": "琅邪阳都",
+    "clan": "琅邪诸葛氏",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "从父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛瑾",
+        "type": "父亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙亮",
+        "type": "辅政大臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张悌",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "滕胤",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙峻",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "韩当",
+    "hometown": "辽西令支",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙策",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "部将",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "程普",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "黄盖",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "孙匡",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙策",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙翊",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙朗",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹仁",
+        "type": "岳父",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "宗预",
+    "hometown": "南阳安众",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "张飞",
+        "type": "主簿",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "诸葛亮",
+        "type": "主簿",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "邓芝",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "费祎",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙权",
+        "type": "出使对象",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "文昭甄皇后",
+    "hometown": "中山无极",
+    "clan": "中山甄氏",
+    "relations": [
+      {
+        "to": "曹丕",
+        "type": "妻",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹叡",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "甄俨",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "郭女王",
+        "type": "情敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "朱治",
+    "hometown": "丹杨故鄣",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙坚",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙策",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙权",
+        "type": "旧部",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "朱然",
+        "type": "养子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "朱才",
+        "type": "亲子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "曹彰",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹昂",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹冲",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彪",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹宇",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "陶谦",
+    "hometown": "丹杨郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "宿敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "刘备",
+        "type": "盟友",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "笮融",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "赵昱",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张闿",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "王夫人",
+    "hometown": "琅邪临沂",
+    "clan": "琅邪王氏",
+    "relations": [
+      {
+        "to": "孙和",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "妃嫔",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "孙霸",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "全公主",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "陈震",
+    "hometown": "南阳郡",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "诸葛亮",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "李严",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙权",
+        "type": "出使对象",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "部下",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  },
+  {
+    "name": "曹昂",
+    "hometown": "沛国谯县",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "曹操",
+        "type": "长子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹丕",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹彰",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "曹植",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "丁夫人",
+        "type": "养母",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "典韦",
+        "type": "同战宛城",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "陈群",
+    "hometown": "颍川许县",
+    "clan": "颍川陈氏",
+    "relations": [
+      {
+        "to": "陈寔",
+        "type": "祖父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "陈纪",
+        "type": "父亲",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "荀彧",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孔融",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "刘备",
+        "type": "曾为下属",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹操",
+        "type": "主公",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "托孤重臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "司马懿",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "薛综",
+    "hometown": "沛郡竹邑",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "薛莹",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙权",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "张温",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      }
+    ]
+  },
+  {
+    "name": "后主敬哀皇后",
+    "hometown": "南阳新野",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "张飞",
+        "type": "长女",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "刘禅",
+        "type": "皇后",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "夏侯渊",
+        "type": "从妹",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "锺繇",
+    "hometown": "颍川长社",
+    "clan": "颍川锺氏",
+    "relations": [
+      {
+        "to": "锺毓",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "锺会",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "荀彧",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "曹丕",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "郭援",
+        "type": "战场死敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "孙和",
+    "hometown": "吴郡富春",
+    "clan": "吴郡孙氏",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙霸",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙皓",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张承",
+        "type": "岳父",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙登",
+        "type": "兄",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "孙亮",
+        "type": "弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "诸葛恪",
+        "type": "太子党核心",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "孙峻",
+        "type": "政敌",
+        "relation_type": "ENEMY"
+      }
+    ]
+  },
+  {
+    "name": "甘宁",
+    "hometown": "巴郡临江",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "孙权",
+        "type": "主臣",
+        "relation_type": "RULER_SUBJECT"
+      },
+      {
+        "to": "周瑜",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "吕蒙",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "凌统",
+        "type": "仇敌",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "关羽",
+        "type": "对手",
+        "relation_type": "ENEMY"
+      },
+      {
+        "to": "甘瑰",
+        "type": "子",
+        "relation_type": "KINSHIP"
+      }
+    ]
+  },
+  {
+    "name": "张范",
+    "hometown": "河内修武",
+    "clan": "无",
+    "relations": [
+      {
+        "to": "张承",
+        "type": "兄弟",
+        "relation_type": "KINSHIP"
+      },
+      {
+        "to": "张昭",
+        "type": "同僚",
+        "relation_type": "ALLY"
+      },
+      {
+        "to": "曹操",
+        "type": "君臣",
+        "relation_type": "RULER_SUBJECT"
+      }
+    ]
+  }
+]

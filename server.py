@@ -424,8 +424,31 @@ async def api_person_timeline(name: str):
 
 @app.get("/api/person-relations/{name}")
 async def api_person_relations(name: str, limit: int = 80):
-    """返回与指定人物共同参与过事件的人物关系列表。"""
-    cypher = """
+    """返回与指定人物共同参与过事件的人物关系列表，以及静态地缘、世族、世系图谱数据。"""
+    # 1. 查找静态籍贯与世族
+    profile_cypher = """
+    MATCH (center:Person {name: $name})
+    OPTIONAL MATCH (center)-[:HOMETOWN]->(h:Location)
+    OPTIONAL MATCH (center)-[:MEMBER_OF]->(c:Clan)
+    RETURN h.name AS hometown, c.name AS clan
+    LIMIT 1
+    """
+    
+    # 2. 查找静态社交圈关系
+    static_relations_cypher = """
+    MATCH (center:Person {name: $name})
+    MATCH (center)-[r:KINSHIP|ALLY|ENEMY|RULER_SUBJECT|RECOMMENDED]->(other:Person)
+    RETURN other.name AS person, type(r) AS rel_type, r.desc AS desc, 'outgoing' AS dir
+    
+    UNION
+    
+    MATCH (center:Person {name: $name})
+    MATCH (center)<-[r:KINSHIP|ALLY|ENEMY|RULER_SUBJECT|RECOMMENDED]-(other:Person)
+    RETURN other.name AS person, type(r) AS rel_type, r.desc AS desc, 'incoming' AS dir
+    """
+    
+    # 3. 查找事件交集 (经典 co-events)
+    co_events_cypher = """
     MATCH (center:Person {name: $name})-[:PARTICIPATED_IN]->(e:Event)<-[:PARTICIPATED_IN]-(other:Person)
     WHERE other.name <> center.name
     WITH other, e
@@ -442,19 +465,80 @@ async def api_person_relations(name: str, limit: int = 80):
     LIMIT $limit
     """
     try:
-        results = run_query(cypher, {"name": name, "limit": max(1, min(limit, 200))})
+        # 执行查询
+        profile_res = run_query(profile_cypher, {"name": name})
+        hometown = profile_res[0]["hometown"] if profile_res and profile_res[0]["hometown"] else None
+        clan = profile_res[0]["clan"] if profile_res and profile_res[0]["clan"] else None
+        
+        static_res = run_query(static_relations_cypher, {"name": name})
+        co_events_res = run_query(co_events_cypher, {"name": name, "limit": max(1, min(limit, 200))})
+        
+        # 兼容旧列表
         relations = [
             {
                 "person": r["person"],
                 "count": r["count"],
                 "events": [event for event in r["events"] if event.get("title")],
             }
-            for r in results
+            for r in co_events_res
         ]
-        return {"name": name, "relations": relations}
+        
+        # 构建图谱节点与连边 (脑图数据)
+        nodes = [{"id": name, "label": name, "type": "center"}]
+        links = []
+        added_nodes = {name}
+        
+        if hometown:
+            nodes.append({"id": hometown, "label": hometown, "type": "hometown"})
+            links.append({"source": name, "target": hometown, "type": "HOMETOWN", "desc": "籍贯"})
+            added_nodes.add(hometown)
+            
+        if clan:
+            nodes.append({"id": clan, "label": clan, "type": "clan"})
+            links.append({"source": name, "target": clan, "type": "MEMBER_OF", "desc": "世族"})
+            added_nodes.add(clan)
+            
+        # 添加静态网络
+        for row in static_res:
+            p_name = row["person"]
+            rel_type = row["rel_type"]
+            desc = row["desc"]
+            
+            if p_name not in added_nodes:
+                nodes.append({"id": p_name, "label": p_name, "type": "person"})
+                added_nodes.add(p_name)
+                
+            if row["dir"] == "outgoing":
+                links.append({"source": name, "target": p_name, "type": rel_type, "desc": desc})
+            else:
+                links.append({"source": p_name, "target": name, "type": rel_type, "desc": desc})
+                
+        # 挑选事件交集前 12 名融合进图谱连边，作为动态关联的展现
+        for r in relations[:12]:
+            p_name = r["person"]
+            if p_name not in added_nodes:
+                nodes.append({"id": p_name, "label": p_name, "type": "person"})
+                added_nodes.add(p_name)
+                links.append({"source": name, "target": p_name, "type": "CO_EVENT", "desc": f"共事{r['count']}次"})
+                
+        return {
+            "name": name,
+            "hometown": hometown,
+            "clan": clan,
+            "nodes": nodes,
+            "links": links,
+            "relations": relations
+        }
     except Exception as err:
         print(f"Person relations query error: {err}")
-        return {"name": name, "relations": []}
+        return {
+            "name": name,
+            "hometown": None,
+            "clan": None,
+            "nodes": [{"id": name, "label": name, "type": "center"}],
+            "links": [],
+            "relations": []
+        }
 
 
 
