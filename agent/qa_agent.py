@@ -11,7 +11,27 @@ from dotenv import load_dotenv
 from agent.schema import GRAPH_SCHEMA
 from agent.graph_client import run_query
 
+# === ChromaDB 向量数据库初始化 ===
+import chromadb
+from scripts.build_vector_db import LocalBgem3EmbeddingFunction
+
 load_dotenv()
+
+_chroma_client = None
+_chroma_collection = None
+
+def get_chroma_collection():
+    global _chroma_client, _chroma_collection
+    if _chroma_collection is None:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        chroma_db_dir = os.path.join(base_dir, "data", "chroma_db")
+        _chroma_client = chromadb.PersistentClient(path=chroma_db_dir)
+        bgem3_ef = LocalBgem3EmbeddingFunction()
+        _chroma_collection = _chroma_client.get_collection(
+            name="sanguozhi_events_bgem3",
+            embedding_function=bgem3_ef
+        )
+    return _chroma_collection
 
 def get_llm():
     return ChatOpenAI(
@@ -25,7 +45,7 @@ def get_llm():
 def ask_question(question: str) -> str:
     llm = get_llm()
     
-    # 1. Text to Cypher
+    # 1. Text to Cypher (从 Neo4j 召回结构化关系)
     cypher_prompt = f"""
 用户问题: {question}
 请直接输出 Cypher 查询语句，不要有任何其他解释，不要用 markdown code block 包裹，直接输出纯文本。
@@ -48,26 +68,54 @@ def ask_question(question: str) -> str:
     
     print(f"🔍 执行 Cypher: \n{cypher}\n")
     
-    # 2. 执行查询
+    # 2. 执行 Neo4j 图库查询
+    graph_results = []
     try:
-        results = run_query(cypher)
+        graph_results = run_query(cypher)
+        print(f"📊 图数据库查到 {len(graph_results)} 条关系记录...")
     except Exception as e:
-        return f"查询数据库时出错: {e}\n生成的 Cypher 为: {cypher}"
+        print(f"⚠️ 图数据库查询失败 ({str(e)})，将仅依赖向量库...")
         
-    print(f"📊 查到 {len(results)} 条结果，正在总结回答...")
-    
-    # 3. 结果转自然语言
+    # 3. 执行 Chroma 向量库查询 (从向量库召回详细事件文献)
+    print("🔍 正在并行进行 Chroma 语义检索...")
+    vector_context = ""
+    try:
+        collection = get_chroma_collection()
+        vector_res = collection.query(
+            query_texts=[question],
+            n_results=3
+        )
+        if vector_res and vector_res.get('documents') and len(vector_res['documents']) > 0:
+            docs = vector_res['documents'][0]
+            metas = vector_res['metadatas'][0]
+            vector_docs = []
+            for idx, (doc, meta) in enumerate(zip(docs, metas)):
+                person = meta.get("person_name", "未知")
+                title = meta.get("title", "无标题")
+                vector_docs.append(f"【文献史料 {idx+1}】(人物: {person}, 标题: {title})\n{doc}")
+            vector_context = "\n\n".join(vector_docs)
+            print(f"📄 向量库成功召回 {len(docs)} 条详细文献史料...")
+    except Exception as ve:
+        print(f"⚠️ Chroma 检索失败: {ve}")
+        
+    # 4. 融合两种数据源并用 DeepSeek 生成大白话回答 (Graph + Vector RAG)
+    print("✍️ 正在融合多源数据并总结回答...")
     answer_prompt = f"""
-请根据以下 Neo4j 图数据库的查询结果，回答用户的问题。
+请根据以下从 **Neo4j 图数据库（结构化关系数据）** 和 **Chroma 向量数据库（非结构化正史事件文献）** 中检索到的历史信息，融会贯通，回答用户的问题。
+
 要求：
-1. 用中文，自然流畅，像历史专家一样回答。
-2. 不要提及"根据查询结果"或"图数据库"等底层技术词汇。
-3. 如果结果为空（[]），请委婉说明在当前史料图谱中没有找到直接相关的记录，并基于你的历史知识简单补充。
+1. 用中文回答，语气自然流畅，符合历史学家的口吻。
+2. 将这两种数据源检索出的信息完美融合，互相补充细节。例如，利用图谱的强人物关系去理解事件网络，同时用向量库的详细原文故事丰富内容。
+3. 绝对不要在回答中提及"图数据库"、"向量数据库"、"Neo4j"、"Chroma"、"查询结果"等底层技术词汇。直接以历史叙叙的口吻叙述。
+4. 如果检索结果均为空，请委婉说明在当前史料图谱和文献中没有找到直接相关的记录，并基于你的历史知识简单补充。
 
 用户问题: {question}
 
-查询结果 (JSON):
-{json.dumps(results, ensure_ascii=False)}
+=== 数据源 A：图关系数据 (JSON) ===
+{json.dumps(graph_results, ensure_ascii=False)}
+
+=== 数据源 B：语义事件文献 (Text) ===
+{vector_context if vector_context else "（无相关文献）"}
 """
     answer = llm.invoke([
         SystemMessage(content="你是精通《三国志》的历史专家。"),

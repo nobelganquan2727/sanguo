@@ -9,6 +9,26 @@ from pydantic import BaseModel
 from agent.qa_agent import ask_question
 from agent.graph_client import run_query
 
+# === 本地向量数据库 (ChromaDB) 与 BGE-M3 模型初始化 ===
+import chromadb
+from scripts.build_vector_db import LocalBgem3EmbeddingFunction
+
+print("🚀 正在加载本地向量数据库与预热 BGE-M3 模型...")
+chroma_client = chromadb.PersistentClient(path="data/chroma_db")
+bgem3_ef = LocalBgem3EmbeddingFunction()
+
+# 预热模型：触发延迟加载，使 2.27 GB 权重一次性载入并常驻内存
+try:
+    bgem3_ef(["预热"])
+    print("✅ BGE-M3 向量模型已成功常驻内存，检索服务就绪！")
+except Exception as e:
+    print(f"⚠️ 模型预热失败 ({str(e)})，可能由于尚未下载模型权重或设备配置问题。")
+
+chroma_collection = chroma_client.get_collection(
+    name="sanguozhi_events_bgem3",
+    embedding_function=bgem3_ef
+)
+
 app = FastAPI(title="Sanguozhi Map API")
 
 # Add CORS for Next.js frontend
@@ -19,6 +39,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class SearchRequest(BaseModel):
+    query: str
+    n_results: int = 3
 
 class AskRequest(BaseModel):
     question: str
@@ -248,6 +272,35 @@ async def api_ask(req: AskRequest):
     # 调用大模型与图数据库交互
     answer = ask_question(req.question)
     return {"answer": answer}
+
+@app.post("/api/semantic-search")
+async def api_semantic_search(req: SearchRequest):
+    """
+    语义检索接口：使用常驻内存的 BGE-M3 模型，在毫秒级内完成语义搜索与召回
+    """
+    try:
+        print(f"\n[Semantic Search] 正在检索: '{req.query}' (N={req.n_results})")
+        results = chroma_collection.query(
+            query_texts=[req.query],
+            n_results=req.n_results
+        )
+        
+        # 格式化组装结果返回给前端
+        formatted_results = []
+        if results and results.get('documents') and len(results['documents']) > 0:
+            for doc, meta in zip(results['documents'][0], results['metadatas'][0]):
+                formatted_results.append({
+                    "person_name": meta.get("person_name", "未知"),
+                    "title": meta.get("title", "无标题"),
+                    "document": doc,
+                    "metadata": meta
+                })
+        
+        print(f"[Semantic Search] 检索完成，成功召回 {len(formatted_results)} 条记录")
+        return {"success": True, "results": formatted_results}
+    except Exception as e:
+        print(f"[Semantic Search Error] {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/events")
 async def api_events(
