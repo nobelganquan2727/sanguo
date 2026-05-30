@@ -1,7 +1,10 @@
 import os
 # 解决国内服务器加载 Hugging Face 模型报错：在任何第三方库载入前，自动读取并加载 .env 文件中的镜像配置 (如 HF_ENDPOINT)
-if os.path.exists(".env"):
-    with open(".env", "r", encoding="utf-8") as f:
+# 使用 __file__ 的绝对路径定位，确保无论在哪个目录下运行 python3 server.py，都能精准读取到根目录下的 .env 文件
+_base_dir = os.path.dirname(os.path.abspath(__file__))
+_env_path = os.path.join(_base_dir, ".env")
+if os.path.exists(_env_path):
+    with open(_env_path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:

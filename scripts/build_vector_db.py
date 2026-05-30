@@ -9,8 +9,11 @@ from tqdm import tqdm
 import chromadb
 
 # 自动从 .env 加载环境变量（如果还有其他非 embedding 相关的环境变量需要的话）
-if os.path.exists(".env"):
-    with open(".env", "r", encoding="utf-8") as f:
+# 使用 __file__ 定位父目录下的 .env，确保无论在哪个路径运行脚本都能正确读取配置
+_base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_env_path = os.path.join(_base_dir, ".env")
+if os.path.exists(_env_path):
+    with open(_env_path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
