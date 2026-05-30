@@ -1,4 +1,13 @@
 import os
+# 解决国内服务器加载 Hugging Face 模型报错：在任何第三方库载入前，自动读取并加载 .env 文件中的镜像配置 (如 HF_ENDPOINT)
+if os.path.exists(".env"):
+    with open(".env", "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, val = line.split("=", 1)
+                os.environ[key.strip()] = val.strip().strip('"').strip("'")
+
 import json
 import uvicorn
 from functools import lru_cache
