@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 
 interface AgentPanelProps {
@@ -20,6 +20,25 @@ export default function AgentPanel({
   chatInput, setChatInput, onSend,
   renderMessage,
 }: AgentPanelProps) {
+  const [isConnected, setIsConnected] = useState<boolean>(true);
+
+  useEffect(() => {
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000';
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/status`);
+        const data = await res.json();
+        setIsConnected(data.status === 'connected');
+      } catch (err) {
+        setIsConnected(false);
+      }
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (!show) {
     return (
       <button
@@ -39,8 +58,14 @@ export default function AgentPanel({
       <div className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-2 border-b border-[#a4424b] px-4 flex justify-between items-center">
         <h2 className="text-sm font-bold text-white tracking-widest">幕僚</h2>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-green-400 font-mono">Neo4j</span>
-          <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
+          <div
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              isConnected
+                ? 'bg-green-500 shadow-[0_0_8px_#22c55e]'
+                : 'bg-red-500 shadow-[0_0_8px_#ef4444]'
+            }`}
+            title={isConnected ? '史料卷宗库已就绪' : '史料卷宗库连接断开'}
+          />
           <button
             onClick={() => onToggle(false)}
             title="隐藏幕僚"

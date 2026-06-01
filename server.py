@@ -265,6 +265,14 @@ async def api_ask(req: AskRequest):
     answer = ask_question(req.question)
     return {"answer": answer}
 
+@app.get("/api/status")
+async def api_status():
+    try:
+        run_query("RETURN 1 AS val")
+        return {"status": "connected"}
+    except Exception as e:
+        return {"status": "disconnected", "error": str(e)}
+
 @app.get("/api/events")
 async def api_events(
     start: int, end: int,
