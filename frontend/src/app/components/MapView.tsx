@@ -144,7 +144,7 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       if (evt.year == null) continue;
 
       const prio = getPriority(evt.type);
-      if (prio === 0) continue;
+      // if (prio === 0) continue;
 
       const firstLoc = evt.locations.find((l: string) => l);
       if (!firstLoc) continue;
@@ -224,7 +224,7 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       id: 'cities-layer',
       data: visibleData,
       getPosition: (d: any) => [d.lng, d.lat],
-      getFillColor: (d: any) => isHL(d.std_name) ? [252, 211, 77, 255] : [185, 28, 28, 200],
+      getFillColor: (d: any) => isHL(d.std_name) ? [34, 197, 94, 255] : [185, 28, 28, 200],
       getRadius: (d: any) => isHL(d.std_name) ? 18000 : 8000,
       radiusMinPixels: 3,
       radiusMaxPixels: 10,
