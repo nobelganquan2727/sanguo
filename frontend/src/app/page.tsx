@@ -342,10 +342,10 @@ export default function Home() {
           setTooltipMode={setTooltipMode}
           onMouseEnter={() => { if (hideTimer.current) clearTimeout(hideTimer.current); }}
           onMouseLeave={() => { hideTimer.current = setTimeout(() => setHoveredEvent(null), 100); }}
-          onEdit={() => {
-            setEditTarget(hoveredEvent);
+          onEdit={(evt) => {
+            setEditTarget(evt);
             setEditField('locations');
-            setEditValue(hoveredEvent.locations?.join(',') || '');
+            setEditValue(evt.locations?.join(',') || '');
             setEditModalOpen(true);
             setHoveredEvent(null);
           }}

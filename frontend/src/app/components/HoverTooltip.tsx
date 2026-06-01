@@ -10,7 +10,7 @@ interface HoverTooltipProps {
   setTooltipMode: (m: 'classical' | 'modern') => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
-  onEdit: () => void;
+  onEdit: (evt: any) => void;
   renderDesc: (text: string) => ReactNode;
 }
 
@@ -82,7 +82,7 @@ export default function HoverTooltip({
                   {/* Actions */}
                   <div className="mt-3 pt-2 border-t border-[#4a5f78]/60 flex justify-end">
                     <button
-                      onClick={onEdit}
+                      onClick={() => onEdit(evt)}
                       className="text-xs text-amber-500 hover:text-amber-300 border border-amber-500/40 hover:border-amber-400 px-2 py-1 rounded transition-colors flex items-center gap-1"
                     >
                       ✏️ 修正
