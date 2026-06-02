@@ -1321,6 +1321,19 @@
               ],
               "region": "冀州-河间国",
               "confidence": 0.6
+            },
+            {
+              "id": "冀州:河间国:乐城县",
+              "name": "蠡城县",
+              "level": "county",
+              "modern": null,
+              "lat": 38.1,
+              "lng": 116.2,
+              "aliases": [
+                "乐城"
+              ],
+              "region": "冀州-河间国",
+              "confidence": 0.6
             }
           ]
         },
@@ -7630,14 +7643,14 @@
           },
           "counties": [
             {
-              "id": "扬州:建安郡:乐城县",
-              "name": "乐城县",
+              "id": "扬州:建安郡:建安县",
+              "name": "建安县",
               "level": "county",
               "modern": null,
               "lat": 27.1,
               "lng": 119.9,
               "aliases": [
-                "乐城县"
+                "建安县"
               ],
               "region": "扬州-建安郡",
               "confidence": 0.6

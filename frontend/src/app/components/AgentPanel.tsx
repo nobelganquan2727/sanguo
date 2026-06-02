@@ -35,8 +35,6 @@ export default function AgentPanel({
     };
 
     checkStatus();
-    const interval = setInterval(checkStatus, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   if (!show) {
