@@ -257,66 +257,81 @@ export default function EventPanel({
       )}
 
       {/* Events list */}
-      <div
-        ref={listRef}
-        onScroll={(e) => {
-          const el = e.currentTarget;
-          const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-          if (nearBottom && hasMore && !isLoadingMore) onLoadMore();
-        }}
-        className="overflow-y-auto flex-1 p-3 flex flex-col gap-2 pointer-events-auto"
-      >
-        {eventsList.length === 0 ? (
-          <div className="text-sm text-slate-500 text-center py-10">点击右上角「过滤」设置条件后查询事件</div>
-        ) : (
-          <>
-            {eventsList.map((evt, idx) => {
-              const selected = selectedEventIds.has(evt.id);
-              return (
-                <div
-                  key={idx}
-                  ref={(node) => { eventRefs.current[evt.id] = node; }}
-                  onClick={() => onToggleEvent(evt)}
-                  onMouseEnter={(e) => {
-                    const wrapperRect = wrapperRef.current?.getBoundingClientRect();
-                    if (wrapperRect) {
-                      const itemRect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-                      const rawTop = itemRect.top - wrapperRect.top;
-                      onHoverEvent(evt, Math.max(0, Math.min(rawTop, 360)), wrapperRect.width);
-                    }
-                  }}
-                  onMouseLeave={onLeaveEvent}
-                  className={`text-sm flex flex-col gap-1.5 p-2 rounded cursor-pointer transition-all border ${selected
-                    ? 'bg-[#1a2f4c] border-amber-500/70 shadow-[0_0_8px_rgba(245,158,11,0.25)]'
-                    : 'border-transparent hover:bg-[#1a2f4c] hover:border-[#4a5f78]'
-                  }`}
-                >
-                  <div className="flex items-start gap-2">
-                    <div className={`mt-0.5 w-3.5 h-3.5 rounded shrink-0 border transition-colors ${selected ? 'bg-amber-500 border-amber-400' : 'bg-transparent border-slate-600'}`} />
-                    <span className="font-bold text-amber-500 min-w-[42px] shrink-0">{evt.year != null ? `${evt.year}年` : '不详'}</span>
-                    <span className={`font-semibold leading-tight ${selected ? 'text-amber-200' : 'text-white'}`}>
-                      {biographyOnly ? `${idx + 1}. ` : ''}{evt.title}
-                    </span>
-                  </div>
-                  {evt.type && <span className="ml-[68px] text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded self-start">{evt.type}</span>}
-                  {evt.locations?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 ml-[68px]">
-                      {evt.locations.map((l: string, i: number) => (
-                        <span key={i} className="text-xs text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded">📍 {l}</span>
-                      ))}
+      {(() => {
+        const protagonistCounts: Record<string, number> = {};
+        const localIndices = eventsList.map(evt => {
+          const p = evt.protagonist || '';
+          protagonistCounts[p] = (protagonistCounts[p] || 0) + 1;
+          return protagonistCounts[p];
+        });
+        const uniqueProtagonists = new Set(eventsList.map(e => e.protagonist).filter(Boolean));
+        const showNamePrefix = uniqueProtagonists.size > 1;
+
+        return (
+          <div
+            ref={listRef}
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+              if (nearBottom && hasMore && !isLoadingMore) onLoadMore();
+            }}
+            className="overflow-y-auto flex-1 p-3 flex flex-col gap-2 pointer-events-auto"
+          >
+            {eventsList.length === 0 ? (
+              <div className="text-sm text-slate-500 text-center py-10">点击右上角「过滤」设置条件后查询事件</div>
+            ) : (
+              <>
+                {eventsList.map((evt, idx) => {
+                  const selected = selectedEventIds.has(evt.id);
+                  const namePrefix = showNamePrefix && evt.protagonist ? `[${evt.protagonist}] ` : '';
+                  const seqText = biographyOnly ? `${namePrefix}${localIndices[idx]}. ` : '';
+                  return (
+                    <div
+                      key={idx}
+                      ref={(node) => { eventRefs.current[evt.id] = node; }}
+                      onClick={() => onToggleEvent(evt)}
+                      onMouseEnter={(e) => {
+                        const wrapperRect = wrapperRef.current?.getBoundingClientRect();
+                        if (wrapperRect) {
+                          const itemRect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                          const rawTop = itemRect.top - wrapperRect.top;
+                          onHoverEvent({ ...evt, seqNum: localIndices[idx] }, Math.max(0, Math.min(rawTop, 360)), wrapperRect.width);
+                        }
+                      }}
+                      onMouseLeave={onLeaveEvent}
+                      className={`text-sm flex flex-col gap-1.5 p-2 rounded cursor-pointer transition-all border ${selected
+                        ? 'bg-[#1a2f4c] border-amber-500/70 shadow-[0_0_8px_rgba(245,158,11,0.25)]'
+                        : 'border-transparent hover:bg-[#1a2f4c] hover:border-[#4a5f78]'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className={`mt-0.5 w-3.5 h-3.5 rounded shrink-0 border transition-colors ${selected ? 'bg-amber-500 border-amber-400' : 'bg-transparent border-slate-600'}`} />
+                        <span className="font-bold text-amber-500 min-w-[42px] shrink-0">{evt.year != null ? `${evt.year}年` : '不详'}</span>
+                        <span className={`font-semibold leading-tight ${selected ? 'text-amber-200' : 'text-white'}`}>
+                          {seqText}{evt.title}
+                        </span>
+                      </div>
+                      {evt.type && <span className="ml-[68px] text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded self-start">{evt.type}</span>}
+                      {evt.locations?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 ml-[68px]">
+                          {evt.locations.map((l: string, i: number) => (
+                            <span key={i} className="text-xs text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded">📍 {l}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-            {(hasMore || isLoadingMore) && (
-              <div className="py-3 text-center text-xs text-slate-500">
-                {isLoadingMore ? '正在加载更多事件...' : '下拉继续加载更多'}
-              </div>
+                  );
+                })}
+                {(hasMore || isLoadingMore) && (
+                  <div className="py-3 text-center text-xs text-slate-500">
+                    {isLoadingMore ? '正在加载更多事件...' : '下拉继续加载更多'}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import hashlib
 import re
 import glob
 import os
+import sys
 from neo4j import GraphDatabase
 
 def generate_id(text: str) -> str:
@@ -96,24 +97,49 @@ if __name__ == "__main__":
     geo_dict = load_geo_dictionary()
     print(f"✅ 成功加载全局地名词典，包含 {len(geo_dict)} 条映射规则。")
     
-    # 之前是测试，现在我们要真正的万佛朝宗，把 300 多个文件全部挂进去！
-    all_json_files = glob.glob("data/raw/*_events.json")
+    # Check if a specific file or name is specified in command line arguments
+    target_file = None
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+        # Resolve different input formats:
+        # 1. Absolute or relative path (e.g. data/raw/刘备_events.json)
+        # 2. Filename only (e.g. 刘备_events.json)
+        # 3. Person name (e.g. 刘备)
+        if os.path.exists(arg):
+            target_file = arg
+        elif os.path.exists(f"data/raw/{arg}"):
+            target_file = f"data/raw/{arg}"
+        elif os.path.exists(f"data/raw/{arg}_events.json"):
+            target_file = f"data/raw/{arg}_events.json"
+        else:
+            print(f"❌ 找不到指定的文件或人物本传: {arg}")
+            sys.exit(1)
+            
     all_queries = []
     
-    # 第一步！清空全表以迎接全新的数据维度
-    all_queries.append("MATCH (n) DETACH DELETE n;")
-    
+    if target_file:
+        protagonist = os.path.basename(target_file).replace("_events.json", "")
+        print(f"ℹ️ 检测到指定导入单个文件: {target_file} (主角: {protagonist})")
+        # 只清空该主角的相关事件，以防把其他数据洗掉，方便快速单文件迭代
+        all_queries.append(f"MATCH (e:Event {{protagonist: '{protagonist}'}}) DETACH DELETE e;")
+        all_json_files = [target_file]
+    else:
+        print("ℹ️ 未指定单个文件，将执行全量导入。")
+        # 第一步！清空全表以迎接全新的数据维度
+        all_queries.append("MATCH (n) DETACH DELETE n;")
+        all_json_files = glob.glob("data/raw/*_events.json")
+        
     for f in all_json_files:
         all_queries.extend(pipeline_to_cypher(f, geo_dict))
         
-    print(f"\n--- ✅ 成功生成全量知识图谱 Cypher 语句 ({len(all_queries)} 条) ---")
+    print(f"\n--- ✅ 成功生成图谱 Cypher 语句 ({len(all_queries)} 条) ---")
     print("准备将数据灌入本地 Neo4j 数据库...")
     
     pwd = "12345678"
     try:
         driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", pwd))
         driver.verify_connectivity()
-        print("✅ 成功连接到 Neo4j 数据库！正在写入庞大的历史关联网络，请耐心等待...")
+        print("✅ 成功连接到 Neo4j 数据库！正在写入关联网络，请耐心等待...")
         
         with driver.session() as session:
             for q in all_queries:

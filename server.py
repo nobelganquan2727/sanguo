@@ -128,6 +128,7 @@ def serialize_event_rows(results: list[dict]) -> list[dict]:
             "source_text": r["source_text"],
             "type": r["type"],
             "locations": [x for x in r["locations"] if x],
+            "protagonist": r.get("protagonist", ""),
             **({"matched_locations": [x for x in r.get("matched_locations", []) if x]} if "matched_locations" in r else {}),
         }
         for r in results
@@ -335,7 +336,7 @@ async def api_events(
     WITH e, collect(DISTINCT l.name) AS locations
     {loc_filter}
     RETURN e.id AS id, e.title AS title, e.std_start_year AS year,
-           e.description AS desc, e.source_text AS source_text, e.type AS type, locations
+           e.description AS desc, e.source_text AS source_text, e.type AS type, locations, e.protagonist AS protagonist
     ORDER BY e.std_start_year ASC, e.seq_index ASC, e.id ASC
     SKIP {safe_offset}
     LIMIT {safe_limit}

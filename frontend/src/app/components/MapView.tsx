@@ -71,6 +71,51 @@ const SMOOTHED_RIVERS = RIVERS.map(r => ({
   path: smoothPath(r.path, 3)
 }));
 
+const BIOGRAPHY_PALETTE = [
+  {
+    name: 'amber',
+    bg: [217, 119, 6, 230], // Amber
+    border: [251, 191, 36, 255],
+    path: [245, 158, 11, 220],
+    pathGlow: [245, 158, 11, 80]
+  },
+  {
+    name: 'teal',
+    bg: [13, 148, 136, 230], // Teal
+    border: [45, 212, 191, 255],
+    path: [20, 184, 166, 220],
+    pathGlow: [20, 184, 166, 80]
+  },
+  {
+    name: 'indigo',
+    bg: [79, 70, 229, 230], // Indigo
+    border: [129, 140, 248, 255],
+    path: [99, 102, 241, 220],
+    pathGlow: [99, 102, 241, 80]
+  },
+  {
+    name: 'rose',
+    bg: [225, 29, 72, 230], // Rose
+    border: [251, 113, 133, 255],
+    path: [244, 63, 94, 220],
+    pathGlow: [244, 63, 94, 80]
+  },
+  {
+    name: 'emerald',
+    bg: [5, 150, 105, 230], // Emerald
+    border: [52, 211, 153, 255],
+    path: [16, 185, 129, 220],
+    pathGlow: [16, 185, 129, 80]
+  },
+  {
+    name: 'violet',
+    bg: [124, 58, 237, 230], // Violet
+    border: [167, 139, 250, 255],
+    path: [139, 92, 246, 220],
+    pathGlow: [139, 92, 246, 80]
+  }
+];
+
 interface MapViewProps {
   viewState: any;
   onViewStateChange: (vs: any) => void;
@@ -124,17 +169,32 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
   }
 
   const eventPoints: any[] = [];
-  const pathCoords: [number, number][] = [];
+  const uniqueProtos: string[] = Array.from(new Set(eventsList?.map(e => e.protagonist).filter(Boolean) || [])) as string[];
+  const protagonistPaths: Record<string, [number, number][]> = {};
+
+  const getProtoColorStyle = (protoName: string) => {
+    const idx = uniqueProtos.indexOf(protoName);
+    return BIOGRAPHY_PALETTE[idx >= 0 ? idx % BIOGRAPHY_PALETTE.length : 0];
+  };
+
   if (eventsList && eventsList.length > 0) {
     if (biographyOnly) {
-      // 1. Resolve coordinates for biography events in sequential order
-      const resolvedEvents = eventsList.map((evt, index) => {
+      // 1. Resolve coordinates for biography events in sequential order, with local sequence numbers per protagonist
+      const protagonistCounts: Record<string, number> = {};
+      const resolvedEvents = eventsList.map((evt) => {
         if (!evt.locations || evt.locations.length === 0) return null;
         const firstLoc = evt.locations.find((l: string) => l);
         if (!firstLoc) return null;
         const geo = geoData.find(d => locationMatchesGeoName(firstLoc, d));
         if (geo) {
-          return { ...evt, lng: geo.lng, lat: geo.lat, seqNum: index + 1 };
+          const p = evt.protagonist || '';
+          protagonistCounts[p] = (protagonistCounts[p] || 0) + 1;
+          return {
+            ...evt,
+            lng: geo.lng,
+            lat: geo.lat,
+            seqNum: protagonistCounts[p]
+          };
         }
         return null;
       }).filter(Boolean) as any[];
@@ -180,22 +240,63 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       // 3. Populate eventPoints
       coordGroups.forEach((group, key) => {
         const firstEvent = group[0];
-        const seqLabel = formatSeqNumbers(group.map(e => e.seqNum));
+
+        // Group by protagonist within this coordinate
+        const protoMap = new Map<string, any[]>();
+        group.forEach(evt => {
+          const p = evt.protagonist || '';
+          if (!protoMap.has(p)) {
+            protoMap.set(p, []);
+          }
+          protoMap.get(p)!.push(evt);
+        });
+
+        let label = '';
+        let bgColor = [217, 119, 6, 230];
+        let borderColor = [251, 191, 36, 255];
+
+        if (protoMap.size === 1) {
+          const pName = Array.from(protoMap.keys())[0];
+          label = formatSeqNumbers(protoMap.get(pName)!.map(e => e.seqNum));
+          const style = getProtoColorStyle(pName);
+          bgColor = style.bg;
+          borderColor = style.border;
+        } else {
+          const parts: string[] = [];
+          protoMap.forEach((pEvents, pName) => {
+            const pLabel = formatSeqNumbers(pEvents.map(e => e.seqNum));
+            const shortName = pName.charAt(0);
+            parts.push(`${shortName}${pLabel}`);
+          });
+          label = parts.join('/');
+          // Mixed location style: Neutral gray
+          bgColor = [55, 65, 81, 230];
+          borderColor = [156, 163, 175, 255];
+        }
+
         eventPoints.push({
           lng: firstEvent.lng,
           lat: firstEvent.lat,
-          label: seqLabel,
+          label: label,
           events: group,
-          bgColor: [217, 119, 6, 230], // Rich glowing gold/amber
-          borderColor: [251, 191, 36, 255],
+          bgColor,
+          borderColor,
         });
       });
 
-      // 4. Populate pathCoords
+      // 4. Populate paths per protagonist
+      uniqueProtos.forEach(p => {
+        protagonistPaths[p] = [];
+      });
+
       resolvedEvents.forEach(evt => {
-        const last = pathCoords[pathCoords.length - 1];
-        if (!last || last[0] !== evt.lng || last[1] !== evt.lat) {
-          pathCoords.push([evt.lng, evt.lat]);
+        const p = evt.protagonist || '';
+        if (protagonistPaths[p]) {
+          const pPath = protagonistPaths[p];
+          const last = pPath[pPath.length - 1];
+          if (!last || last[0] !== evt.lng || last[1] !== evt.lat) {
+            pPath.push([evt.lng, evt.lat]);
+          }
         }
       });
     } else {
@@ -296,28 +397,33 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       rounded: true,
       pickable: false
     }),
-    ...(biographyOnly && pathCoords.length > 1 ? [
-      new PathLayer({
-        id: 'biography-path-glow-layer',
-        data: [{ path: pathCoords }],
-        getPath: (d: any) => d.path,
-        getColor: [245, 158, 11, 80],
-        getWidth: 5,
-        widthUnits: 'pixels',
-        rounded: true,
-        pickable: false
-      }),
-      new PathLayer({
-        id: 'biography-path-layer',
-        data: [{ path: pathCoords }],
-        getPath: (d: any) => d.path,
-        getColor: [245, 158, 11, 220],
-        getWidth: 2,
-        widthUnits: 'pixels',
-        rounded: true,
-        pickable: false
-      })
-    ] : []),
+    ...(biographyOnly ? uniqueProtos.map((protoName, idx) => {
+      const pPath = protagonistPaths[protoName] || [];
+      if (pPath.length < 2) return null;
+      const style = BIOGRAPHY_PALETTE[idx % BIOGRAPHY_PALETTE.length];
+      return [
+        new PathLayer({
+          id: `biography-path-glow-${protoName}`,
+          data: [{ path: pPath }],
+          getPath: (d: any) => d.path,
+          getColor: style.pathGlow,
+          getWidth: 5,
+          widthUnits: 'pixels',
+          rounded: true,
+          pickable: false
+        }),
+        new PathLayer({
+          id: `biography-path-${protoName}`,
+          data: [{ path: pPath }],
+          getPath: (d: any) => d.path,
+          getColor: style.path,
+          getWidth: 2,
+          widthUnits: 'pixels',
+          rounded: true,
+          pickable: false
+        })
+      ];
+    }).filter(Boolean).flat() : []),
     new ScatterplotLayer({
       id: 'cities-layer',
       data: visibleData,
