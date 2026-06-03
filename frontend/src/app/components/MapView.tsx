@@ -71,7 +71,13 @@ const SMOOTHED_RIVERS = RIVERS.map(r => ({
   path: smoothPath(r.path, 3)
 }));
 
-const BIOGRAPHY_PALETTE = [
+const BIOGRAPHY_PALETTE: {
+  name: string;
+  bg: [number, number, number, number];
+  border: [number, number, number, number];
+  path: [number, number, number, number];
+  pathGlow: [number, number, number, number];
+}[] = [
   {
     name: 'amber',
     bg: [217, 119, 6, 230], // Amber
