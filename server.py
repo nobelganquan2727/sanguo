@@ -38,6 +38,7 @@ app.add_middleware(
 
 class AskRequest(BaseModel):
     question: str
+    history: list[dict] = []
 
 class FeedbackRequest(BaseModel):
     event_id: str
@@ -263,7 +264,7 @@ async def apply_admin_feedback(req: AdminApplyRequest, x_admin_password: str = H
 @app.post("/api/ask")
 async def api_ask(req: AskRequest):
     # 调用大模型与图数据库交互
-    answer = ask_question(req.question)
+    answer = ask_question(req.question, req.history)
     return {"answer": answer}
 
 @app.get("/api/status")

@@ -8,8 +8,6 @@ interface AgentPanelProps {
   onToggle: (v: boolean) => void;
   chatHistory: { role: string; content: string }[];
   isLoading: boolean;
-  chatInput: string;
-  setChatInput: (v: string) => void;
   onSend: (msg: string) => void;
   renderMessage: (text: string) => ReactNode;
 }
@@ -17,10 +15,11 @@ interface AgentPanelProps {
 export default function AgentPanel({
   show, onToggle,
   chatHistory, isLoading,
-  chatInput, setChatInput, onSend,
+  onSend,
   renderMessage,
 }: AgentPanelProps) {
   const [isConnected, setIsConnected] = useState<boolean>(true);
+  const [localInput, setLocalInput] = useState('');
 
   useEffect(() => {
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000';
@@ -102,9 +101,14 @@ export default function AgentPanel({
       <div className="p-3 border-t border-[#4a5f78] bg-[#0c1821] pointer-events-auto">
         <input
           type="text"
-          value={chatInput}
-          onChange={e => setChatInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && onSend(chatInput)}
+          value={localInput}
+          onChange={e => setLocalInput(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && localInput.trim()) {
+              onSend(localInput);
+              setLocalInput('');
+            }
+          }}
           placeholder="向幕僚提问..."
           className="w-full bg-[#1a2f4c] border border-[#4a5f78] rounded py-2 px-3 text-sm focus:outline-none focus:border-[#e53e3e] text-white placeholder-slate-500"
         />

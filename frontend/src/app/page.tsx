@@ -63,7 +63,6 @@ export default function Home() {
 
   // Agent chat
   const [showAgentPanel, setShowAgentPanel] = useState(true);
-  const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState<{ role: string; content: string }[]>([
     { role: 'ai', content: '主公，臣已就绪。可通过图谱调取各方势力的绝密卷宗。点击地图上的地名即可查阅该地史料。' },
   ]);
@@ -204,7 +203,6 @@ export default function Home() {
     if (!query.trim() || isLoading) return;
     const newHistory = [...chatHistory, { role: 'user', content: query }];
     setChatHistory(newHistory);
-    setChatInput('');
     setIsLoading(true);
     try {
       const answer = await sendMessage(query, newHistory);
@@ -363,8 +361,6 @@ export default function Home() {
           onToggle={setShowAgentPanel}
           chatHistory={chatHistory}
           isLoading={isLoading}
-          chatInput={chatInput}
-          setChatInput={setChatInput}
           onSend={handleSendMessage}
           renderMessage={(text) => linkifyChatText(text)}
         />

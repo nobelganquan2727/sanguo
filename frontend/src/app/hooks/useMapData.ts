@@ -184,7 +184,7 @@ export function useMapData() {
     const res = await fetch(`${API_BASE}/api/ask`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: query }),
+      body: JSON.stringify({ question: query, history: chatHistory }),
     });
     const data = await res.json();
     return data.answer as string;
