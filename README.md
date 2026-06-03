@@ -61,3 +61,25 @@ npm install
 npm run dev
 ```
 打开浏览器访问 `http://localhost:3000` 即可开启数字沙盘。
+
+---
+
+## 数据清洗重建与数据备份工作流
+
+为了防止线上数据修正不同步，项目提供了自动化回写脚本：
+
+### 每日定时将 Neo4j 数据回写同步至本地 JSON (推荐，自动同步)
+使用 [scripts/backup_neo4j_to_json.py](file:///Users/kansen/Documents/Code/Sanguozhi/scripts/backup_neo4j_to_json.py) 脚本。该脚本会查询当前 Neo4j 全库的最新数据状态，并根据 `seq_index` 自动回写更新本地 `data/raw/*.json` 对应条目的字段。
+
+#### 1. 手动运行备份回写：
+```bash
+python3 scripts/backup_neo4j_to_json.py
+```
+
+#### 2. 配置 Cron 定时任务：
+通过系统的 `crontab -e` 配置每日夜里 2:00 定时执行备份回写（自动更新本地 JSON 且不污染 Git）：
+```cron
+0 2 * * * /usr/bin/python3 /Users/kansen/Documents/Code/Sanguozhi/scripts/backup_neo4j_to_json.py >> /Users/kansen/Documents/Code/Sanguozhi/scripts/backup.log 2>&1
+```
+
+*注：由于数据文件已添加至 `.gitignore`，你可以随时在本地拉取这些最新被回写的 JSON，重新运行 `build_graph_pipeline.py` 即可原样回灌。*

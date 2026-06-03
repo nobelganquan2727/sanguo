@@ -40,3 +40,8 @@ out/
 **/out/
 coverage/
 **/coverage/
+
+# 原始数据目录
+data/raw/
+sgraw/
+sgraw_backup/
