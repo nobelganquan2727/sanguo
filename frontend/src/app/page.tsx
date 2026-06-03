@@ -55,6 +55,7 @@ export default function Home() {
   const [filterPersonInclude, setFilterPersonInclude] = useState('');
   const [filterPersonOr, setFilterPersonOr] = useState('');
   const [filterEventType, setFilterEventType] = useState('');
+  const [biographyOnly, setBiographyOnly] = useState(false);
   const [eventQueryParams, setEventQueryParams] = useState<URLSearchParams>(() => new URLSearchParams({ start: '190', end: '195' }));
   const [eventOffset, setEventOffset] = useState(EVENT_PAGE_SIZE);
   const [eventsHasMore, setEventsHasMore] = useState(true);
@@ -141,6 +142,7 @@ export default function Home() {
       ...(filterPersonInclude && { person_include: filterPersonInclude }),
       ...(filterPersonOr && { person_or: filterPersonOr }),
       ...(filterEventType && { event_type: filterEventType }),
+      ...(biographyOnly && { biography_only: 'true' }),
     });
     await replaceEvents(params);
   };
@@ -153,6 +155,7 @@ export default function Home() {
       ...(filterPersonInclude && { person_include: filterPersonInclude }),
       ...(filterPersonOr && { person_or: filterPersonOr }),
       ...(filterEventType && { event_type: filterEventType }),
+      ...(biographyOnly && { biography_only: 'true' }),
     });
     await replaceEvents(params);
   };
@@ -300,6 +303,7 @@ export default function Home() {
           eventsList={showTimeline ? eventsList : []}
           allPersons={allPersons}
           onEventHover={handleMapEventHover}
+          biographyOnly={biographyOnly}
         />
 
 
@@ -332,6 +336,8 @@ export default function Home() {
           hasMore={eventsHasMore}
           isLoadingMore={eventsLoadingMore}
           onLoadMore={handleLoadMoreEvents}
+          biographyOnly={biographyOnly}
+          setBiographyOnly={setBiographyOnly}
         />
 
         <HoverTooltip

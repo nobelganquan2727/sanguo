@@ -51,7 +51,7 @@ export default function HoverTooltip({
                   {evt.year != null ? `${evt.year}年` : '不详'}
                 </span>
                 <h3 className={`font-bold flex-1 leading-snug transition-colors ${isActive ? 'text-white' : 'text-slate-400'}`}>
-                  {evt.title}
+                  {evt.seqNum ? `${evt.seqNum}. ` : ''}{evt.title}
                 </h3>
                 {isActive && (
                   <div className="flex rounded overflow-hidden border border-[#4a5f78] shrink-0 text-[10px] font-bold">

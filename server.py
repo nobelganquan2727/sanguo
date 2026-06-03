@@ -281,24 +281,35 @@ async def api_events(
     person_exclude: str = "",
     location: str = "",
     event_type: str = "",
+    biography_only: bool = False,
     limit: int = 100,
     offset: int = 0,
 ):
-    safe_limit = max(1, min(limit, 100))
+    safe_limit = 1000 if biography_only else max(1, min(limit, 100))
     safe_offset = max(0, offset)
-    where_clauses = [
-        # 有年份的事件才做时间范围过滤；没有年份的事件(std_start_year IS NULL)也包含进来
-        f"(e.std_start_year IS NULL OR (e.std_start_year >= {start} AND e.std_start_year <= {end}))",
-    ]
-
-    # 包含人物（AND 逻辑）：每个名字都必须有参与记录
-    if person_include:
+    
+    where_clauses = []
+    
+    if biography_only and person_include:
+        # 只显示本传，忽略时间范围过滤，直接匹配主角
         names = [n.strip() for n in person_include.split(',') if n.strip()]
-        for n in names:
-            where_clauses.append(f"EXISTS {{ MATCH (per:Person)-[:PARTICIPATED_IN]->(e) WHERE per.name CONTAINS '{n}' }}")
+        if names:
+            cond = ' OR '.join([f"e.protagonist = '{n}'" for n in names])
+            where_clauses.append(f"({cond})")
+    else:
+        # 有年份的事件才做时间范围过滤；没有年份的事件(std_start_year IS NULL)也包含进来
+        where_clauses.append(
+            f"(e.std_start_year IS NULL OR (e.std_start_year >= {start} AND e.std_start_year <= {end}))"
+        )
+        
+        # 包含人物（AND 逻辑）：每个名字都必须有参与记录
+        if person_include:
+            names = [n.strip() for n in person_include.split(',') if n.strip()]
+            for n in names:
+                where_clauses.append(f"EXISTS {{ MATCH (per:Person)-[:PARTICIPATED_IN]->(e) WHERE per.name CONTAINS '{n}' }}")
 
     # 包含人物（OR 逻辑）：至少有一个名字有参与记录
-    if person_or:
+    if person_or and not (biography_only and person_include):
         names = [n.strip() for n in person_or.split(',') if n.strip()]
         if names:
             cond = ' OR '.join([f"per.name CONTAINS '{n}'" for n in names])
@@ -330,13 +341,13 @@ async def api_events(
     LIMIT {safe_limit}
     """
     print(f"\n{'='*60}")
-    print(f"[/api/events] AND={person_include!r} OR={person_or!r} type={event_type!r} range=[{start},{end}] offset={safe_offset} limit={safe_limit}")
+    print(f"[/api/events] AND={person_include!r} OR={person_or!r} type={event_type!r} range=[{start},{end}] biography_only={biography_only} offset={safe_offset} limit={safe_limit}")
     print(f"[Cypher]\n{cypher}")
     try:
         results = run_query(cypher)
         events = serialize_event_rows(results)
         print(f"[Result] {len(events)} events returned")
-        return {"events": events, "has_more": len(events) == safe_limit, "offset": safe_offset, "limit": safe_limit}
+        return {"events": events, "has_more": len(events) == safe_limit if not biography_only else False, "offset": safe_offset, "limit": safe_limit}
     except Exception as err:
         print(f"[Query error] {err}")
         return {"events": []}

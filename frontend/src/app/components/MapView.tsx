@@ -80,9 +80,10 @@ interface MapViewProps {
   eventsList?: any[];
   allPersons?: string[];
   onEventHover?: (info: any) => void;
+  biographyOnly?: boolean;
 }
 
-export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick, eventsList, allPersons, onEventHover }: MapViewProps) {
+export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick, eventsList, allPersons, onEventHover, biographyOnly }: MapViewProps) {
   const isHL = useCallback(
     (name: string) => [...highlightedLocNames].some(l => l && locationNameMatches(l, name)),
     [highlightedLocNames],
@@ -123,89 +124,164 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
   }
 
   const eventPoints: any[] = [];
+  const pathCoords: [number, number][] = [];
   if (eventsList && eventsList.length > 0) {
-    const TYPE_PRIORITY: Record<string, number> = {
-      '军事征伐': 3,
-      '政治谋虑': 2,
-      '政治谋略': 2,
-      '内政治理': 1,
-    };
-    const getPriority = (type?: string) => (type && TYPE_PRIORITY[type]) || 0;
-
-    const seenTitles = new Set<string>();
-    const validEvents: any[] = [];
-
-    for (const evt of eventsList) {
-      if (!evt.locations || evt.locations.length === 0) continue;
-
-      if (seenTitles.has(evt.title)) continue;
-      seenTitles.add(evt.title);
-
-      if (evt.year == null) continue;
-
-      const prio = getPriority(evt.type);
-      // if (prio === 0) continue;
-
-      const firstLoc = evt.locations.find((l: string) => l);
-      if (!firstLoc) continue;
-
-      const geo = geoData.find(d => locationMatchesGeoName(firstLoc, d));
-      if (geo) {
-        validEvents.push({ ...evt, lng: geo.lng, lat: geo.lat, priority: prio });
-      }
-    }
-
-    // 展示所有匹配类型的事件
-    validEvents.sort((a, b) => b.priority - a.priority);
-
-    // 计算重叠，将重叠的事件聚合
-    const lngThreshold = 6.0 / viewState.zoom;
-    const latThreshold = 2.0 / viewState.zoom;
-    const groupedEvents: any[][] = [];
-
-    for (const evt of validEvents) {
-      let placed = false;
-      for (const group of groupedEvents) {
-        const center = group[0];
-        if (Math.abs(center.lng - evt.lng) < lngThreshold && Math.abs(center.lat - evt.lat) < latThreshold) {
-          group.push(evt);
-          placed = true;
-          break;
+    if (biographyOnly) {
+      // 1. Resolve coordinates for biography events in sequential order
+      const resolvedEvents = eventsList.map((evt, index) => {
+        if (!evt.locations || evt.locations.length === 0) return null;
+        const firstLoc = evt.locations.find((l: string) => l);
+        if (!firstLoc) return null;
+        const geo = geoData.find(d => locationMatchesGeoName(firstLoc, d));
+        if (geo) {
+          return { ...evt, lng: geo.lng, lat: geo.lat, seqNum: index + 1 };
         }
-      }
-      if (!placed) {
-        groupedEvents.push([evt]);
-      }
-    }
+        return null;
+      }).filter(Boolean) as any[];
 
-    const getShortLabel = (title: string) => {
-      if (allPersons && allPersons.length > 0) {
-        for (const p of allPersons) {
-          if (title.startsWith(p)) {
-            return p;
+      // 2. Group by location coordinates
+      const coordGroups = new Map<string, any[]>();
+      resolvedEvents.forEach(evt => {
+        const key = `${evt.lng.toFixed(5)},${evt.lat.toFixed(5)}`;
+        if (!coordGroups.has(key)) {
+          coordGroups.set(key, []);
+        }
+        coordGroups.get(key)!.push(evt);
+      });
+
+      // Helper to format ranges like "1-3, 5, 7-8"
+      const formatSeqNumbers = (nums: number[]): string => {
+        if (nums.length === 0) return '';
+        nums.sort((a, b) => a - b);
+        const ranges: string[] = [];
+        let start = nums[0];
+        let end = nums[0];
+        for (let i = 1; i < nums.length; i++) {
+          if (nums[i] === end + 1) {
+            end = nums[i];
+          } else {
+            if (start === end) {
+              ranges.push(`${start}`);
+            } else {
+              ranges.push(`${start}-${end}`);
+            }
+            start = nums[i];
+            end = nums[i];
           }
         }
-      }
-      return title.length > 4 ? title.substring(0, 4) : title;
-    };
+        if (start === end) {
+          ranges.push(`${start}`);
+        } else {
+          ranges.push(`${start}-${end}`);
+        }
+        return ranges.join(', ');
+      };
 
-    for (const group of groupedEvents) {
-      const topEvent = group[0];
-      const shortTitle = getShortLabel(topEvent.title);
-
-      const type = topEvent.type || '';
-      const isRed = type === '军事征伐' || type === '政治谋略' || type === '政治谋虑';
-      const bgColor = isRed ? [185, 28, 28, 220] : [20, 83, 45, 220];
-      const borderColor = isRed ? [239, 68, 68, 255] : [34, 197, 94, 255];
-
-      eventPoints.push({
-        lng: topEvent.lng,
-        lat: topEvent.lat,
-        label: group.length > 1 ? `${shortTitle} 等${group.length}件` : shortTitle,
-        events: group,
-        bgColor,
-        borderColor,
+      // 3. Populate eventPoints
+      coordGroups.forEach((group, key) => {
+        const firstEvent = group[0];
+        const seqLabel = formatSeqNumbers(group.map(e => e.seqNum));
+        eventPoints.push({
+          lng: firstEvent.lng,
+          lat: firstEvent.lat,
+          label: seqLabel,
+          events: group,
+          bgColor: [217, 119, 6, 230], // Rich glowing gold/amber
+          borderColor: [251, 191, 36, 255],
+        });
       });
+
+      // 4. Populate pathCoords
+      resolvedEvents.forEach(evt => {
+        const last = pathCoords[pathCoords.length - 1];
+        if (!last || last[0] !== evt.lng || last[1] !== evt.lat) {
+          pathCoords.push([evt.lng, evt.lat]);
+        }
+      });
+    } else {
+      const TYPE_PRIORITY: Record<string, number> = {
+        '军事征伐': 3,
+        '政治谋虑': 2,
+        '政治谋略': 2,
+        '内政治理': 1,
+      };
+      const getPriority = (type?: string) => (type && TYPE_PRIORITY[type]) || 0;
+
+      const seenTitles = new Set<string>();
+      const validEvents: any[] = [];
+
+      for (const evt of eventsList) {
+        if (!evt.locations || evt.locations.length === 0) continue;
+
+        if (seenTitles.has(evt.title)) continue;
+        seenTitles.add(evt.title);
+
+        if (evt.year == null) continue;
+
+        const prio = getPriority(evt.type);
+        // if (prio === 0) continue;
+
+        const firstLoc = evt.locations.find((l: string) => l);
+        if (!firstLoc) continue;
+
+        const geo = geoData.find(d => locationMatchesGeoName(firstLoc, d));
+        if (geo) {
+          validEvents.push({ ...evt, lng: geo.lng, lat: geo.lat, priority: prio });
+        }
+      }
+
+      // 展示所有匹配类型的事件
+      validEvents.sort((a, b) => b.priority - a.priority);
+
+      // 计算重叠，将重叠的事件聚合
+      const lngThreshold = 6.0 / viewState.zoom;
+      const latThreshold = 2.0 / viewState.zoom;
+      const groupedEvents: any[][] = [];
+
+      for (const evt of validEvents) {
+        let placed = false;
+        for (const group of groupedEvents) {
+          const center = group[0];
+          if (Math.abs(center.lng - evt.lng) < lngThreshold && Math.abs(center.lat - evt.lat) < latThreshold) {
+            group.push(evt);
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          groupedEvents.push([evt]);
+        }
+      }
+
+      const getShortLabel = (title: string) => {
+        if (allPersons && allPersons.length > 0) {
+          for (const p of allPersons) {
+            if (title.startsWith(p)) {
+              return p;
+            }
+          }
+        }
+        return title.length > 4 ? title.substring(0, 4) : title;
+      };
+
+      for (const group of groupedEvents) {
+        const topEvent = group[0];
+        const shortTitle = getShortLabel(topEvent.title);
+
+        const type = topEvent.type || '';
+        const isRed = type === '军事征伐' || type === '政治谋略' || type === '政治谋虑';
+        const bgColor = isRed ? [185, 28, 28, 220] : [20, 83, 45, 220];
+        const borderColor = isRed ? [239, 68, 68, 255] : [34, 197, 94, 255];
+
+        eventPoints.push({
+          lng: topEvent.lng,
+          lat: topEvent.lat,
+          label: group.length > 1 ? `${shortTitle} 等${group.length}件` : shortTitle,
+          events: group,
+          bgColor,
+          borderColor,
+        });
+      }
     }
   }
 
@@ -220,6 +296,28 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       rounded: true,
       pickable: false
     }),
+    ...(biographyOnly && pathCoords.length > 1 ? [
+      new PathLayer({
+        id: 'biography-path-glow-layer',
+        data: [{ path: pathCoords }],
+        getPath: (d: any) => d.path,
+        getColor: [245, 158, 11, 80],
+        getWidth: 5,
+        widthUnits: 'pixels',
+        rounded: true,
+        pickable: false
+      }),
+      new PathLayer({
+        id: 'biography-path-layer',
+        data: [{ path: pathCoords }],
+        getPath: (d: any) => d.path,
+        getColor: [245, 158, 11, 220],
+        getWidth: 2,
+        widthUnits: 'pixels',
+        rounded: true,
+        pickable: false
+      })
+    ] : []),
     new ScatterplotLayer({
       id: 'cities-layer',
       data: visibleData,
@@ -257,16 +355,16 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       data: eventPoints,
       getPosition: (d: any) => [d.lng, d.lat],
       getText: (d: any) => d.label,
-      getSize: 13,
+      getSize: biographyOnly ? 14 : 13,
       getColor: [255, 255, 255, 255],
       getBackgroundColor: (d: any) => d.bgColor || [26, 47, 76, 230],
       getBorderColor: (d: any) => d.borderColor || [245, 158, 11, 255],
       getBorderWidth: 1,
       background: true,
-      backgroundPadding: [6, 4, 6, 4],
-      backgroundBorderRadius: 4,
-      getAlignmentBaseline: 'top',
-      getPixelOffset: [0, 15],
+      backgroundPadding: biographyOnly ? [6, 6, 6, 6] : [6, 4, 6, 4],
+      backgroundBorderRadius: biographyOnly ? 12 : 4,
+      getAlignmentBaseline: biographyOnly ? 'center' : 'top',
+      getPixelOffset: biographyOnly ? [0, 0] : [0, 15],
       fontFamily: 'Noto Serif SC, serif',
       fontWeight: 'bold',
       characterSet: 'auto',
