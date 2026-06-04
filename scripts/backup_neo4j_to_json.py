@@ -25,13 +25,16 @@ def main():
         print(f"❌ 无法连接到 Neo4j 数据库: {e}")
         return
         
-    # 查询所有事件和他们被修改后的属性
+    # 查询所有事件和他们被修改后的属性，包括关联的地点和相关人物
     cypher = """
     MATCH (e:Event)
     OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location)
+    OPTIONAL MATCH (p:Person)-[:PARTICIPATED_IN]->(e)
     RETURN e.protagonist AS protagonist, e.seq_index AS seq_index, 
-           e.title AS title, e.description AS description, 
-           e.std_start_year AS std_start_year, collect(l.name) AS locations
+           e.title AS title, e.time_text AS time_text, e.type AS type,
+           e.description AS description, e.source_text AS source_text, 
+           e.std_start_year AS std_start_year, e.std_end_year AS std_end_year,
+           collect(DISTINCT l.name) AS locations, collect(DISTINCT p.name) AS characters
     """
     
     try:
@@ -61,70 +64,100 @@ def main():
     print(f"📊 从图数据库获取到 {len(records)} 个事件，涉及 {len(grouped_records)} 位主角传记...")
     
     raw_dir = Path(_base_dir) / "data" / "raw"
+    raw_dir.mkdir(parents=True, exist_ok=True)
     success_files = 0
     updated_events = 0
+    new_files = 0
     
     for protagonist, items in grouped_records.items():
         json_path = raw_dir / f"{protagonist}_events.json"
-        if not json_path.exists():
-            print(f"⚠️ [Skip] 找不到对应的原始 JSON 文件: {json_path}")
-            continue
-            
-        try:
-            with open(json_path, "r", encoding="utf-8") as f:
-                events = json.load(f)
-        except Exception as e:
-            print(f"❌ 读取 JSON 失败 {json_path}: {e}")
-            continue
-            
+        
         file_updated = False
-        for item in items:
-            seq_index = item["seq_index"]
-            if seq_index is None or seq_index < 0 or seq_index >= len(events):
+        if not json_path.exists():
+            print(f"➕ [New File] 自动创建缺失的原始 JSON 文件: {json_path}")
+            events = []
+            file_updated = True
+            new_files += 1
+        else:
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    events = json.load(f)
+            except Exception as e:
+                print(f"❌ 读取 JSON 失败 {json_path}: {e}")
                 continue
-                
+            
+        # 区分有序号和无序号的事件
+        indexed_items = [item for item in items if item["seq_index"] is not None]
+        indexed_items = sorted(indexed_items, key=lambda x: x["seq_index"])
+        unindexed_items = [item for item in items if item["seq_index"] is None]
+        
+        # 对齐列表大小以容纳最大 seq_index
+        max_idx = max((item["seq_index"] for item in indexed_items), default=-1)
+        while len(events) <= max_idx:
+            events.append({})
+            file_updated = True
+            
+        # 处理有序号的事件更新
+        for item in indexed_items:
+            seq_index = item["seq_index"]
             e = events[seq_index]
             
-            # 检查是否有更新，并同步回 JSON 的对应字段
-            # 地点
+            # 辅助函数：如果发生变更则设置并记录
+            def set_if_changed(key, val):
+                nonlocal file_updated
+                if e.get(key) != val:
+                    e[key] = val
+                    file_updated = True
+
+            set_if_changed("事件标题", item["title"] or "")
+            set_if_changed("时间", item["time_text"] or "")
+            
             locs_str = ",".join(sorted(filter(None, item["locations"])))
-            # 原本的地点表示
-            orig_locs = e.get("地点", "")
-            # 对比并更新
-            if orig_locs != locs_str:
-                e["地点"] = locs_str
+            set_if_changed("地点", locs_str)
+            
+            chars = sorted(filter(None, item["characters"]))
+            if e.get("相关人物") != chars:
+                e["相关人物"] = chars
                 file_updated = True
                 
-            # 年份
-            year = item["std_start_year"]
-            if e.get("std_start_year") != year:
-                e["std_start_year"] = year
+            set_if_changed("事件简介", item["description"] or "")
+            set_if_changed("事件类型", item["type"] or "")
+            set_if_changed("原文", item["source_text"] or "")
+            
+            if e.get("std_start_year") != item["std_start_year"]:
+                e["std_start_year"] = item["std_start_year"]
                 file_updated = True
                 
-            # 简介
-            desc = item["description"]
-            if e.get("事件简介") != desc:
-                e["事件简介"] = desc
+            if e.get("std_end_year") != item["std_end_year"]:
+                e["std_end_year"] = item["std_end_year"]
                 file_updated = True
                 
-            # 标题
-            title = item["title"]
-            if e.get("事件标题") != title:
-                e["事件标题"] = title
-                file_updated = True
-                
-            if file_updated:
-                updated_events += 1
-                
+        # 处理没有序号的事件（直接追加）
+        for item in unindexed_items:
+            new_event = {
+                "事件标题": item["title"] or "",
+                "时间": item["time_text"] or "",
+                "地点": ",".join(sorted(filter(None, item["locations"]))),
+                "相关人物": sorted(filter(None, item["characters"])),
+                "事件简介": item["description"] or "",
+                "事件类型": item["type"] or "",
+                "原文": item["source_text"] or "",
+                "std_start_year": item["std_start_year"],
+                "std_end_year": item["std_end_year"]
+            }
+            events.append(new_event)
+            file_updated = True
+            
         if file_updated:
             try:
                 with open(json_path, "w", encoding="utf-8") as f:
                     json.dump(events, f, ensure_ascii=False, indent=2)
                 success_files += 1
+                updated_events += len(items)
             except Exception as e:
                 print(f"❌ 写入 JSON 失败 {json_path}: {e}")
                 
-    print(f"🎉 备份同步完成：更新了 {success_files} 个 JSON 文件，共同步 {updated_events} 个事件修正！")
+    print(f"🎉 备份同步完成：新增了 {new_files} 个文件，更新并保存了 {success_files} 个 JSON 文件，同步了 {updated_events} 个事件数据！")
 
 if __name__ == "__main__":
     main()
