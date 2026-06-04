@@ -95,17 +95,24 @@ export default function Home() {
     fetchEventDetail,
     sendMessage,
     submitFeedback,
+    mapLoading,
+    setMapLoading,
   } = useMapData();
   const allLocationNames = geoData.map((d: any) => d.std_name).filter(Boolean);
 
   const replaceEvents = async (params: URLSearchParams) => {
-    const { events, hasMore } = await fetchEventsPage(params, 0, EVENT_PAGE_SIZE);
-    setEventsList(events);
-    setEventQueryParams(new URLSearchParams(params));
-    setEventOffset(events.length);
-    setEventsHasMore(hasMore);
-    setSelectedEventIds(new Set());
-    setHighlightedLocNames(new Set());
+    setMapLoading(true);
+    try {
+      const { events, hasMore } = await fetchEventsPage(params, 0, EVENT_PAGE_SIZE);
+      setEventsList(events);
+      setEventQueryParams(new URLSearchParams(params));
+      setEventOffset(events.length);
+      setEventsHasMore(hasMore);
+      setSelectedEventIds(new Set());
+      setHighlightedLocNames(new Set());
+    } finally {
+      setMapLoading(false);
+    }
   };
 
   const loadPersonEvents = async (name: string) => {
@@ -189,14 +196,19 @@ export default function Home() {
   };
 
   const handleLocationClick = async (location: any) => {
-    const { events, expandedLocations } = await fetchLocationEvents(location, 180, 280);
-    setEventsList(events);
-    setEventOffset(events.length);
-    setEventsHasMore(false);
-    setSelectedEventIds(new Set());
-    setHighlightedLocNames(new Set(expandedLocations.length > 0 ? expandedLocations : [location.std_name]));
-    setShowEventPanel(true);
-    setViewState((vs: any) => ({ ...vs, longitude: location.lng, latitude: location.lat, zoom: Math.max(vs.zoom, 5.5), transitionDuration: 800 }));
+    setMapLoading(true);
+    try {
+      const { events, expandedLocations } = await fetchLocationEvents(location, 180, 280);
+      setEventsList(events);
+      setEventOffset(events.length);
+      setEventsHasMore(false);
+      setSelectedEventIds(new Set());
+      setHighlightedLocNames(new Set(expandedLocations.length > 0 ? expandedLocations : [location.std_name]));
+      setShowEventPanel(true);
+      setViewState((vs: any) => ({ ...vs, longitude: location.lng, latitude: location.lat, zoom: Math.max(vs.zoom, 5.5), transitionDuration: 800 }));
+    } finally {
+      setMapLoading(false);
+    }
   };
 
   const handleSendMessage = async (query: string) => {
@@ -236,10 +248,15 @@ export default function Home() {
       return;
     }
 
-    const event = await fetchEventDetail(eventId);
-    if (event) {
-      setEventsList(current => current.some((evt: any) => evt.id === event.id) ? current : [event, ...current]);
-      focusEvent(event);
+    setMapLoading(true);
+    try {
+      const event = await fetchEventDetail(eventId);
+      if (event) {
+        setEventsList(current => current.some((evt: any) => evt.id === event.id) ? current : [event, ...current]);
+        focusEvent(event);
+      }
+    } finally {
+      setMapLoading(false);
     }
   };
 
@@ -303,6 +320,32 @@ export default function Home() {
           onEventHover={handleMapEventHover}
           biographyOnly={biographyOnly}
         />
+
+        {mapLoading && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#041527]/35 backdrop-blur-[2px] transition-all duration-300">
+            <style dangerouslySetInnerHTML={{
+              __html: `
+              @keyframes spin-reverse {
+                from { transform: rotate(360deg); }
+                to { transform: rotate(0deg); }
+              }
+              .animate-spin-reverse {
+                animation: spin-reverse 1.5s linear infinite;
+              }
+            `}} />
+            <div className="relative flex items-center justify-center">
+              {/* Outer ring */}
+              <div className="w-16 h-16 border-4 border-t-[#f59e0b] border-r-transparent border-b-[#f59e0b]/30 border-l-transparent rounded-full animate-spin"></div>
+              {/* Inner ring spinning opposite direction */}
+              <div className="absolute w-10 h-10 border-4 border-r-[#e2ddce] border-t-transparent border-l-[#e2ddce]/30 border-b-transparent rounded-full animate-spin-reverse"></div>
+              {/* Center dot */}
+              <div className="absolute w-3 h-3 bg-[#f59e0b] rounded-full animate-ping"></div>
+            </div>
+            <p className="mt-4 text-[#e2ddce] text-xs font-serif tracking-[0.2em] font-bold select-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] animate-pulse">
+              「正在筹画沙盘，请稍候...」
+            </p>
+          </div>
+        )}
 
 
         <EventPanel

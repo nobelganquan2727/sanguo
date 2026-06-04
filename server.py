@@ -60,8 +60,9 @@ class AdminApplyRequest(BaseModel):
 
 import pymysql
 import os
+from sqlalchemy import pool
 
-def get_db_connection():
+def _create_db_connection():
     return pymysql.connect(
         host=os.getenv('MYSQL_HOST', 'localhost'),
         user=os.getenv('MYSQL_USER', 'root'),
@@ -69,6 +70,17 @@ def get_db_connection():
         database=os.getenv('MYSQL_DB', 'sanguo'),
         cursorclass=pymysql.cursors.DictCursor
     )
+
+# 使用 SQLAlchemy QueuePool 缓存连接，避免频繁进行 TCP 握手
+mysql_pool = pool.QueuePool(
+    _create_db_connection,
+    pool_size=10,
+    max_overflow=20,
+    recycle=1800
+)
+
+def get_db_connection():
+    return mysql_pool.connect()
 
 
 ADMIN_GEO_PATH = Path(__file__).resolve().parent / "frontend" / "public" / "eastern_han_admin.json"
@@ -136,7 +148,7 @@ def serialize_event_rows(results: list[dict]) -> list[dict]:
     ]
 
 @app.post("/api/feedback")
-async def api_feedback(req: FeedbackRequest):
+def api_feedback(req: FeedbackRequest):
     try:
         conn = get_db_connection()
         with conn.cursor() as cursor:
@@ -159,7 +171,7 @@ def verify_admin_password(x_admin_password: str = Header(None)):
         )
 
 @app.get("/api/admin/feedback")
-async def get_admin_feedback(x_admin_password: str = Header(None)):
+def get_admin_feedback(x_admin_password: str = Header(None)):
     verify_admin_password(x_admin_password)
     try:
         conn = get_db_connection()
@@ -176,7 +188,7 @@ async def get_admin_feedback(x_admin_password: str = Header(None)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/admin/feedback/delete")
-async def delete_admin_feedback(req: AdminDeleteRequest, x_admin_password: str = Header(None)):
+def delete_admin_feedback(req: AdminDeleteRequest, x_admin_password: str = Header(None)):
     verify_admin_password(x_admin_password)
     if not req.ids:
         return {"success": True, "message": "No feedbacks to delete."}
@@ -193,7 +205,7 @@ async def delete_admin_feedback(req: AdminDeleteRequest, x_admin_password: str =
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/admin/feedback/apply")
-async def apply_admin_feedback(req: AdminApplyRequest, x_admin_password: str = Header(None)):
+def apply_admin_feedback(req: AdminApplyRequest, x_admin_password: str = Header(None)):
     verify_admin_password(x_admin_password)
     if not req.items:
         return {"success": True, "message": "No feedbacks to apply."}

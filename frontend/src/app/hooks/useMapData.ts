@@ -95,22 +95,28 @@ export function useMapData() {
   const [eventsList, setEventsList] = useState<any[]>([]);
   const [filterMeta, setFilterMeta] = useState<{ locations: string[]; event_types: string[] }>({ locations: [], event_types: [] });
   const [allPersons, setAllPersons] = useState<string[]>([]);
+  const [mapLoading, setMapLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/eastern_han_admin.json').then(r => r.json()).then(data => {
+    setMapLoading(true);
+    const p1 = fetch('/eastern_han_admin.json').then(r => r.json()).then(data => {
       setGeoData(flattenAdminGeo(data));
-    });
+    }).catch(() => {});
 
-    fetch(`${API_BASE}/api/filter-meta`).then(r => r.json()).then(setFilterMeta).catch(() => { });
+    const p2 = fetch(`${API_BASE}/api/filter-meta`).then(r => r.json()).then(setFilterMeta).catch(() => { });
 
-    fetch(`${API_BASE}/api/persons`).then(r => r.json()).then((d: any) => {
+    const p3 = fetch(`${API_BASE}/api/persons`).then(r => r.json()).then((d: any) => {
       const sorted = [...(d.persons || [])].sort((a: string, b: string) => b.length - a.length);
       setAllPersons(sorted);
     }).catch(() => { });
 
-    fetch(`${API_BASE}/api/events?start=190&end=195&limit=${DEFAULT_EVENT_PAGE_SIZE}&offset=0`).then(r => r.json()).then((d: any) => {
+    const p4 = fetch(`${API_BASE}/api/events?start=190&end=195&limit=${DEFAULT_EVENT_PAGE_SIZE}&offset=0`).then(r => r.json()).then((d: any) => {
       setEventsList(d.events || []);
     }).catch(() => { });
+
+    Promise.all([p1, p2, p3, p4]).finally(() => {
+      setMapLoading(false);
+    });
   }, []);
 
   const fetchEventsPage = async (params: URLSearchParams, offset = 0, limit = DEFAULT_EVENT_PAGE_SIZE) => {
@@ -217,5 +223,7 @@ export function useMapData() {
     fetchEventDetail,
     sendMessage,
     submitFeedback,
+    mapLoading,
+    setMapLoading,
   };
 }
