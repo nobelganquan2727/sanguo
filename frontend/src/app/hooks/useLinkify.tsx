@@ -11,13 +11,15 @@ export function useLinkify(
   /** 在纯文本中高亮人名（可点击，用于 tooltip desc） */
   const linkifyText = (text: string) => {
     if (!text || allPersons.length === 0) return <>{text}</>;
-    const escaped = allPersons.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const filteredPersons = allPersons.filter(p => p.length > 1);
+    if (filteredPersons.length === 0) return <>{text}</>;
+    const escaped = filteredPersons.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     const regex = new RegExp(`(${escaped.join('|')})`, 'g');
     const parts = text.split(regex);
     return (
       <>
         {parts.map((part, i) =>
-          allPersons.includes(part)
+          filteredPersons.includes(part)
             ? (
               <span
                 key={i}
@@ -37,9 +39,11 @@ export function useLinkify(
   /** 仅对普通字符串应用人名和地名的匹配跳转 */
   const linkifyString = (text: string) => {
     if (!text) return <>{text}</>;
+    const filteredPersons = allPersons.filter(p => p.length > 1);
+    const filteredLocations = allLocationNames.filter(l => l.length > 1);
     const allTerms = [
-      ...allPersons.map(w => ({ w, t: 'person' as const })),
-      ...allLocationNames.map(w => ({ w, t: 'location' as const })),
+      ...filteredPersons.map(w => ({ w, t: 'person' as const })),
+      ...filteredLocations.map(w => ({ w, t: 'location' as const })),
     ].sort((a, b) => b.w.length - a.w.length);
     if (allTerms.length === 0) return <>{text}</>;
     const escaped = allTerms.map(({ w }) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));

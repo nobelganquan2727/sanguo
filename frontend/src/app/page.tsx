@@ -63,10 +63,19 @@ export default function Home() {
 
   // Agent chat
   const [showAgentPanel, setShowAgentPanel] = useState(true);
-  const [chatHistory, setChatHistory] = useState<{ role: string; content: string }[]>([
-    { role: 'ai', content: '主公，臣已就绪。可通过图谱调取各方势力的绝密卷宗。点击地图上的地名即可查阅该地史料。' },
+  const [chatHistory, setChatHistory] = useState<{ role: string; content: string; thinkingLogs?: string[] }[]>([
+    { role: 'ai', content: '主公，臣已就绪。可通过图谱调取各方势力的绝密卷宗。点击地图上的地名即可查阅该地史料。', thinkingLogs: [] },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleStopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+  };
 
   // Tooltip mode
   const [tooltipMode, setTooltipMode] = useState<'classical' | 'modern'>('modern');
@@ -213,16 +222,61 @@ export default function Home() {
 
   const handleSendMessage = async (query: string) => {
     if (!query.trim() || isLoading) return;
+    
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     const newHistory = [...chatHistory, { role: 'user', content: query }];
     setChatHistory(newHistory);
     setIsLoading(true);
+
+    const aiMessageIndex = newHistory.length;
+    const historyWithPlaceholder = [...newHistory, { role: 'ai', content: '', thinkingLogs: [] }];
+    setChatHistory(historyWithPlaceholder);
+
     try {
-      const answer = await sendMessage(query, newHistory);
-      setChatHistory([...newHistory, { role: 'ai', content: answer }]);
-    } catch {
-      setChatHistory([...newHistory, { role: 'ai', content: '抱歉主公，臣未能联系上后台图谱引擎。请确认已运行 `python3 server.py`。' }]);
+      await sendMessage(
+        query,
+        newHistory.map(h => ({ role: h.role, content: h.content })),
+        (chunk) => {
+          setChatHistory(prev => {
+            const updated = [...prev];
+            const aiMsg = { ...updated[aiMessageIndex] };
+            if (chunk.type === 'status') {
+              aiMsg.thinkingLogs = [...(aiMsg.thinkingLogs || []), chunk.content];
+            } else if (chunk.type === 'text') {
+              aiMsg.content = (aiMsg.content || '') + chunk.content;
+            }
+            updated[aiMessageIndex] = aiMsg;
+            return updated;
+          });
+        },
+        controller.signal
+      );
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        setChatHistory(prev => {
+          const updated = [...prev];
+          const aiMsg = { ...updated[aiMessageIndex] };
+          aiMsg.content = (aiMsg.content || '') + '\n\n*(主公，臣已遵命停止思索。)*';
+          updated[aiMessageIndex] = aiMsg;
+          return updated;
+        });
+      } else {
+        console.error(err);
+        setChatHistory(prev => {
+          const updated = [...prev];
+          updated[aiMessageIndex] = {
+            role: 'ai',
+            content: '抱歉主公，臣未能联系上后台图谱引擎。请确认已运行 `python3 server.py`。',
+            thinkingLogs: []
+          };
+          return updated;
+        });
+      }
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -405,6 +459,7 @@ export default function Home() {
           chatHistory={chatHistory}
           isLoading={isLoading}
           onSend={handleSendMessage}
+          onStop={handleStopGeneration}
           renderMessage={(text) => linkifyChatText(text)}
         />
 

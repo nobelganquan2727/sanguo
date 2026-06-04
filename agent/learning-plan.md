@@ -1,133 +1,102 @@
-# 大模型应用开发学习计划 — 基于三国志知识图谱 QA Agent
+# 大模型应用演进计划：从 Text-to-Cypher 到专业级历史 AI Agent
 
-> 基于现有 `qa_agent.py` Text-to-Cypher 流水线，逐步升级为生产级 Agent 系统。
-
----
-
-## 阶段1：鲁棒性 + Prompt 工程
-
-**目标**：让系统从"能跑"变成"稳定可用"
-
-### 1.1 Cypher 自修正循环（Error Recovery）
-- 当 `run_query` 抛出异常时，捕获错误信息
-- 将错误信息 + 原 Cypher 回传给 LLM，要求修正
-- 设置最多 2 次重试，仍失败则优雅降级
-- **核心技能**：LLM 作为调试器、重试策略、优雅降级
-
-### 1.2 Prompt 模板化
-- 将 Cypher 生成 Prompt 抽到独立文件或类中
-- 引入 Few-shot 示例选择：根据用户问题动态选取最相关的 2-3 个查询示例
-- **核心技能**：Prompt 模板化、Few-shot Learning、示例选择策略
-
-### 1.3 结构化输出
-- 使用 JSON Mode 或 Prompt 约束，让 LLM 返回 `{"cypher": "...", "reasoning": "..."}`
-- 用 Pydantic 校验输出格式
-- **核心技能**：Structured Output、Pydantic 校验、输出解析
-
-### 1.4 基础安全过滤
-- 对用户输入做简单的 Cypher 注入检测
-- 限制查询结果数量，防止全表扫描拖垮数据库
-- **核心技能**：安全边界意识、输入校验
+> 本计划基于现有的 `qa_agent.py` Text-to-Cypher 流水线，致力于将其逐步打造成具备高可用性、强推理能力和完善 LLMOps 体系的生产级 LLM 应用。
 
 ---
 
-## 阶段2：Agent 化改造
+## 阶段一：基础加固与 Prompt 工程迭代 (当前重点)
 
-**目标**：从固定流水线升级为能自主决策的 Agent
+**目标**：提升现有 Text-to-Cypher 链路的稳定性和准确率，使其从“能跑”走向“好用”。
 
-### 2.1 引入 ReAct 决策循环
-- 定义 Tools：`query_graph(cypher)`、`answer_directly()`、`ask_clarification()`
-- LLM 先判断用户意图，再决定调用哪个工具
-- **核心技能**：Tool Use / Function Calling、Agent 决策逻辑
+### 1.1 Cypher 自修正闭环 (Self-Healing)
+- **机制**：当 `run_query` 抛出语法异常或图谱查询报错时，捕获异常信息。
+- **动作**：将错误日志 + 原始 Cypher 重新喂给 LLM 要求自我修正。
+- **保障**：设定最大重试次数（如 2 次），超过则触发优雅降级（如基于常识作答并提示数据查询失败）。
 
-### 2.2 多轮对话与记忆
-- 引入 `ConversationBufferMemory` 或自管理 `messages`
-- 支持上下文追问，如"那他后来呢？"
-- **核心技能**：Memory 管理、上下文压缩、Message History
+### 1.2 Prompt 系统化与 Few-Shot 管理
+- **解耦**：将硬编码在代码中的 Prompt 抽离，采用单独的文件（如 YAML/JSON）或配置管理，便于快速迭代和 A/B 测试。
+- **动态样本检索**：建立 Cypher 查询示例库。当用户提问时，通过向量相似度动态检索最相关的 3-5 个 Few-Shot 示例，拼接到 Prompt 中，大幅提升模型一次性写对 Cypher 的概率。
 
-### 2.3 多工具扩展
-- `search_events_by_keyword(keyword)`：全文检索事件描述
-- `get_person_timeline(name)`：查询人物生平时间线
-- `compare_two_persons(p1, p2)`：对比两位人物交集
-- Agent 自主决定调用哪个工具及调用顺序
-- **核心技能**：多工具编排、工具描述设计
-
-### 2.4 计划型查询（Multi-step）
-- 复杂问题拆分为多步：先查 A 再查 B，最后综合
-- 例如"曹操和刘备在赤壁之战前有过哪些交集？"
-- **核心技能**：多步推理、子目标分解
+### 1.3 结构化输出与意图分类调优
+- **规范化**：强制使用 JSON Mode 或 Pydantic 约束 LLM 输出格式（如 `{ "cypher": "...", "reasoning": "..." }`），减少解析错误。
+- **意图细化**：在现有的 `relationship` / `fact` 之外，补充诸如 `temporal_sequence` (时间线脉络)、`statistical` (统计梳理) 等更细粒度的意图，分别匹配更精准的提示词模板。
 
 ---
 
-## 阶段3：RAG 混合检索 + 向量语义
+## 阶段二：Agent 核心能力构建
 
-**目标**：超越图谱精确匹配，支持模糊语义查询
+**目标**：打破固定流水线束缚，赋予系统自主决策、多步规划和工具调用的能力。
 
-### 3.1 事件文本向量化
-- 对 `Event.description` 和 `source_text` 生成 Embedding
-- 存入向量索引（ChromaDB / pgvector / Neo4j 自带向量索引）
-- **核心技能**：Embedding 模型使用、向量存储
+### 2.1 ReAct 决策框架与多工具编排
+- 引入标准的 Agent 循环（Thought -> Action -> Observation）。
+- 扩展核心 Tools：
+  - `query_neo4j(cypher)`: 查询结构化图谱。
+  - `get_person_timeline(name)`: 快速拉取人物时间线。
+  - `search_historical_text(keyword)`: 直接检索史料原文。
 
-### 3.2 GraphRAG 混合检索
-- 用户问题先做语义检索，找到相关事件
-- 再根据事件 ID 精确查询图谱关联
-- **核心技能**：Hybrid RAG、语义 + 结构化结合
+### 2.2 对话状态追踪与记忆管理 (Memory)
+- **记忆压缩**：引入带摘要的 Memory 机制（如 LangChain 的 SummaryBufferMemory），避免长对话吃光 Token 且偏离重点。
+- **指代消解 (Coreference Resolution)**：在处理多轮对话时，利用轻量模型将“他后来怎么了？”补全为“刘备在赤壁之战后怎么了？”，再进行工具调用。
 
-### 3.3 查询路由（Query Routing）
-- 判断问题类型：精确事实查询走图谱，模糊描述走向量
-- **核心技能**：智能路由、分类器设计
-
----
-
-## 阶段4：生产化与部署
-
-**目标**：将 Agent 部署为可用服务
-
-### 4.1 FastAPI 服务化
-- 用 FastAPI 包装为 REST API
-- 支持 SSE 流式输出回答
-- **核心技能**：异步架构、流式生成、API 设计
-
-### 4.2 可观测性
-- 接入 LangSmith 或自研追踪，记录每次 LLM 调用的 Prompt / 输出 / 延迟
-- 记录 Cypher 生成成功率、查询耗时
-- **核心技能**：LLM Observability、性能分析
-
-### 4.3 缓存与成本优化
-- 相同/相似问题的 Cypher 和答案缓存
-- 评估是否可用更小模型（如 deepseek-chat 降级为 deepseek-reasoner 或本地模型）处理简单任务
-- **核心技能**：缓存策略、模型选型、成本控制
+### 2.3 复杂问题规划 (Plan-and-Solve)
+- 针对宏大叙事问题（如“分析曹操在官渡之战前后的战略调整”），Agent 首先拆解为多个子任务（1. 查战前部署 2. 查战中决策 3. 查战后人事变动）。
+- 依次执行查询，汇总所有信息后再生成最终的历史深度长文。
 
 ---
 
-## 学习路线速览
+## 阶段三：评估驱动开发与可观测性 (LLMOps)
 
-```
-阶段1: 鲁棒性 + Prompt 模板化
-   |
-   v
-阶段2: Agent 化 + 多轮对话 + 多工具
-   |
-   v
-阶段3: 向量检索 + GraphRAG 混合查询
-   |
-   v
-阶段4: FastAPI 服务化 + 监控 + 部署
-```
+**目标**：建立科学的指标体系，不盲目调参，确保每次迭代都有正向收益。
+
+### 3.1 构建自动化评估集 (Eval Dataset)
+- 沉淀数百个真实用户的三国历史提问，人工标注对应的“黄金 Cypher”与“参考回答”。
+- 每次修改 Prompt、切换基座模型或优化数据库后，跑自动化测试。
+- 引入 **LLM-as-a-Judge**，从“史实准确度”、“引用合规性”、“逻辑严密性”维度自动打分。
+
+### 3.2 全链路可观测性 (Observability)
+- 接入 LangSmith、Phoenix 等工具，或在系统中建立埋点。
+- 追踪核心指标：
+  - 各个 Agent 步骤的耗时 (Latency)。
+  - Token 消耗与成本 (Cost)。
+  - Tool 调用的成功率 / 失败原因（如 Cypher 语法错误率）。
+
+### 3.3 成本管控与模型路由
+- **大小模型结合**：针对简单的意图分类或总结任务，路由至小规模且便宜的模型（如 Qwen-Turbo, DeepSeek-Chat）；遇到复杂的推理、计划与 Cypher 编写，再请求推理大模型（如 DeepSeek-Reasoner, GPT-4o）。
 
 ---
 
-## 当前项目现状与下一步
+## 阶段四：性能优化与服务化生产
 
-**现有能力**：
-- Text-to-Cypher 流水线（2 步：生成 Cypher -> 总结回答）
-- Neo4j 图数据库连接
-- 基于 LangChain ChatOpenAI 的 LLM 调用
+**目标**：提供极致顺滑的前端用户体验与坚如磐石的后端架构。
 
-**当前最大短板**：
-- Cypher 写错直接崩溃，无容错
-- Prompt 硬编码，难以迭代优化
-- 无多轮对话能力
-- 无 Agent 自主决策
+### 4.1 流式输出 (Streaming) 与感知优化
+- 全面改用 Server-Sent Events (SSE)，实现打字机效果。
+- 在 Agent 思考和调用工具时，前端展示实时的状态透传（如“🔍 正在解析古籍...”、“📊 正在查询 Neo4j 图谱...”），缓解等待焦虑。
 
-**建议下一步**：先做 **1.1 Cypher 自修正循环**，改动最小、收益最大。
+### 4.2 语义缓存机制 (Semantic Caching)
+- 对于高频问题（如“赤壁之战时间”），通过对比用户 Query 的 Embedding 相似度，如果与历史提问高度匹配，直接从缓存返回结果，大幅节省成本与时间。
+
+### 4.3 高可用架构
+- 继续完善异步编程、连接池管理，对大模型 API 建立熔断与重试机制，防止上游 API 抖动导致整个服务不可用。
+
+---
+
+## 阶段五：混合检索 (GraphRAG + Vector RAG) [低优先级]
+
+**目标**：超越图谱严格的 Schema 限制，支持模糊语义和海量纯文本数据的融合查询。
+
+### 5.1 历史史料向量化
+- 将《三国志》原文、裴松之注文、长篇事件描述进行合理的 Chunking（分块）。
+- 使用 Embedding 模型向量化，并存入 ChromaDB、Milvus 或 PostgreSQL (pgvector)。
+
+### 5.2 图与向量双轨检索 (Hybrid RAG)
+- 用户问题进入后，触发双路召回：
+  1. **图谱召回**：查出精确的人物关系网络、事件时空序列。
+  2. **向量召回**：查出描述细节丰富的原文片段。
+- **Node-to-Chunk 映射**：建立图谱节点与文本块的双向关联，实现顺藤摸瓜式的深层检索。
+
+### 5.3 智能路由机制 (Query Routing)
+- 引入 Router 组件，判断问题类型：
+  - 明确事实/关系：“郭嘉怎么死的？” -> 走图谱 Cypher。
+  - 模糊/主观评价：“陈寿对诸葛亮的评价是什么？” -> 走向量文本检索。
+  - 综合型：“官渡之战的经过” -> 双路混合。

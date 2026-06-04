@@ -18,7 +18,8 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from agent.qa_agent import ask_question
+from fastapi.responses import StreamingResponse
+from agent.qa_agent import ask_question, ask_question_stream
 from agent.graph_client import run_query
 
 
@@ -275,9 +276,11 @@ def apply_admin_feedback(req: AdminApplyRequest, x_admin_password: str = Header(
 
 @app.post("/api/ask")
 async def api_ask(req: AskRequest):
-    # 调用大模型与图数据库交互
-    answer = ask_question(req.question, req.history)
-    return {"answer": answer}
+    # 返回大模型与图数据库交互的流式事件数据 (status + text)
+    return StreamingResponse(
+        ask_question_stream(req.question, req.history),
+        media_type="text/event-stream"
+    )
 
 @app.get("/api/status")
 async def api_status():
