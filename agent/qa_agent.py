@@ -42,6 +42,10 @@ class IntentAnalysis(BaseModel):
     entities: List[str] = Field(
         description="问题中包含的核心历史人物、官职或地点。"
     )
+    historical_characters: List[str] = Field(
+        default_factory=list,
+        description="重写后问题中显式提到的具体三国历史人物或虚构人物名字（例如：['曹操', '刘备']，或 ['哈利波特']）。如果没有具体人名，则为空列表。"
+    )
 
 def get_llm(model_type: str = "complex"):
     handler = active_callback_var.get()
@@ -69,6 +73,39 @@ def truncate_tool_output(output: str, max_chars: int = 3000) -> str:
     if len(output) > max_chars:
         return output[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。若仍需深究，请缩窄检索条件重新调阅。"
     return output
+
+def check_characters_exist(names: List[str]) -> dict[str, bool]:
+    if not names:
+        return {}
+    cypher = "UNWIND $names AS name OPTIONAL MATCH (p:Person {name: name}) RETURN name, p IS NOT NULL AS exists"
+    try:
+        results = run_query(cypher, {"names": names})
+        return {r["name"]: r["exists"] for r in results}
+    except Exception as e:
+        print(f"⚠️ 检查人物是否存在时出错: {e}")
+        return {name: True for name in names}
+
+def has_valid_db_records(observations: list) -> bool:
+    if not observations:
+        return False
+    for obs in observations:
+        res = obs.get("result", "").strip()
+        if not res:
+            continue
+        if "未找到" in res:
+            continue
+        if res == "[]":
+            continue
+        if "Error executing" in res or "Database query failed" in res:
+            continue
+        try:
+            parsed = json.loads(res)
+            if isinstance(parsed, list) and len(parsed) == 0:
+                continue
+        except Exception:
+            pass
+        return True
+    return False
 
 # ----------------- Tools Definition (Sync) -----------------
 
@@ -311,7 +348,8 @@ def ask_question(question: str, history: list[dict] = None) -> str:
                 analysis = IntentAnalysis(
                     type=data.get("type", "fact"),
                     rewritten_question=data.get("rewritten_question", question),
-                    entities=data.get("entities", [])
+                    entities=data.get("entities", []),
+                    historical_characters=data.get("historical_characters", [])
                 )
             except Exception as e2:
                 print(f"⚠️ 兜底 JSON 解析也失败: {str(e2)}，执行规则降级策略。")
@@ -324,13 +362,24 @@ def ask_question(question: str, history: list[dict] = None) -> str:
                 analysis = IntentAnalysis(
                     type=q_type,
                     rewritten_question=question,
-                    entities=[]
+                    entities=[],
+                    historical_characters=[]
                 )
                 
         print(f"📋 意图拆解结果: 类型={analysis.type}, 重写问题='{analysis.rewritten_question}', 实体={analysis.entities}")
 
         q_type = analysis.type
         rewritten_q = analysis.rewritten_question
+        
+        # 1.5 验证提及的历史人物是否在图数据库中
+        if q_type != "generic_chat" and getattr(analysis, "historical_characters", None):
+            missing_chars = [name for name, exists in check_characters_exist(analysis.historical_characters).items() if not exists]
+            if missing_chars:
+                missing_str = "、".join(missing_chars)
+                print(f"⚠️ 发现人物不在三国志中: {missing_str}")
+                answer = f"抱歉，正史《三国志》中并未记载有关“{missing_str}”的任何信息。此人或非三国时期人物，或在《三国志》中无传无载，老夫无从考证。"
+                save_cache(question, answer)
+                return answer
         
         # 2a. 闲聊 / 会话历史查询
         if q_type == "generic_chat":
@@ -384,6 +433,13 @@ def ask_question(question: str, history: list[dict] = None) -> str:
         # 2c. 常规事实或关系查询
         else:
             all_observations = run_agent_loop(llm_with_tools, rewritten_q, history_text)
+
+        # 2.5 检查是否检索到任何有效的数据库记录
+        if not has_valid_db_records(all_observations):
+            print("⚠️ 未检索到任何有效的 Neo4j 数据库记录，直接拒绝回答。")
+            answer = "抱歉，在正史《三国志》及相关史料库中未搜寻到任何与该问题相关的史实记录，老夫无从考证。"
+            save_cache(question, answer)
+            return answer
 
         # 3. 汇总数据与自检故障
         print("✍️ 正在总结回答...")
@@ -481,6 +537,17 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
     async def run_query_async(cypher: str, params: dict = None) -> list[dict]:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, run_query, cypher, params)
+
+    async def check_characters_exist_async(names: List[str]) -> dict[str, bool]:
+        if not names:
+            return {}
+        cypher = "UNWIND $names AS name OPTIONAL MATCH (p:Person {name: name}) RETURN name, p IS NOT NULL AS exists"
+        try:
+            results = await run_query_async(cypher, {"names": names})
+            return {r["name"]: r["exists"] for r in results}
+        except Exception as e:
+            await send_event("status", f"⚠️ [检查人物] 数据库查询失败 ({str(e)})")
+            return {name: True for name in names}
 
     # 动态声明异步 Agent 工具函数
     @tool
@@ -703,7 +770,8 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
                     analysis = IntentAnalysis(
                         type=data.get("type", "fact"),
                         rewritten_question=data.get("rewritten_question", question),
-                        entities=data.get("entities", [])
+                        entities=data.get("entities", []),
+                        historical_characters=data.get("historical_characters", [])
                     )
                 except Exception as e2:
                     await send_event("status", f"⚠️ [意图拆解] 兜底解析失败 ({str(e2)})，退水至经验规则分类。")
@@ -716,13 +784,25 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
                     analysis = IntentAnalysis(
                         type=q_type,
                         rewritten_question=question,
-                        entities=[]
+                        entities=[],
+                        historical_characters=[]
                     )
                     
             await send_event("status", f"📋 [意图判定] 分类: {analysis.type} | 重写问题: '{analysis.rewritten_question}'")
 
             q_type = analysis.type
             rewritten_q = analysis.rewritten_question
+
+            # 1.5 验证提及的历史人物是否在图数据库中
+            if q_type != "generic_chat" and getattr(analysis, "historical_characters", None):
+                missing_chars = [name for name, exists in (await check_characters_exist_async(analysis.historical_characters)).items() if not exists]
+                if missing_chars:
+                    missing_str = "、".join(missing_chars)
+                    await send_event("status", f"⚠️ 发现人物不在三国志中: {missing_str}")
+                    answer = f"抱歉，正史《三国志》中并未记载有关“{missing_str}”的任何信息。此人或非三国时期人物，或在《三国志》中无传无载，老夫无从考证。"
+                    await send_event("text", answer)
+                    collected_text.append(answer)
+                    return
 
             # 2a. 闲聊 / 会话历史查询
             if q_type == "generic_chat":
@@ -780,6 +860,14 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
             # 2c. 常规事实或关系查询
             else:
                 all_observations = await run_agent_loop_async(llm_with_tools_async, rewritten_q, history_text)
+
+            # 2.5 检查是否检索到任何有效的数据库记录
+            if not has_valid_db_records(all_observations):
+                await send_event("status", "⚠️ 未检索到任何有效的 Neo4j 数据库记录，直接拒绝回答。")
+                answer = "抱歉，在正史《三国志》及相关史料库中未搜寻到任何与该问题相关的史实记录，老夫无从考证。"
+                await send_event("text", answer)
+                collected_text.append(answer)
+                return
 
             # 3. 汇总数据与自检故障
             await send_event("status", "✍️ 正在汇编并考证所有搜集到的史料，准备作答...")
