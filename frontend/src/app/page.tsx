@@ -49,6 +49,13 @@ export default function Home() {
   const [hoverTooltipLeft, setHoverTooltipLeft] = useState<number | undefined>(undefined);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Toast notification
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   // Filter panel
   const [showFilter, setShowFilter] = useState(false);
   const [showEventPanel, setShowEventPanel] = useState(false);
@@ -192,15 +199,12 @@ export default function Home() {
     }
   };
 
-  const handleMapEventHover = (info: any) => {
-    if (hideTimer.current) clearTimeout(hideTimer.current);
+  const handleMapEventClick = (info: any) => {
     if (info.object && info.object.events && info.object.events.length > 0) {
       setHoveredEvent(info.object.events);
       setTooltipMode('modern');
       setHoverTooltipTop(info.y);
       setHoverTooltipLeft(info.x + 15);
-    } else {
-      hideTimer.current = setTimeout(() => setHoveredEvent(null), 100);
     }
   };
 
@@ -349,13 +353,13 @@ export default function Home() {
         proposed_value: editValue,
       });
       if (data.success) {
-        alert('反馈提交成功，感谢您的修正！');
         setEditModalOpen(false);
+        showToast('反馈提交成功，感谢您的修正！');
       } else {
-        alert('提交失败: ' + data.message);
+        showToast('提交失败: ' + data.message);
       }
     } catch {
-      alert('请求异常，请检查后端状态。');
+      showToast('请求异常，请检查后端状态。');
     }
   };
 
@@ -371,7 +375,8 @@ export default function Home() {
           onLocationClick={handleLocationClick}
           eventsList={showTimeline ? eventsList : []}
           allPersons={allPersons}
-          onEventHover={handleMapEventHover}
+          onEventClick={handleMapEventClick}
+          onMapClick={() => setHoveredEvent(null)}
           biographyOnly={biographyOnly}
         />
 
@@ -409,12 +414,10 @@ export default function Home() {
           selectedEventIds={selectedEventIds}
           onToggleEvent={toggleEvent}
           onHoverEvent={(evt, top, panelWidth) => {
-            if (hideTimer.current) clearTimeout(hideTimer.current);
             setHoverTooltipTop(top);
             setHoverTooltipLeft(panelWidth ? panelWidth + 20 : undefined);
             setHoveredEvent(evt);
           }}
-          onLeaveEvent={() => { hideTimer.current = setTimeout(() => setHoveredEvent(null), 200); }}
           showFilter={showFilter}
           onToggleFilter={() => setShowFilter(v => !v)}
           timeRange={timeRange}
@@ -441,8 +444,6 @@ export default function Home() {
           left={hoverTooltipLeft}
           tooltipMode={tooltipMode}
           setTooltipMode={setTooltipMode}
-          onMouseEnter={() => { if (hideTimer.current) clearTimeout(hideTimer.current); }}
-          onMouseLeave={() => { hideTimer.current = setTimeout(() => setHoveredEvent(null), 100); }}
           onEdit={(evt) => {
             setEditTarget(evt);
             setEditField('locations');
@@ -451,6 +452,7 @@ export default function Home() {
             setHoveredEvent(null);
           }}
           renderDesc={(text) => linkifyText(text)}
+          onClose={() => setHoveredEvent(null)}
         />
 
         <AgentPanel
@@ -565,6 +567,13 @@ export default function Home() {
             <span className="text-[10px] text-slate-500 font-sans mt-3 select-none">
               （若已横置，请确认手机系统的“自动旋转”或“方向锁定”已开启）
             </span>
+          </div>
+        )}
+
+        {toastMessage && (
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-[#0a1628]/95 text-[#e2ddce] border border-[#a4424b] rounded-md shadow-[0_4px_25px_rgba(0,0,0,0.8)] backdrop-blur-md flex items-center gap-2 text-sm font-serif font-bold tracking-wider animate-in fade-in slide-in-from-top-4 duration-300">
+            <span className="text-amber-500">⚜️</span>
+            <span>{toastMessage}</span>
           </div>
         )}
 

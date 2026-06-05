@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 
 interface HoverTooltipProps {
   event: any;
@@ -8,15 +9,16 @@ interface HoverTooltipProps {
   left?: number;
   tooltipMode: 'classical' | 'modern';
   setTooltipMode: (m: 'classical' | 'modern') => void;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
   onEdit: (evt: any) => void;
   renderDesc: (text: string) => ReactNode;
+  onClose: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export default function HoverTooltip({
   event, top, left, tooltipMode, setTooltipMode,
-  onMouseEnter, onMouseLeave, onEdit, renderDesc,
+  onEdit, renderDesc, onClose, onMouseEnter, onMouseLeave,
 }: HoverTooltipProps) {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
@@ -36,6 +38,13 @@ export default function HoverTooltip({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
+      <button
+        onClick={onClose}
+        className="absolute top-3 right-3 text-slate-400 hover:text-white transition-colors cursor-pointer z-50 p-1 rounded-full hover:bg-slate-800/50"
+        title="关闭"
+      >
+        <X size={16} />
+      </button>
       <div className="flex flex-col gap-3">
         {events.map((evt, idx) => {
           const isActive = isList ? activeIdx === idx : true;
@@ -43,7 +52,7 @@ export default function HoverTooltip({
             <div 
               key={evt.id || idx} 
               className="border-b border-[#4a5f78]/50 pb-3 last:border-0" 
-              onMouseEnter={() => isList && setActiveIdx(idx)}
+              onClick={() => isList && setActiveIdx(idx)}
             >
               {/* Header */}
               <div className="flex items-center gap-3 mb-2 cursor-pointer">

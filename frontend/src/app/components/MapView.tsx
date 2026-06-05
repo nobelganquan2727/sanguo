@@ -130,11 +130,12 @@ interface MapViewProps {
   onLocationClick?: (location: any) => void;
   eventsList?: any[];
   allPersons?: string[];
-  onEventHover?: (info: any) => void;
+  onEventClick?: (info: any) => void;
+  onMapClick?: () => void;
   biographyOnly?: boolean;
 }
 
-export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick, eventsList, allPersons, onEventHover, biographyOnly }: MapViewProps) {
+export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick, eventsList, allPersons, onEventClick, onMapClick, biographyOnly }: MapViewProps) {
   const isHL = useCallback(
     (name: string) => [...highlightedLocNames].some(l => l && locationNameMatches(l, name)),
     [highlightedLocNames],
@@ -481,8 +482,8 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       fontWeight: 'bold',
       characterSet: 'auto',
       pickable: true,
-      onHover: (info: any) => {
-        if (onEventHover) onEventHover(info);
+      onClick: (info: any) => {
+        if (onEventClick) onEventClick(info);
       },
       updateTriggers: {
         getText: [eventsList],
@@ -508,6 +509,11 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
           }
         }}
         controller={true}
+        onClick={(info) => {
+          if (!info.object) {
+            onMapClick?.();
+          }
+        }}
         layers={layers}
       >
         <MapGL mapStyle={MAP_STYLE} />
