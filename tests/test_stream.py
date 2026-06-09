@@ -8,7 +8,7 @@ from agent.qa_agent import ask_question_stream
 
 async def main():
     print("🚀 Testing ask_question_stream...")
-    question = "刘备和曹操在煮酒论英雄之后有什么纠葛？"
+    question = "曹操在官渡之战前是如何防备袁绍的？"
     history = [
         {"role": "user", "content": "你好，曹操当时在哪？"},
         {"role": "assistant", "content": "曹操当时在许都。"}

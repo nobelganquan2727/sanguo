@@ -144,7 +144,7 @@ class AgentObservabilityCallbackHandler(BaseCallbackHandler):
             "status": "error"
         })
 
-    def finalize_run(self, question: str, answer: str) -> Dict[str, Any]:
+    def finalize_run(self, question: str, answer: str, question_type: Optional[str] = None) -> Dict[str, Any]:
         overall_latency = time.time() - self.start_time
         self.total_latency = overall_latency
         
@@ -152,6 +152,7 @@ class AgentObservabilityCallbackHandler(BaseCallbackHandler):
             "run_id": self.run_id,
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
             "question": question,
+            "question_type": question_type,
             "answer": answer,
             "total_latency_seconds": overall_latency,
             "total_input_tokens": self.total_input_tokens,
@@ -174,15 +175,29 @@ class AgentObservabilityCallbackHandler(BaseCallbackHandler):
             f.write(f"\n==================== RUN {self.run_id} ====================\n")
             f.write(f"Time: {trace_data['timestamp']}\n")
             f.write(f"Question: {question}\n")
+            if question_type:
+                f.write(f"Question Type: {question_type}\n")
             f.write(f"Answer: {answer}\n")
             f.write(f"Summary: Latency={overall_latency:.2f}s | Tokens={trace_data['total_tokens']} (In={self.total_input_tokens}, Out={self.total_output_tokens}) | Cost=${self.total_cost:.6f} USD\n")
             f.write("LLM Calls:\n")
             for idx, run in enumerate(self.llm_runs):
                 err = f" | Error: {run['error']}" if "error" in run else ""
                 f.write(f"  [{idx+1}] {run['model_name']} | Latency: {run['duration']:.2f}s | In: {run.get('prompt_tokens', 0)}, Out: {run.get('completion_tokens', 0)} | Cost: ${run.get('cost', 0):.6f}{err}\n")
-            f.write("Tool Calls:\n")
-            for idx, run in enumerate(self.tool_runs):
-                f.write(f"  [{idx+1}] {run['name']} | Input: {run['input']} | Duration: {run['duration']:.2f}s | Status: {run['status']}\n")
+            if not self.tool_runs:
+                f.write("Tool Calls: None\n")
+            else:
+                f.write("Tool Calls:\n")
+                for idx, run in enumerate(self.tool_runs):
+                    f.write(f"  [{idx+1}] {run['name']} | Input: {run['input']} | Duration: {run['duration']:.2f}s | Status: {run['status']}\n")
+                    output_str = run.get('output', '')
+                    try:
+                        parsed_output = json.loads(output_str)
+                        pretty_output = json.dumps(parsed_output, ensure_ascii=False, indent=2)
+                        indented_output = "\n".join("      " + line for line in pretty_output.splitlines())
+                        f.write(f"      Output (JSON):\n{indented_output}\n")
+                    except Exception:
+                        indented_output = "\n".join("      " + line for line in output_str.splitlines())
+                        f.write(f"      Output (Raw):\n{indented_output}\n")
             f.write(f"==========================================================\n")
             
         # 3. Print a premium ASCII dashboard to stdout (console)
@@ -190,6 +205,8 @@ class AgentObservabilityCallbackHandler(BaseCallbackHandler):
         print(f"║ 📊 三国志 AI 幕僚系统全链路追踪 [Run ID: {self.run_id}] ║")
         print("╠" + "═" * 58 + "╣")
         print(f"║ 提问: {question[:45] + '...' if len(question) > 45 else question:<45} ║")
+        if question_type:
+            print(f"║ Question Type: {question_type:<41} ║")
         print(f"║ 总耗时: {overall_latency:5.2f} 秒                                       ║")
         print(f"║ 总 Token: {trace_data['total_tokens']:<6} (输入: {self.total_input_tokens:<5} | 输出: {self.total_output_tokens:<5})             ║")
         print(f"║ 总成本: ${self.total_cost:8.6f} USD                                ║")

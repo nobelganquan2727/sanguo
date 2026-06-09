@@ -19,7 +19,7 @@ from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
-from agent.qa_agent import ask_question, ask_question_stream
+from agent.qa_agent import ask_question_stream
 from agent.graph_client import run_query
 
 
