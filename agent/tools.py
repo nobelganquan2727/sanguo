@@ -1,15 +1,13 @@
 import os
-import sys
 import json
 import asyncio
-import threading
-from typing import List, Literal, Callable, Awaitable, Optional, Dict, Any
+import requests
+from typing import List, Callable, Awaitable, Optional, Any
 from contextvars import ContextVar
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.tools import tool
-from sentence_transformers import SentenceTransformer
 
 from agent.schema import GRAPH_SCHEMA
 from agent.graph_client import run_query
@@ -27,24 +25,28 @@ async def emit_status(content: str):
         print(f"⚙️ [Agent Status] {content}")
 
 # --- Helper Functions ---
-_bge_model = None
-_model_lock = threading.Lock()
-
-def _warm_up_model():
-    global _bge_model
-    with _model_lock:
-        if _bge_model is None:
-            _bge_model = SentenceTransformer('BAAI/bge-m3')
-
-# Pre-warm on import
-threading.Thread(target=_warm_up_model, daemon=True).start()
 
 def get_query_embedding(text: str) -> list[float]:
-    global _bge_model
-    if _bge_model is None:
-        _warm_up_model()
-    vec = _bge_model.encode(text)
-    return [float(x) for x in vec]
+    """Fetch BGE-M3 embedding vector from SiliconFlow API to save local server RAM."""
+    api_key = os.environ.get("SILICONFLOW_API_KEY")
+    if not api_key:
+        raise ValueError("SILICONFLOW_API_KEY not found in environment!")
+        
+    url = "https://api.siliconflow.cn/v1/embeddings"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "BAAI/bge-m3",
+        "input": text
+    }
+    
+    res = requests.post(url, json=payload, headers=headers, timeout=10)
+    res.raise_for_status()
+    
+    response = res.json()
+    return response["data"][0]["embedding"]
 
 def get_llm(model_type: str = "complex"):
     handler = active_callback_var.get()
