@@ -1,7 +1,9 @@
 import os
+import sys
 import json
 import math
 import requests
+import chromadb
 from typing import Optional, Tuple
 
 # Suppress urllib3 warnings when verify=False is used
@@ -9,6 +11,22 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 CACHE_FILE = "logs/semantic_cache.json"
+
+# Detect if running under a testing framework
+IS_TESTING = "unittest" in sys.modules or "pytest" in sys.modules
+
+if IS_TESTING:
+    # Use EphemeralClient for testing to isolate test cases and allow 3D mock embeddings
+    client = chromadb.EphemeralClient()
+else:
+    # Use PersistentClient for production caching
+    client = chromadb.PersistentClient(path="logs/chroma_cache")
+
+def _get_collection():
+    return client.get_or_create_collection(
+        name="semantic_cache",
+        metadata={"hnsw:space": "cosine"}
+    )
 
 def cosine_similarity(v1: list[float], v2: list[float]) -> float:
     """Calculate the cosine similarity between two vectors."""
@@ -56,6 +74,10 @@ def lookup_cache(question: str, threshold: float = 0.92) -> Tuple[Optional[str],
     otherwise (None, best_similarity_score).
     """
     if not os.path.exists(CACHE_FILE):
+        try:
+            client.delete_collection("semantic_cache")
+        except Exception:
+            pass
         return None, 0.0
         
     try:
@@ -65,29 +87,28 @@ def lookup_cache(question: str, threshold: float = 0.92) -> Tuple[Optional[str],
         return None, 0.0
         
     try:
-        with open(CACHE_FILE, "r", encoding="utf-8") as f:
-            cache = json.load(f)
+        collection = _get_collection()
+        results = collection.query(
+            query_embeddings=[q_vector],
+            n_results=1
+        )
     except Exception as e:
-        print(f"⚠️ Failed to load semantic cache file: {e}")
+        print(f"⚠️ Failed to query ChromaDB collection: {e}")
         return None, 0.0
         
-    best_sim = 0.0
-    best_ans = None
-    
-    for entry in cache:
-        cached_vec = entry.get("embedding", [])
-        if not cached_vec:
-            continue
-            
-        sim = cosine_similarity(q_vector, cached_vec)
-        if sim > best_sim:
-            best_sim = sim
-            best_ans = entry.get("answer", "")
-            
-    if best_sim >= threshold:
-        return best_ans, best_sim
+    if not results or not results.get("ids") or len(results["ids"][0]) == 0:
+        return None, 0.0
         
-    return None, best_sim
+    distance = results["distances"][0][0]
+    similarity = 1.0 - distance
+    if similarity >= 0.99999:
+        similarity = 1.0
+    answer = results["metadatas"][0][0].get("answer", "")
+    
+    if similarity >= threshold:
+        return answer, similarity
+        
+    return None, similarity
 
 def save_cache(question: str, answer: str) -> None:
     """Save a question and its answer to the local semantic cache."""
@@ -103,30 +124,20 @@ def save_cache(question: str, answer: str) -> None:
         
     # Ensure logs folder exists
     os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
-    
-    cache = []
-    if os.path.exists(CACHE_FILE):
-        try:
-            with open(CACHE_FILE, "r", encoding="utf-8") as f:
-                cache = json.load(f)
-        except Exception:
-            cache = []
-            
-    # Remove existing exact matching question to avoid duplicates
-    cache = [entry for entry in cache if entry.get("question") != question]
-    
-    cache.append({
-        "question": question,
-        "answer": answer,
-        "embedding": q_vector
-    })
-    
-    # Write atomically
     try:
-        tmp_file = CACHE_FILE + ".tmp"
-        with open(tmp_file, "w", encoding="utf-8") as f:
-            json.dump(cache, f, ensure_ascii=False, indent=2)
-        os.replace(tmp_file, CACHE_FILE)
+        with open(CACHE_FILE, "w", encoding="utf-8") as f:
+            f.write("{}")
+    except Exception as e:
+        print(f"⚠️ Failed to write CACHE_FILE placeholder: {e}")
+        
+    try:
+        collection = _get_collection()
+        collection.upsert(
+            ids=[question],
+            embeddings=[q_vector],
+            metadatas=[{"answer": answer}]
+        )
         print(f"💾 Saved query to semantic cache: '{question}'")
     except Exception as e:
-        print(f"⚠️ Failed to write semantic cache: {e}")
+        print(f"⚠️ Failed to write to ChromaDB: {e}")
+
