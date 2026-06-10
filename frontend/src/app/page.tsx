@@ -8,7 +8,6 @@ import EventPanel from './components/EventPanel';
 import HoverTooltip from './components/HoverTooltip';
 import AgentPanel from './components/AgentPanel';
 import EditModal from './components/EditModal';
-import PersonRelationsModal from './components/PersonRelationsModal';
 import TimelineSlider from './components/TimelineSlider';
 import { locationMatchesGeoName } from './utils/locationMatch';
 import { Calendar } from 'lucide-react';
@@ -83,7 +82,6 @@ export default function Home() {
   const [filterPersonInclude, setFilterPersonInclude] = useState('');
   const [filterPersonOr, setFilterPersonOr] = useState('');
   const [filterEventType, setFilterEventType] = useState('');
-  const [biographyOnly, setBiographyOnly] = useState(false);
   const [eventQueryParams, setEventQueryParams] = useState<URLSearchParams>(() => new URLSearchParams({ start: '190', end: '195' }));
   const [eventOffset, setEventOffset] = useState(EVENT_PAGE_SIZE);
   const [eventsHasMore, setEventsHasMore] = useState(true);
@@ -114,12 +112,6 @@ export default function Home() {
   const [editField, setEditField] = useState<'locations' | 'std_start_year'>('locations');
   const [editValue, setEditValue] = useState('');
 
-  // Person relations modal
-  const [relationsModalOpen, setRelationsModalOpen] = useState(false);
-  const [relationsPerson, setRelationsPerson] = useState('');
-  const [personRelations, setPersonRelations] = useState<any>(null);
-  const [relationsLoading, setRelationsLoading] = useState(false);
-
   const {
     geoData,
     eventsList,
@@ -128,7 +120,6 @@ export default function Home() {
     allPersons,
     fetchEventsPage,
     fetchLocationEvents,
-    fetchPersonRelations,
     fetchEventDetail,
     sendMessage,
     submitFeedback,
@@ -159,14 +150,8 @@ export default function Home() {
   };
 
   const handlePersonClick = async (name: string) => {
-    setRelationsPerson(name);
-    setRelationsModalOpen(true);
-    setRelationsLoading(true);
-    setPersonRelations(null);
     await loadPersonEvents(name);
-    const relationsData = await fetchPersonRelations(name);
-    setPersonRelations(relationsData);
-    setRelationsLoading(false);
+    setShowEventPanel(true);
   };
 
   const jumpToLocation = (locName: string) => {
@@ -185,7 +170,6 @@ export default function Home() {
       ...(filterPersonInclude && { person_include: filterPersonInclude }),
       ...(filterPersonOr && { person_or: filterPersonOr }),
       ...(filterEventType && { event_type: filterEventType }),
-      ...(biographyOnly && { biography_only: 'true' }),
     });
     await replaceEvents(params);
   };
@@ -198,7 +182,6 @@ export default function Home() {
       ...(filterPersonInclude && { person_include: filterPersonInclude }),
       ...(filterPersonOr && { person_or: filterPersonOr }),
       ...(filterEventType && { event_type: filterEventType }),
-      ...(biographyOnly && { biography_only: 'true' }),
     });
     await replaceEvents(params);
   };
@@ -324,7 +307,6 @@ export default function Home() {
 
   const focusEvent = (evt: any) => {
     setShowEventPanel(true);
-    setRelationsModalOpen(false);
     setSelectedEventIds(new Set([evt.id]));
 
     const locs = new Set<string>();
@@ -340,25 +322,6 @@ export default function Home() {
     }));
     if (firstTarget) {
       setViewState((vs: any) => ({ ...vs, longitude: firstTarget.lng, latitude: firstTarget.lat, zoom: 6.0, transitionDuration: 1200 }));
-    }
-  };
-
-  const handleRelationEventClick = async (eventId: string) => {
-    const target = eventsList.find(evt => evt.id === eventId);
-    if (target) {
-      focusEvent(target);
-      return;
-    }
-
-    setMapLoading(true);
-    try {
-      const event = await fetchEventDetail(eventId);
-      if (event) {
-        setEventsList(current => current.some((evt: any) => evt.id === event.id) ? current : [event, ...current]);
-        focusEvent(event);
-      }
-    } finally {
-      setMapLoading(false);
     }
   };
 
@@ -428,7 +391,6 @@ export default function Home() {
           onEventClick={handleMapEventClick}
           onEventHover={handleMapEventHover}
           onMapClick={() => { setHoveredEvent(null); setTooltipOpenedViaClick(false); }}
-          biographyOnly={biographyOnly}
         />
 
         {mapLoading && (
@@ -492,8 +454,6 @@ export default function Home() {
           hasMore={eventsHasMore}
           isLoadingMore={eventsLoadingMore}
           onLoadMore={handleLoadMoreEvents}
-          biographyOnly={biographyOnly}
-          setBiographyOnly={setBiographyOnly}
         />
 
         <HoverTooltip
@@ -545,15 +505,7 @@ export default function Home() {
           onSubmit={handleSubmitEdit}
         />
 
-        <PersonRelationsModal
-          open={relationsModalOpen}
-          name={relationsPerson}
-          relations={personRelations}
-          loading={relationsLoading}
-          onClose={() => setRelationsModalOpen(false)}
-          onEventClick={handleRelationEventClick}
-          onPersonClick={handlePersonClick}
-        />
+
 
         {showTimeline ? (
           <TimelineSlider

@@ -15,8 +15,6 @@ interface FilterPanelProps {
   filterEventType: string;
   setFilterEventType: (v: string) => void;
   filterMeta: { event_types: string[] };
-  biographyOnly: boolean;
-  setBiographyOnly: (v: boolean) => void;
   onApply: () => void;
   onClose: () => void;
 }
@@ -27,7 +25,6 @@ function FilterPanel({
   filterPersonOr, setFilterPersonOr,
   filterEventType, setFilterEventType,
   filterMeta,
-  biographyOnly, setBiographyOnly,
   onApply, onClose,
 }: FilterPanelProps) {
   return (
@@ -71,19 +68,6 @@ function FilterPanel({
           placeholder="如: 刘备,诸葛亮"
           className="bg-[#1a2f4c] border border-[#4a5f78] rounded px-2 py-1.5 text-white placeholder-slate-600 focus:outline-none focus:border-green-500"
         />
-        {/* 只显示本传 checkbox */}
-        <div className="flex items-center gap-2 mt-1">
-          <input
-            type="checkbox"
-            id="biography-only"
-            checked={biographyOnly}
-            onChange={e => setBiographyOnly(e.target.checked)}
-            className="w-3.5 h-3.5 rounded border-[#4a5f78] bg-[#1a2f4c] text-amber-500 focus:ring-amber-500"
-          />
-          <label htmlFor="biography-only" className="text-slate-300 select-none cursor-pointer">
-            只显示本传
-          </label>
-        </div>
       </div>
 
       {/* Person include OR (Temporarily commented out)
@@ -118,7 +102,7 @@ function FilterPanel({
       {/* Actions */}
       <div className="flex items-center justify-between pt-1 border-t border-[#4a5f78]">
         <button
-          onClick={() => { setFilterPersonInclude(''); setFilterPersonOr(''); setFilterEventType(''); setBiographyOnly(false); setTimeRange([180, 280]); }}
+          onClick={() => { setFilterPersonInclude(''); setFilterPersonOr(''); setFilterEventType(''); setTimeRange([180, 280]); }}
           className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
         >
           清除过滤
@@ -160,8 +144,6 @@ interface EventPanelProps {
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
-  biographyOnly: boolean;
-  setBiographyOnly: (v: boolean) => void;
 }
 
 export default function EventPanel({
@@ -175,7 +157,6 @@ export default function EventPanel({
   filterMeta, onApplyFilter,
   onClearSelection,
   hasMore, isLoadingMore, onLoadMore,
-  biographyOnly, setBiographyOnly,
 }: EventPanelProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -237,7 +218,6 @@ export default function EventPanel({
           filterPersonOr={filterPersonOr} setFilterPersonOr={setFilterPersonOr}
           filterEventType={filterEventType} setFilterEventType={setFilterEventType}
           filterMeta={filterMeta}
-          biographyOnly={biographyOnly} setBiographyOnly={setBiographyOnly}
           onApply={onApplyFilter}
           onClose={onToggleFilter}
         />
@@ -283,8 +263,6 @@ export default function EventPanel({
               <>
                 {eventsList.map((evt, idx) => {
                   const selected = selectedEventIds.has(evt.id);
-                  const namePrefix = showNamePrefix && evt.protagonist ? `[${evt.protagonist}] ` : '';
-                  const seqText = biographyOnly ? `${namePrefix}${localIndices[idx]}. ` : '';
                   return (
                     <div
                       key={idx}
@@ -312,7 +290,7 @@ export default function EventPanel({
                         <div className={`mt-0.5 w-3.5 h-3.5 rounded shrink-0 border transition-colors ${selected ? 'bg-amber-500 border-amber-400' : 'bg-transparent border-slate-600'}`} />
                         <span className="font-bold text-amber-500 min-w-[42px] shrink-0">{evt.year != null ? `${evt.year}年` : '不详'}</span>
                         <span className={`font-semibold leading-tight ${selected ? 'text-amber-200' : 'text-white'}`}>
-                          {seqText}{evt.title}
+                          {evt.title}
                         </span>
                       </div>
                       {evt.type && <span className="ml-[68px] text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded self-start">{evt.type}</span>}
