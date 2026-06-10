@@ -32,7 +32,7 @@ export default function EditModal({
     setEditField(value);
     setFieldMenuOpen(false);
     if (value === 'locations') {
-      setEditValue(target.locations?.join(',') || '');
+      setEditValue(target.locations?.map((l: any) => typeof l === 'object' ? l.name : l).join(',') || '');
     } else {
       setEditValue(target.year != null ? String(target.year) : '');
     }

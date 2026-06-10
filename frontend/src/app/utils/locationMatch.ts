@@ -1,7 +1,9 @@
 const ADMIN_SUFFIXES = ['县', '郡', '国', '州', '尹', '属国'];
 
-export function normalizeLocationName(name: string) {
-  return name
+export function normalizeLocationName(name: any): string {
+  if (!name) return '';
+  const str = typeof name === 'object' && name.name ? name.name : String(name);
+  return str
     .trim()
     .replace(/[（）()【】\[\]\s]/g, '')
     .replace(/，/g, ',');

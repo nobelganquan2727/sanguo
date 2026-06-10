@@ -48,6 +48,27 @@ export default function Home() {
   const [hoverTooltipTop, setHoverTooltipTop] = useState(0);
   const [hoverTooltipLeft, setHoverTooltipLeft] = useState<number | undefined>(undefined);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [tooltipOpenedViaClick, setTooltipOpenedViaClick] = useState(false);
+  const isInsideTooltipRef = useRef(false);
+  const isInsideItemRef = useRef(false);
+
+  const scheduleCloseTooltip = () => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+    }
+    hideTimer.current = setTimeout(() => {
+      if (!tooltipOpenedViaClick && !isInsideTooltipRef.current && !isInsideItemRef.current) {
+        setHoveredEvent(null);
+      }
+    }, 150);
+  };
+
+  const cancelCloseTooltip = () => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  };
 
   // Toast notification
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -201,10 +222,27 @@ export default function Home() {
 
   const handleMapEventClick = (info: any) => {
     if (info.object && info.object.events && info.object.events.length > 0) {
+      cancelCloseTooltip();
+      setTooltipOpenedViaClick(true);
       setHoveredEvent(info.object.events);
       setTooltipMode('modern');
       setHoverTooltipTop(info.y);
       setHoverTooltipLeft(info.x + 15);
+    }
+  };
+
+  const handleMapEventHover = (info: any) => {
+    if (info.object && info.object.events && info.object.events.length === 1) {
+      cancelCloseTooltip();
+      isInsideItemRef.current = true;
+      setHoverTooltipTop(info.y);
+      setHoverTooltipLeft(info.x + 15);
+      setTooltipMode('modern');
+      setHoveredEvent(info.object.events);
+      setTooltipOpenedViaClick(false);
+    } else {
+      isInsideItemRef.current = false;
+      scheduleCloseTooltip();
     }
   };
 
@@ -290,10 +328,16 @@ export default function Home() {
     setSelectedEventIds(new Set([evt.id]));
 
     const locs = new Set<string>();
-    evt.locations?.forEach((l: string) => { if (l) locs.add(l); });
+    evt.locations?.forEach((l: any) => {
+      const name = typeof l === 'object' ? l.name : l;
+      if (name) locs.add(name);
+    });
     setHighlightedLocNames(locs);
 
-    const firstTarget = geoData.find(d => evt.locations?.some((l: string) => l && locationMatchesGeoName(l, d)));
+    const firstTarget = geoData.find(d => evt.locations?.some((l: any) => {
+      const name = typeof l === 'object' ? l.name : l;
+      return name && locationMatchesGeoName(name, d);
+    }));
     if (firstTarget) {
       setViewState((vs: any) => ({ ...vs, longitude: firstTarget.lng, latitude: firstTarget.lat, zoom: 6.0, transitionDuration: 1200 }));
     }
@@ -332,9 +376,15 @@ export default function Home() {
     let firstTarget: any = null;
     eventsList.forEach(e => {
       if (newSelected.has(e.id) && e.locations?.length) {
-        e.locations.forEach((l: string) => { if (l) allLocs.add(l); });
+        e.locations.forEach((l: any) => {
+          const name = typeof l === 'object' ? l.name : l;
+          if (name) allLocs.add(name);
+        });
         if (!firstTarget) {
-          firstTarget = geoData.find(d => e.locations.some((l: string) => l && locationMatchesGeoName(l, d)));
+          firstTarget = geoData.find(d => e.locations.some((l: any) => {
+            const name = typeof l === 'object' ? l.name : l;
+            return name && locationMatchesGeoName(name, d);
+          }));
         }
       }
     });
@@ -376,7 +426,8 @@ export default function Home() {
           eventsList={showTimeline ? eventsList : []}
           allPersons={allPersons}
           onEventClick={handleMapEventClick}
-          onMapClick={() => setHoveredEvent(null)}
+          onEventHover={handleMapEventHover}
+          onMapClick={() => { setHoveredEvent(null); setTooltipOpenedViaClick(false); }}
           biographyOnly={biographyOnly}
         />
 
@@ -414,9 +465,16 @@ export default function Home() {
           selectedEventIds={selectedEventIds}
           onToggleEvent={toggleEvent}
           onHoverEvent={(evt, top, panelWidth) => {
+            cancelCloseTooltip();
+            isInsideItemRef.current = true;
             setHoverTooltipTop(top);
             setHoverTooltipLeft(panelWidth ? panelWidth + 20 : undefined);
             setHoveredEvent(evt);
+            setTooltipOpenedViaClick(false);
+          }}
+          onLeaveEvent={() => {
+            isInsideItemRef.current = false;
+            scheduleCloseTooltip();
           }}
           showFilter={showFilter}
           onToggleFilter={() => setShowFilter(v => !v)}
@@ -447,12 +505,23 @@ export default function Home() {
           onEdit={(evt) => {
             setEditTarget(evt);
             setEditField('locations');
-            setEditValue(evt.locations?.join(',') || '');
+            setEditValue(evt.locations?.map((l: any) => typeof l === 'object' ? l.name : l).join(',') || '');
             setEditModalOpen(true);
             setHoveredEvent(null);
           }}
           renderDesc={(text) => linkifyText(text)}
-          onClose={() => setHoveredEvent(null)}
+          onClose={() => {
+            setHoveredEvent(null);
+            setTooltipOpenedViaClick(false);
+          }}
+          onMouseEnter={() => {
+            cancelCloseTooltip();
+            isInsideTooltipRef.current = true;
+          }}
+          onMouseLeave={() => {
+            isInsideTooltipRef.current = false;
+            scheduleCloseTooltip();
+          }}
         />
 
         <AgentPanel

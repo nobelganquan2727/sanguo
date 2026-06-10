@@ -142,6 +142,7 @@ interface EventPanelProps {
   selectedEventIds: Set<string>;
   onToggleEvent: (evt: any) => void;
   onHoverEvent: (evt: any, top: number, panelWidth?: number) => void;
+  onLeaveEvent?: () => void;
   showFilter: boolean;
   onToggleFilter: () => void;
   // filter props passthrough
@@ -165,7 +166,7 @@ interface EventPanelProps {
 
 export default function EventPanel({
   show, onToggle,
-  eventsList, selectedEventIds, onToggleEvent, onHoverEvent,
+  eventsList, selectedEventIds, onToggleEvent, onHoverEvent, onLeaveEvent,
   showFilter, onToggleFilter,
   timeRange, setTimeRange,
   filterPersonInclude, setFilterPersonInclude,
@@ -288,8 +289,7 @@ export default function EventPanel({
                     <div
                       key={idx}
                       ref={(node) => { eventRefs.current[evt.id] = node; }}
-                      onClick={(e) => {
-                        onToggleEvent(evt);
+                      onMouseEnter={(e) => {
                         const wrapperRect = wrapperRef.current?.getBoundingClientRect();
                         if (wrapperRect) {
                           const itemRect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
@@ -297,10 +297,16 @@ export default function EventPanel({
                           onHoverEvent({ ...evt, seqNum: localIndices[idx] }, Math.max(0, Math.min(rawTop, 360)), wrapperRect.width);
                         }
                       }}
+                      onMouseLeave={() => {
+                        if (onLeaveEvent) onLeaveEvent();
+                      }}
+                      onClick={(e) => {
+                        onToggleEvent(evt);
+                      }}
                       className={`text-sm flex flex-col gap-1.5 p-2 rounded cursor-pointer transition-all border ${selected
                         ? 'bg-[#1a2f4c] border-amber-500/70 shadow-[0_0_8px_rgba(245,158,11,0.25)]'
                         : 'border-transparent hover:bg-[#1a2f4c] hover:border-[#4a5f78]'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start gap-2">
                         <div className={`mt-0.5 w-3.5 h-3.5 rounded shrink-0 border transition-colors ${selected ? 'bg-amber-500 border-amber-400' : 'bg-transparent border-slate-600'}`} />
@@ -312,9 +318,12 @@ export default function EventPanel({
                       {evt.type && <span className="ml-[68px] text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded self-start">{evt.type}</span>}
                       {evt.locations?.length > 0 && (
                         <div className="flex flex-wrap gap-1 ml-[68px]">
-                          {evt.locations.map((l: string, i: number) => (
-                            <span key={i} className="text-xs text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded">📍 {l}</span>
-                          ))}
+                          {evt.locations.map((l: any, i: number) => {
+                            const name = typeof l === 'object' ? l.name : l;
+                            return (
+                              <span key={i} className="text-xs text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded">📍 {name}</span>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

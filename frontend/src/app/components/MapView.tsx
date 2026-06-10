@@ -131,11 +131,12 @@ interface MapViewProps {
   eventsList?: any[];
   allPersons?: string[];
   onEventClick?: (info: any) => void;
+  onEventHover?: (info: any) => void;
   onMapClick?: () => void;
   biographyOnly?: boolean;
 }
 
-export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick, eventsList, allPersons, onEventClick, onMapClick, biographyOnly }: MapViewProps) {
+export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick, eventsList, allPersons, onEventClick, onEventHover, onMapClick, biographyOnly }: MapViewProps) {
   const isHL = useCallback(
     (name: string) => [...highlightedLocNames].some(l => l && locationNameMatches(l, name)),
     [highlightedLocNames],
@@ -190,16 +191,28 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       const protagonistCounts: Record<string, number> = {};
       const resolvedEvents = eventsList.map((evt) => {
         if (!evt.locations || evt.locations.length === 0) return null;
-        const firstLoc = evt.locations.find((l: string) => l);
+        const firstLoc = evt.locations.find((l: any) => l);
         if (!firstLoc) return null;
-        const geo = geoData.find(d => locationMatchesGeoName(firstLoc, d));
-        if (geo) {
+        
+        let lat = typeof firstLoc === 'object' ? firstLoc.lat : null;
+        let lng = typeof firstLoc === 'object' ? firstLoc.lng : null;
+        
+        if (typeof lat !== 'number' || typeof lng !== 'number') {
+          const firstLocName = typeof firstLoc === 'object' ? firstLoc.name : firstLoc;
+          const geo = geoData.find(d => locationMatchesGeoName(firstLocName, d));
+          if (geo) {
+            lat = geo.lat;
+            lng = geo.lng;
+          }
+        }
+        
+        if (typeof lat === 'number' && typeof lng === 'number') {
           const p = evt.protagonist || '';
           protagonistCounts[p] = (protagonistCounts[p] || 0) + 1;
           return {
             ...evt,
-            lng: geo.lng,
-            lat: geo.lat,
+            lng,
+            lat,
             seqNum: protagonistCounts[p]
           };
         }
@@ -329,12 +342,23 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
         const prio = getPriority(evt.type);
         // if (prio === 0) continue;
 
-        const firstLoc = evt.locations.find((l: string) => l);
+        const firstLoc = evt.locations.find((l: any) => l);
         if (!firstLoc) continue;
 
-        const geo = geoData.find(d => locationMatchesGeoName(firstLoc, d));
-        if (geo) {
-          validEvents.push({ ...evt, lng: geo.lng, lat: geo.lat, priority: prio });
+        let lat = typeof firstLoc === 'object' ? firstLoc.lat : null;
+        let lng = typeof firstLoc === 'object' ? firstLoc.lng : null;
+
+        if (typeof lat !== 'number' || typeof lng !== 'number') {
+          const firstLocName = typeof firstLoc === 'object' ? firstLoc.name : firstLoc;
+          const geo = geoData.find(d => locationMatchesGeoName(firstLocName, d));
+          if (geo) {
+            lat = geo.lat;
+            lng = geo.lng;
+          }
+        }
+
+        if (typeof lat === 'number' && typeof lng === 'number') {
+          validEvents.push({ ...evt, lng, lat, priority: prio });
         }
       }
 
@@ -376,8 +400,7 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
         const topEvent = group[0];
         const shortTitle = getShortLabel(topEvent.title);
 
-        const type = topEvent.type || '';
-        const isRed = type === '军事征伐' || type === '政治谋略' || type === '政治谋虑';
+        const isRed = group.some((e: any) => e.major_events && e.major_events.length > 0);
         const bgColor = isRed ? [185, 28, 28, 220] : [20, 83, 45, 220];
         const borderColor = isRed ? [239, 68, 68, 255] : [34, 197, 94, 255];
 
@@ -484,6 +507,9 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       pickable: true,
       onClick: (info: any) => {
         if (onEventClick) onEventClick(info);
+      },
+      onHover: (info: any) => {
+        if (onEventHover) onEventHover(info);
       },
       updateTriggers: {
         getText: [eventsList],

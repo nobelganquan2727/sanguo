@@ -1,0 +1,286 @@
+{
+  "meta": {
+    "title": "三国时期政治利益集团与世家大族谱系",
+    "description": "归纳整理三国末期至西晋初年的各大政治利益集团、地方士人派系以及顶级世家门阀，列出其地理源流与代表人物。",
+    "approxPeriod": "190-280 AD",
+    "source": "依据《三国志》、《晋书》及谭其骧《中国历史地图集》地理分域整理。"
+  },
+  "political_factions": [
+    {
+      "id": "ru_ying",
+      "name": "汝颍集团",
+      "description": "源自豫州汝南郡与颍川郡的士人群体。东汉末期“清议”的策源地，儒学底蕴深厚。是曹魏政权最核心的文官智囊团，也是九品中正制等曹魏/西晋政治秩序的奠基者。",
+      "origin": "豫州-汝南郡、颍川郡",
+      "representatives": [
+        { "name": "荀彧", "alias": "文若", "faction": "曹魏", "description": "曹魏首席战略家，颍川荀氏代表，被称为“吾之子房”。" },
+        { "name": "荀攸", "alias": "公达", "faction": "曹魏", "description": "曹操核心谋主，百里挑一的战术大师。" },
+        { "name": "郭嘉", "alias": "奉孝", "faction": "曹魏", "description": "曹操谋士，擅出奇兵与洞察人性的军事天才。" },
+        { "name": "陈群", "alias": "长文", "faction": "曹魏", "description": "九品中正制的创立者，奠定门阀世族政治根基。" },
+        { "name": "钟繇", "alias": "元常", "faction": "曹魏", "description": "坐镇关中保障后方辎重与军马，大书法家。" },
+        { "name": "戏志才", "alias": null, "faction": "曹魏", "description": "曹操早期谋士，极受器重，英年早逝。" },
+        { "name": "新平/辛评", "alias": "仲治", "faction": "袁绍", "description": "原袁绍部属，颍川阳翟人。" },
+        { "name": "徐庶", "alias": "元直", "faction": "蜀汉/曹魏", "description": "颍川人，先助刘备后投曹魏，官至御史中丞。" },
+        { "name": "石韬", "alias": "广元", "faction": "曹魏", "description": "颍川人，诸葛亮密友，入魏官至典农校尉、郡守。" },
+        { "name": "钟会", "alias": "士季", "faction": "曹魏", "description": "钟繇之子，灭蜀主将，后与姜维共谋叛魏。" }
+      ]
+    },
+    {
+      "id": "qiao_pei",
+      "name": "谯沛集团",
+      "description": "曹操的乡党亲信军功集团，主要由豫州谯郡、沛国等地的将领及亲信构成。掌控曹魏的核心禁卫军与军权（诸曹夏侯），是曹魏宗室强硬派的中坚力量。",
+      "origin": "豫州-谯郡、沛国",
+      "representatives": [
+        { "name": "夏侯敦", "alias": "元让", "faction": "曹魏", "description": "曹魏勋臣之首，曹氏最信任的军中大将。" },
+        { "name": "夏侯渊", "alias": "妙才", "faction": "曹魏", "description": "擅长长途奔袭与虎步关右的西部战区司令。" },
+        { "name": "曹仁", "alias": "子孝", "faction": "曹魏", "description": "曹魏守城名将，樊城防线的定海神针。" },
+        { "name": "曹洪", "alias": "子廉", "faction": "曹魏", "description": "曹操族弟，舍命献马，家财万贯的宗室功臣。" },
+        { "name": "曹纯", "alias": "子和", "faction": "曹魏", "description": "曹魏王牌骑兵“虎豹骑”的首任督帅。" },
+        { "name": "曹真", "alias": "子丹", "faction": "曹魏", "description": "大司马，多次成功抵御诸葛亮北伐的统帅。" },
+        { "name": "夏侯尚", "alias": "伯仁", "faction": "曹魏", "description": "曹魏中生代统帅，攻占上庸，经营荆州。" },
+        { "name": "曹休", "alias": "文烈", "faction": "曹魏", "description": "“千里驹”，负责东线对吴防御的大司马。" },
+        { "name": "曹爽", "alias": "昭伯", "faction": "曹魏", "description": "曹真之子，辅政大臣，在高平陵之变中被司马懿夷灭。" },
+        { "name": "夏侯霸", "alias": "仲权", "faction": "曹魏/蜀汉", "description": "夏侯渊之子，高平陵之变后投奔蜀汉任车骑将军。" }
+      ]
+    },
+    {
+      "id": "jiang_dong",
+      "name": "江东集团",
+      "description": "孙吴政权的支柱——江东本土世家门阀。以吴郡“顾陆朱张”和会稽“虞孔魏贺”为代表。前期致力于地方割据与联姻，中后期随着江东化加深，逐渐在政治和军事上占据绝对主导。",
+      "origin": "扬州-吴郡、会稽郡、丹杨郡",
+      "representatives": [
+        { "name": "陆逊", "alias": "伯言", "faction": "孙吴", "description": "击败关羽、刘备的核心统帅，出将入相的吴郡陆氏代表。" },
+        { "name": "顾雍", "alias": "元叹", "faction": "孙吴", "description": "执掌东吴朝政十九年的丞相，吴郡顾氏代表。" },
+        { "name": "朱桓", "alias": "休穆", "faction": "孙吴", "description": "勇猛善战的吴郡朱氏名将，濡须督。" },
+        { "name": "张温", "alias": "惠恕", "faction": "孙吴", "description": "才名冠世的吴郡张氏子弟，曾出使蜀汉。" },
+        { "name": "虞翻", "alias": "仲翔", "faction": "孙吴", "description": "会稽余姚人，性格狂直的经学家与易学大师。" },
+        { "name": "陆抗", "alias": "幼节", "faction": "孙吴", "description": "陆逊之子，击败晋将羊祜，孙吴末期的中流砥柱。" },
+        { "name": "朱然", "alias": "义封", "faction": "孙吴", "description": "朱治外甥与养子，守御江陵的东吴重臣。" },
+        { "name": "顾谭", "alias": "子默", "faction": "孙吴", "description": "顾雍之孙，与太子孙登交好，后因二宫之争被流放。" },
+        { "name": "吾粲", "alias": "孔休", "faction": "孙吴", "description": "吴郡乌程人，寒门崛起，因卷入二宫之争被杀。" },
+        { "name": "贺齐", "alias": "公苗", "faction": "孙吴", "description": "会稽山阴人，平定山越、武备奢华的名将。" }
+      ]
+    },
+    {
+      "id": "huai_si",
+      "name": "淮泗集团",
+      "description": "跟随孙坚、孙策、孙权父子南渡江东的淮河、泗水流域的北方流寓将领与士人。是孙吴前期的创业功臣班底，倾向于积极北伐中原以归乡，与本土江东集团在战略上偶有分歧。",
+      "origin": "豫州、徐州-淮水与泗水流域（如九江、临淮、鲁国、彭城）",
+      "representatives": [
+        { "name": "周瑜", "alias": "公瑾", "faction": "孙吴", "description": "庐江舒县人，赤壁之战统帅，淮泗集团首代军事领袖。" },
+        { "name": "鲁肃", "alias": "子敬", "faction": "孙吴", "description": "临淮东城人，提出“榻上策”，力主孙刘联盟的战略家。" },
+        { "name": "张昭", "alias": "子布", "faction": "孙吴", "description": "彭城人，江东文臣之首，辅佐孙氏父子的辅政重臣。" },
+        { "name": "吕蒙", "alias": "子明", "faction": "孙吴", "description": "汝南富陂人，白衣渡江袭取荆州，淮泗将领代表。" },
+        { "name": "甘宁", "alias": "兴霸", "faction": "孙吴", "description": "巴郡人（游侠投吴，归属淮泗武将体系），锦帆贼。" },
+        { "name": "周泰", "alias": "幼平", "faction": "孙吴", "description": "九江下蔡人，勇猛护主，遍体鳞伤的猛将。" },
+        { "name": "蒋钦", "alias": "公奕", "faction": "孙吴", "description": "九江寿春人，随孙策创业的十二虎臣之一。" },
+        { "name": "徐盛", "alias": "文向", "faction": "孙吴", "description": "琅邪莒人，江东抗魏防线的重要将领。" },
+        { "name": "丁奉", "alias": "承渊", "faction": "孙吴", "description": "庐江安丰人，历经四代、雪中奋短兵的晚期宿将。" },
+        { "name": "诸葛瑾", "alias": "子瑜", "faction": "孙吴", "description": "琅邪阳都人，诸葛亮之兄，性格宽厚，官至大将军。" }
+      ]
+    },
+    {
+      "id": "jing_zhou",
+      "name": "荆州集团",
+      "description": "东汉末期在荆州牧刘表庇护下形成，后在赤壁之战后投奔刘备的士人与地方武装力量。是蜀汉政权的实际掌权群体（孔明治蜀的骨干），在益州政治格局中处于第一层级。",
+      "origin": "荆州-南阳郡、襄阳郡、江夏郡、零陵郡等",
+      "representatives": [
+        { "name": "诸葛亮", "alias": "孔明", "faction": "蜀汉", "description": "琅邪人，寓居襄阳隆中，蜀汉力挽狂澜的执政官。" },
+        { "name": "庞统", "alias": "士元", "faction": "蜀汉", "description": "襄阳名士，凤雏，刘备入蜀的核心军师。" },
+        { "name": "马良", "alias": "季常", "faction": "蜀汉", "description": "“马氏五常，白眉最良”，深得刘备信任的文官。" },
+        { "name": "马谡", "alias": "幼常", "faction": "蜀汉", "description": "马良之弟，才气过人，因失街亭被诸葛亮挥泪斩首。" },
+        { "name": "黄忠", "alias": "汉升", "faction": "蜀汉", "description": "南阳人，定军山力斩夏侯渊的五虎上将之一。" },
+        { "name": "魏延", "alias": "文长", "faction": "蜀汉", "description": "义阳人，镇守汉中的大将，具有极高军事天赋。" },
+        { "name": "蒋琬", "alias": "公琰", "faction": "蜀汉", "description": "零陵人，诸葛亮逝世后的首任承接大局者。" },
+        { "name": "费祎", "alias": "文伟", "faction": "蜀汉", "description": "江夏人，性格温顺理智，主政蜀汉中后期。" },
+        { "name": "董允", "alias": "休昭", "faction": "蜀汉", "description": "掌内侍，敢于直言谏诤，制约宦官黄皓。" },
+        { "name": "杨仪", "alias": "威公", "faction": "蜀汉", "description": "襄阳人，精于筹划军粮，但器量狭隘，因魏延之死失势。" }
+      ]
+    },
+    {
+      "id": "dong_zhou",
+      "name": "东州集团",
+      "description": "关东兵乱期间，从三辅（关中）和南阳等地流入益州的流民与士人。被益州牧刘焉接纳并编为“东州兵”。刘备入蜀后，联合东州集团来压制巴蜀本土派系。",
+      "origin": "司隶-关中三辅、荆州-南阳郡等流寓益州群体",
+      "representatives": [
+        { "name": "法正", "alias": "孝直", "faction": "蜀汉", "description": "扶风人，奇谋百出，帮助刘备夺取汉中，深受宠信。" },
+        { "name": "孟达", "alias": "子度", "faction": "蜀汉/曹魏", "description": "扶风人，先投备后投魏，在新城之乱中被司马懿斩杀。" },
+        { "name": "李严", "alias": "正方", "faction": "蜀汉", "description": "南阳人，与诸葛亮共同托孤，后因运粮失职被废为庶人。" },
+        { "name": "吴懿", "alias": "子远", "faction": "蜀汉", "description": "陈留人，刘备吴皇后的兄长，蜀汉中后期重臣。" },
+        { "name": "许靖", "alias": "文休", "faction": "蜀汉", "description": "汝南平舆人，名满天下的名士，被尊为蜀汉太傅。" },
+        { "name": "董_/_董和", "alias": "幼宰", "faction": "蜀汉", "description": "南郡人，为官清廉，与诸葛亮共同主持丞相府政务。" }
+      ]
+    },
+    {
+      "id": "ba_shu",
+      "name": "巴蜀集团",
+      "description": "益州本土的士人与豪强地主。在刘璋、刘备、诸葛亮治蜀期间均处于非核心统治层。他们倾向于安境保民，对蜀汉兴复汉室、连年北伐的消耗战略持消极或反对态度。",
+      "origin": "益州-蜀郡、广汉郡、巴郡、犍为郡",
+      "representatives": [
+        { "name": "谯周", "alias": "允南", "faction": "蜀汉", "description": "巴西人，蜀汉儒学大师，力主刘禅投降邓艾以保全百姓。" },
+        { "name": "张翼", "alias": "伯恭", "faction": "蜀汉", "description": "犍为人，蜀汉名将，常持反对姜维北伐立场。" },
+        { "name": "张嶷", "alias": "伯岐", "faction": "蜀汉", "description": "巴郡人，平定南中，战死于北伐前线的忠勇之将。" },
+        { "name": "黄权", "alias": "公衡", "faction": "蜀汉/曹魏", "description": "巴西人，原刘璋主簿，夷陵战败后投魏，受魏帝礼遇。" },
+        { "name": "秦宓", "alias": "子敕", "faction": "蜀汉", "description": "广汉人，天蜀雄辩名士，博学多才。" },
+        { "name": "王平", "alias": "子均", "faction": "蜀汉", "description": "巴西人（降将出身，融入本土），镇守汉中使魏军无功而返。" },
+        { "name": "张松", "alias": "子乔", "faction": "刘璋", "description": "蜀郡人，因暗中勾结刘备事泄，被刘璋处死。" },
+        { "name": "杨戏", "alias": "文然", "faction": "蜀汉", "description": "犍为人，撰写《季汉辅臣赞》，性格傲慢忤逆姜维被废。" }
+      ]
+    },
+    {
+      "id": "he_bei",
+      "name": "河北集团",
+      "description": "东汉末年以袁绍政权为中心，活跃于冀州、并州、幽州、青州的士大夫及军事领袖。袁氏覆亡后，部分投降曹操，成为曹魏北方边防及行政的中坚力量。",
+      "origin": "冀州、幽州、并州、青州",
+      "representatives": [
+        { "name": "田丰", "alias": "元皓", "faction": "袁绍", "description": "冀州人，袁绍核心谋士，因直言进谏被袁绍下狱杀害。" },
+        { "name": "沮授", "alias": null, "faction": "袁绍", "description": "冀州人，提出占冀州、图天下的战略，官渡之战被俘不降被杀。" },
+        { "name": "审配", "alias": "正南", "faction": "袁绍", "description": "冀州人，死守邺城，临刑要求“面朝北方”以示忠心。" },
+        { "name": "逢纪", "alias": "元图", "faction": "袁绍", "description": "南阳人（客籍河北），协助袁绍夺取冀州，后辅佐袁尚。" },
+        { "name": "张郃", "alias": "隽乂", "faction": "袁绍/曹魏", "description": "冀州人，官渡之战投曹，街亭之战击败马谡的魏国名将。" },
+        { "name": "辛毗", "alias": "佐治", "faction": "袁绍/曹魏", "description": "颍川人（客籍河北），后投曹魏，持节限制司马懿出战诸葛亮。" },
+        { "name": "高览", "alias": null, "faction": "袁绍/曹魏", "description": "与张郃一同在官渡之战中投奔曹操的猛将。" },
+        { "name": "牵招", "alias": "子经", "faction": "袁绍/曹魏", "description": "冀州人，魏国北疆雁门太守，威震匈奴乌桓。" }
+      ]
+    }
+  ],
+  "great_clans": [
+    {
+      "id": "hong_nong_yang",
+      "name": "弘农杨氏",
+      "surname": "杨",
+      "ancestral_home": "司隶-弘农郡华阴县",
+      "description": "东汉“四世三公”的顶级世家，西汉丞相杨敞之后。以秉公清廉、研习《欧阳尚书》名噪天下。东汉末期在政治上极力维护汉室，后因曹操猜忌逐渐边缘化，但依然在北方士族中地位筹高。",
+      "representatives": [
+        { "name": "杨震", "alias": "伯起", "faction": "东汉", "description": "“四知太尉”（天知地知你知我知），弘农杨氏崛起的奠基人。" },
+        { "name": "杨秉", "alias": "叔节", "faction": "东汉", "description": "杨震之子，官至太尉，以清廉著称。" },
+        { "name": "杨彪", "alias": "文先", "faction": "东汉/曹魏", "description": "杨震之孙，历经董卓之乱维护汉室，汉末最后一位太尉。" },
+        { "name": "杨修", "alias": "德祖", "faction": "曹魏", "description": "杨彪之子，曹植智囊，因参与夺嫡及“鸡肋”事件被曹操处死。" },
+        { "name": "杨骏", "alias": "文长", "faction": "西晋", "description": "晋武帝杨皇后的父亲，西晋初年的权臣，后在政变中被贾南风诛杀。" }
+      ]
+    },
+    {
+      "id": "ying_chuan_xun",
+      "name": "颍川荀氏",
+      "surname": "荀",
+      "ancestral_home": "豫州-颍川郡颍阴县",
+      "description": "战国荀子之后。东汉“荀氏八龙”奠定家学地位。荀彧协助曹操建立了曹魏统一北方的基业，使荀氏成为曹魏第一文臣世家。即使在魏晋禅代期间，荀氏依然凭借庞大的联姻网络屹立不倒。",
+      "representatives": [
+        { "name": "荀淑", "alias": "季和", "faction": "东汉", "description": "世称“神君”，“荀氏八龙”之父，荀氏宗脉的开创者。" },
+        { "name": "荀彧", "alias": "文若", "faction": "曹魏", "description": "荀淑之孙，曹魏的首席谋臣与政治架构师。" },
+        { "name": "荀攸", "alias": "公达", "faction": "曹魏", "description": "荀彧之侄，曹操的军事谋主，列入魏五臣之一。" },
+        { "name": "荀恽", "alias": "长倩", "faction": "曹魏", "description": "荀彧长子，娶曹操之女安阳公主，与曹植交好。" },
+        { "name": "荀勖", "alias": "公曾", "faction": "西晋", "description": "荀彧曾孙，西晋开国功臣，音律学家，极力谄媚司马氏。" },
+        { "name": "荀专/荀粲", "alias": "奉倩", "faction": "曹魏", "description": "荀彧之子，著名的玄学家，“妇死殉情”的唯美主义代表。" }
+      ]
+    },
+    {
+      "id": "lang_ya_zhuge",
+      "name": "琅琊诸葛氏",
+      "surname": "诸葛",
+      "ancestral_home": "徐州-琅邪郡阳都县",
+      "description": "“一门三方，分仕三国”。诸葛氏在汉末战乱中分赴魏、蜀、吴三地，并在三方均出仕到卿相重臣。这是地缘政治中家族分散投资、保障家族传承的经典案例。",
+      "representatives": [
+        { "name": "诸葛亮", "alias": "孔明", "faction": "蜀汉", "description": "蜀汉丞相，鞠躬尽瘁，被誉为卧龙，代表诸葛家仕蜀一支。" },
+        { "name": "诸葛瑾", "alias": "子瑜", "faction": "孙吴", "description": "诸葛亮之兄，吴国大将军、豫州牧，代表诸葛家仕吴一支。" },
+        { "name": "诸葛诞", "alias": "公休", "faction": "曹魏", "description": "诸葛亮族弟，魏国征东大将军，后发动淮南第三叛反对司马氏战死。" },
+        { "name": "诸葛恪", "alias": "元逊", "faction": "孙吴", "description": "诸葛瑾之子，孙权托孤大臣，权倾一时，后被孙峻设计诛杀。" },
+        { "name": "诸葛瞻", "alias": "思远", "faction": "蜀汉", "description": "诸葛亮之子，蜀汉卫将军，在绵竹关抗击邓艾时英勇战死。" }
+      ]
+    },
+    {
+      "id": "qiao_jun_cao_xiahou",
+      "name": "谯郡曹氏·夏侯氏",
+      "surname": "曹/夏侯",
+      "ancestral_home": "豫州-谯郡",
+      "description": "曹氏与夏侯氏本为同乡并多代联姻，在汉末起兵时深度绑定，是曹魏政权的皇族宗室。拥有对魏国核心主力军队（虎豹骑、青州兵、西线/东线防线）的绝对控制权。",
+      "representatives": [
+        { "name": "曹操", "alias": "孟德", "faction": "曹魏", "description": "魏武帝，曹魏政权的奠基者。" },
+        { "name": "曹丕", "alias": "子桓", "faction": "曹魏", "description": "魏文帝，正式接受汉献帝禅让建立曹魏政权。" },
+        { "name": "夏侯敦", "alias": "元让", "faction": "曹魏", "description": "曹操至亲，大将军，享有不臣之礼的宗室功臣。" },
+        { "name": "夏侯渊", "alias": "妙才", "faction": "曹魏", "description": "征西将军，曹操西线的屏障。" },
+        { "name": "曹植", "alias": "子建", "faction": "曹魏", "description": "曹操之子，文学巨匠，建安文学的集大成者。" },
+        { "name": "夏侯玄", "alias": "太初", "faction": "曹魏", "description": "魏晋玄学开创者之一，高平陵变后被司马师灭族。" }
+      ]
+    },
+    {
+      "id": "he_nei_sima",
+      "name": "河内司马氏",
+      "surname": "司马",
+      "ancestral_home": "司隶-河内郡温县",
+      "description": "楚汉赵王司马卬之后。汉末以“司马八达”名震京洛。司马氏通过军事政变（高平陵之变）逐步篡夺曹魏政权，最终建立西晋，实现了从地方豪族到皇权的跨越。",
+      "representatives": [
+        { "name": "司马防", "alias": "建公", "faction": "东汉", "description": "司马懿之父，曾举荐曹操为洛阳北部尉，培育了“司马八达”。" },
+        { "name": "司马懿", "alias": "仲达", "faction": "曹魏", "description": "西晋政权实际奠基人，多次防御蜀吴，发动高平陵之变。" },
+        { "name": "司马师", "alias": "子元", "faction": "曹魏", "description": "司马懿长子，废魏帝曹芳，平定淮南叛乱，稳固司马氏统治。" },
+        { "name": "司马昭", "alias": "子上", "faction": "曹魏", "description": "司马懿次子，世称“司马昭之心路人皆知”，主持灭蜀。" },
+        { "name": "司马炎", "alias": "安世", "faction": "西晋", "description": "晋武帝，篡魏建晋，统一三国，终结乱世。" },
+        { "name": "司马孚", "alias": "叔达", "faction": "曹魏/西晋", "description": "司马懿之弟，自封“魏之忠臣”，西晋建立后封安平王。" }
+      ]
+    },
+    {
+      "id": "tai_yuan_wang",
+      "name": "太原王氏",
+      "surname": "王",
+      "ancestral_home": "并州-太原郡晋阳县",
+      "description": "源自姬姓，秦名将王翦之后。汉末王允刺杀董卓使家族名声达到顶点，魏晋交替期王昶、王浑等镇守地方，为西晋统一立下汗马功劳，并在南北朝时期发展为顶级门阀。",
+      "representatives": [
+        { "name": "王允", "alias": "子师", "faction": "东汉", "description": "汉末司徒，策划连环计诛杀董卓，后被李傕、郭汜所杀。" },
+        { "name": "王凌", "alias": "彦云", "faction": "曹魏", "description": "王允之侄，太尉，因图谋废黜曹芳、反对司马懿被逼自杀（淮南第一叛）。" },
+        { "name": "王昶", "alias": "文舒", "faction": "曹魏", "description": "魏国司空，深识远虑，镇守南线对吴战场。" },
+        { "name": "王浑", "alias": "玄冲", "faction": "西晋", "description": "王昶之子，西晋灭吴主将之一，与王濬争功。" }
+      ]
+    },
+    {
+      "id": "run_nan_yuan",
+      "name": "汝南袁氏",
+      "surname": "袁",
+      "ancestral_home": "豫州-汝南郡汝阳县",
+      "description": "东汉名副其实的“四世三公”第一门阀。门生故吏遍天下，凭借极强的政治号召力，在汉末群雄讨董时被推举为盟主。后因分裂与战略失误，被曹操各个击破而衰亡。",
+      "representatives": [
+        { "name": "袁安", "alias": "邵公", "faction": "东汉", "description": "东汉司徒，卧雪迎宾，汝南袁氏贵显名望的奠基人。" },
+        { "name": "袁隗", "alias": "次阳", "faction": "东汉", "description": "袁安之孙，汉末太傅，因袁绍起兵反对董卓，在洛阳被董卓灭门。" },
+        { "name": "袁绍", "alias": "本初", "faction": "群雄", "description": "汉末北方最大割据势力，占有冀青幽并四州，官渡之战败于曹操。" },
+        { "name": "袁术", "alias": "公路", "faction": "群雄", "description": "袁绍之弟（嫡子），占领淮南，强行僭越称帝（仲家），最终众叛亲离病死。" }
+      ]
+    },
+    {
+      "id": "ying_chuan_chen",
+      "name": "颍川陈氏",
+      "surname": "陈",
+      "ancestral_home": "豫州-颍川郡许县",
+      "description": "汉末名士陈寔之后，以德行著称于世。陈群在曹魏创立九品中正制，确立了陈氏作为曹魏、西晋第一流高门显贵的地位，陈氏宗脉贯穿魏晋南北朝。",
+      "representatives": [
+        { "name": "陈寔", "alias": "仲弓", "faction": "东汉", "description": "世称“太丘长”，德高望重，为“梁上君子”典故的主角。" },
+        { "name": "陈群", "alias": "长文", "faction": "曹魏", "description": "陈寔之孙，曹魏尚书令，托孤大臣，九品中正制设计者。" },
+        { "name": "陈泰", "alias": "玄伯", "faction": "曹魏", "description": "陈群之子，魏国名将，数次击退姜维北伐，曹髦被弑时抚尸大哭。" }
+      ]
+    },
+    {
+      "id": "wu_jun_lu",
+      "name": "吴郡陆氏",
+      "surname": "陆",
+      "ancestral_home": "扬州-吴郡吴县",
+      "description": "吴郡四姓（顾、陆、朱、张）之首。从陆康守庐江开始登上历史舞台，至陆逊、陆抗父子出将入相达到巅峰。陆氏在军事上是孙吴的保护伞，在文化上是江南士族的标杆。",
+      "representatives": [
+        { "name": "陆康", "alias": "季宁", "faction": "东汉", "description": "庐江太守，坚守庐江抗击袁术两年，忧愤而死。" },
+        { "name": "陆逊", "alias": "伯言", "faction": "孙吴", "description": "陆康从孙，火烧连营击败刘备，东吴社稷之臣。" },
+        { "name": "陆抗", "alias": "幼节", "faction": "孙吴", "description": "陆逊之子，大司马，荆州战线守护神。" },
+        { "name": "陆机", "alias": "士衡", "faction": "西晋", "description": "陆抗之子，吴亡后入洛阳，大文豪，写有《文赋》、《辩亡论》。" },
+        { "name": "陆云", "alias": "士龙", "faction": "西晋", "description": "陆机之弟，与陆机并称“二陆”，名重西晋京华。" }
+      ]
+    },
+    {
+      "id": "wu_jun_gu",
+      "name": "吴郡顾氏",
+      "surname": "顾",
+      "ancestral_home": "扬州-吴郡吴县",
+      "description": "吴郡四姓之一，以政治声望和行政干练闻名。顾氏门风严谨，顾雍长期担任丞相，与孙权相得益彰。是本土士族在东吴朝堂之上的代表。",
+      "representatives": [
+        { "name": "顾雍", "alias": "元叹", "faction": "孙吴", "description": "东吴任职时间最长的丞相，性格沉默寡言却极有决断力。" },
+        { "name": "顾徽", "alias": "子叹", "faction": "孙吴", "description": "顾雍之弟，曾任巴东太守。" },
+        { "name": "顾韶", "alias": "子桠", "faction": "孙吴", "description": "顾雍之子，娶陆逊之姐，早卒。" },
+        { "name": "顾谭", "alias": "子默", "faction": "孙吴", "description": "顾雍之孙，曾任太常，卷入二宫之争被流放而死。" }
+      ]
+    }
+  ]
+}

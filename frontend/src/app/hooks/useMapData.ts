@@ -99,7 +99,7 @@ export function useMapData() {
 
   useEffect(() => {
     setMapLoading(true);
-    const p1 = fetch('/eastern_han_admin.json').then(r => r.json()).then(data => {
+    const p1 = fetch(`${API_BASE}/api/eastern-han-admin`).then(r => r.json()).then(data => {
       setGeoData(flattenAdminGeo(data));
     }).catch(() => {});
 
