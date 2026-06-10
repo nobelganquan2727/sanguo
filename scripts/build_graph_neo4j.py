@@ -118,6 +118,59 @@ def load_major_events_dictionary():
             print(f"⚠️ 读取重大事件词典失败: {e}")
     return me_dict
 
+CHAPTER_NAME_MAP = {
+    "武帝": "曹操",
+    "文帝": "曹丕",
+    "明帝": "曹叡",
+    "三少帝": "曹芳曹髦曹奂",
+    "先主": "刘备",
+    "后主": "刘禅",
+    "吴主": "孙权",
+    "三嗣主": "孙亮孙休孙皓",
+    "二李臧文吕许典二庞阎": "李典李通臧霸文聘吕虔许褚典韦庞德阎温",
+    "二公孙陶四张": "公孙瓒公孙度陶谦张杨张燕张绣张鲁",
+    "诸夏侯曹": "夏侯惇夏侯渊曹仁曹洪曹纯曹休曹真夏侯尚",
+    "张乐于张徐": "张辽乐进于禁张郃徐晃",
+    "程郭董刘蒋刘": "程昱郭嘉董昭刘晔蒋济刘放",
+    "刘司马梁张温贾": "刘晔司马芝梁习张既温恢贾逵",
+    "任苏杜郑仓": "任峻苏则杜畿郑浑仓慈",
+    "崔毛徐何邢鲍司马": "崔琰毛玠徐奕何夔邢颙鲍勋司马芝",
+    "袁张凉国田王邴管": "袁涣张范凉茂国渊田畴王修邴原管宁",
+    "二主妃子": "甘皇后穆皇后敬哀皇后张皇后刘永刘理",
+    "吴主五子": "孙登孙虑孙和孙霸孙奋",
+    "武文世王公": "曹协曹蕤曹鉴曹霖曹礼曹邕曹贡曹整曹京曹均曹棘曹徽曹茂",
+    "宗室": "孙静孙瑜孙皎孙奂孙贲孙辅孙翊孙匡孙韶孙桓",
+    "刘二牧": "刘焉刘璋",
+    "二刘": "刘焉刘璋",
+    "关张马黄赵": "关羽张飞马超黄忠赵云",
+    "黄李吕马王张": "黄权李恢吕凯马忠王平张嶷",
+    "霍王向张杨费": "霍峻王平向朗张裔杨洪费诗",
+    "周瑜鲁肃吕蒙": "周瑜鲁肃吕蒙",
+    "虞陆张骆陆吾朱": "虞翻陆绩张温骆统陆瑁吾粲朱居",
+    "张顾诸葛步": "张昭顾雍诸葛瑾步骘",
+    "诸葛滕二孙濮阳": "诸葛恪滕胤孙峻孙綝濮阳兴",
+    "王楼贺韦华": "王蕃楼玄贺邵韦昭华覈",
+    "许麋孙简伊秦": "许靖麋竺孙乾简雍伊籍秦宓",
+    "董二袁刘": "董卓袁绍袁术刘表",
+    "王卫二刘傅": "王粲卫觊刘廙刘劭傅嘏",
+    "桓二陈徐卫卢": "桓阶陈群陈泰徐宣卫臻卢毓",
+    "和常杨杜赵裴": "和洽常林杨俊杜袭赵俨裴潜",
+    "韩崔高孙王": "韩暨崔林高柔孙礼王观",
+    "满田牵郭": "满宠田豫牵招郭淮",
+    "徐胡二王": "徐邈胡质王昶王基",
+    "王毌丘诸葛邓锺": "王凌毌丘俭诸葛诞邓艾钟会",
+    "乌丸鲜卑东夷": "乌丸鲜卑东夷",
+    "董刘马陈董吕": "董允刘巴马良陈震董和吕乂",
+    "刘彭廖李刘魏杨": "刘封彭羱廖立李严刘琰魏延杨仪",
+    "杜周杜许孟来尹李谯郤": "杜微周群杜琼许慈孟光来敏尹默李譔谯周郤正",
+    "邓张宗杨": "邓芝张翼宗预杨戏",
+    "刘繇太史慈士燮": "刘繇太史慈士燮",
+    "张严程阚薛": "张温严畯程秉阚泽薛综",
+    "贺全吕周锺离": "贺齐全琮吕岱周鲂钟离牧",
+    "任城陈萧王": "曹彰曹植曹熊",
+    "方技": "华佗管辂周宣朱建平"
+}
+
 def build_cypher_queries(json_file_path, groups_dict, me_dict, geo_dict):
     file_name = os.path.basename(json_file_path)
     chapter_name = file_name.replace("_events.json", "")
@@ -145,6 +198,34 @@ def build_cypher_queries(json_file_path, groups_dict, me_dict, geo_dict):
         std_start_year = e.get("std_start_year")
         std_start_year_str = str(std_start_year) if std_start_year is not None else "null"
         
+        characters = e.get("相关人物", [])
+        
+        # 自动推导主角名字
+        event_protagonist = ""
+        if "武帝纪" in chapter_name: event_protagonist = "曹操"
+        elif "文帝纪" in chapter_name: event_protagonist = "曹丕"
+        elif "明帝纪" in chapter_name: event_protagonist = "曹叡"
+        elif "先主传" in chapter_name: event_protagonist = "刘备"
+        elif "后主传" in chapter_name: event_protagonist = "刘禅"
+        elif "吴主传" in chapter_name: event_protagonist = "孙权"
+        elif "诸葛亮传" in chapter_name: event_protagonist = "诸葛亮"
+        elif "陆逊传" in chapter_name: event_protagonist = "陆逊"
+        else:
+            name_part = ""
+            m = re.search(r' ([^ ]+?)(传|纪)(第|$)', chapter_name)
+            if m:
+                name_part = m.group(1)
+                for key, val in CHAPTER_NAME_MAP.items():
+                    if key in name_part:
+                        name_part = val
+                        break
+            if name_part:
+                matched = [c for c in characters if c and c in name_part]
+                if matched:
+                    event_protagonist = matched[0]
+            if not event_protagonist:
+                event_protagonist = characters[0] if characters else "未知"
+                
         # 1. 创建 Event 节点
         queries.append(
             f"MERGE (e:Event {{id: '{event_id}'}}) "
@@ -155,7 +236,8 @@ def build_cypher_queries(json_file_path, groups_dict, me_dict, geo_dict):
             f"e.translation = '{translation}', "
             f"e.std_start_year = {std_start_year_str}, "
             f"e.seq_index = {idx}, "
-            f"e.chapter = '{chapter_name}';"
+            f"e.chapter = '{chapter_name}', "
+            f"e.protagonist = '{event_protagonist}';"
         )
         
         # 2. 人物实体及参与关系
