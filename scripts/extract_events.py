@@ -152,6 +152,23 @@ def deduplicate_events(events: List[dict]) -> List[dict]:
         ev.pop('_orig_idx', None)
     return unique_events
 
+def clean_json_quotes(raw_content: str) -> str:
+    keys = ["事件标题", "时间", "地点", "原文", "事件翻译"]
+    next_keys_pattern = r"(?:事件标题|时间|地点|相关人物|原文|事件翻译|std_start_year|涉及的集团|所属事件|地理信息)"
+    lookahead = r'(?=\s*,\s*"' + next_keys_pattern + r'"\s*:|\s*,\s*\}|\s*\})'
+    
+    cleaned = raw_content
+    for key in keys:
+        pattern = r'"' + re.escape(key) + r'"\s*:\s*"(.*?)"' + lookahead
+        
+        def replace_match(match):
+            val = match.group(1)
+            val_escaped = re.sub(r'(?<!\\)"', r'\"', val)
+            return f'"{key}": "{val_escaped}"'
+            
+        cleaned = re.sub(pattern, replace_match, cleaned, flags=re.DOTALL)
+    return cleaned
+
 async def extract_events_from_text(text_chunk: str, context_str: str, history_context: str = "") -> List[dict]:
     system_prompt = f"""
 你是一位精通《三国志》的资深历史学家。请从下面提供的古文原文中，提取出所有有价值的历史事件，并将其转换为结构化的 JSON 数据。
@@ -163,10 +180,10 @@ async def extract_events_from_text(text_chunk: str, context_str: str, history_co
    - **如果段落只是纯粹的背景介绍、人物籍贯、外貌描写、或是文末的“评曰”史官评论等（例如“评曰：霍峻孤城不倾...”），也必须将其强制包装为一个事件（例如标题起名为“人物背景”、“早期背景”或“史官评论/历史评价”），绝不能忽略，也绝不能直接输出非JSON文本。**
 2. **完整句段与上下文（Context Integrity）**：
    - 每个事件的「原文」字段必须由**完整、连续的句子或段落**组成，包含明确的历史事实和语境，严禁断章取义地只截取对话或动作那一句而丢弃前面的前置背景介绍句子。
-3. **事件粒度**：每个事件应是一个独立的、有明确边界的事实。  
-   - 不要刻意合并：除非原文是连续列举同质动作（如“历任XX、XX、XX”且无其他细节），否则应拆开。  
-   - 也不要逐句拆分：若几句话共同描述同一个完整事件（如同一战役的过程），则合并为一个事件。  
-   - 关键节点（出生、死亡、重要战役、重大任命、名言、史评）必须单独列出，不可合并。
+3. **事件粒度**：以**一个自然段**（或裴注中一个完整引用的段落）为基本事件粒度。由于输入的【待提取原文】本身就是这一个自然段，因此**原则上整个输入应该且只应该提取为一个事件**，绝对不要拆分细化为多个碎小的事件。
+   - 绝不要逐句拆分：若一个段落内的几句话共同描述同一个完整历史进程或事实（如同一战役的过程、一次对话交往），必须合并为一个事件，其「原文」字段应完整包含输入段落的全部文字，不得拆成多句话。
+   - 只有当这一段落中明确包含了多个完全独立、不相关的重大历史事实时，才允许进行拆分。
+   - 关键节点（出生、死亡、重要战役、重大任命、名言、史评等）如果在段落内部，必须随整个段落合并提取，其「原文」为这一整段，严禁为了提取关键节点而强行拆散段落。
 4. **时间与地点推测**：如果原文没有明确时间（如年号、干支）或地点，请根据上下文和历史知识合理推测，直接写数字年份（如 194）和地名，不要加任何“推测”标记。
 5. **JSON 格式严格**：原文中出现的双引号（“ ”）和单引号（‘ ’）全部删除，确保生成的 JSON 可以被 `json.loads()` 正确解析。
 6. **事件标题**：统一采用“谁 + 做了什么”的简洁事实描述，不加结果或影响。例如：“曹操在官渡击败袁绍”（正确），“曹操在官渡击败袁绍，奠定北方霸业基础”（错误）。
@@ -217,6 +234,7 @@ async def extract_events_from_text(text_chunk: str, context_str: str, history_co
         
         response = await llm.ainvoke(messages)
         content = response.content
+        content = clean_json_quotes(content)
         
         try:
             parsed_result = EventExtractionResult.model_validate_json(content)
