@@ -14,9 +14,9 @@ interface FilterPanelProps {
   setFilterPersonOr: (v: string) => void;
   filterEventType: string;
   setFilterEventType: (v: string) => void;
+  filterBiographyOnly: boolean;
+  setFilterBiographyOnly: (v: boolean) => void;
   filterMeta: { event_types: string[] };
-  biographyOnly: boolean;
-  setBiographyOnly: (v: boolean) => void;
   onApply: () => void;
   onClose: () => void;
 }
@@ -26,8 +26,8 @@ function FilterPanel({
   filterPersonInclude, setFilterPersonInclude,
   filterPersonOr, setFilterPersonOr,
   filterEventType, setFilterEventType,
+  filterBiographyOnly, setFilterBiographyOnly,
   filterMeta,
-  biographyOnly, setBiographyOnly,
   onApply, onClose,
 }: FilterPanelProps) {
   return (
@@ -71,19 +71,20 @@ function FilterPanel({
           placeholder="如: 刘备,诸葛亮"
           className="bg-[#1a2f4c] border border-[#4a5f78] rounded px-2 py-1.5 text-white placeholder-slate-600 focus:outline-none focus:border-green-500"
         />
-        {/* 只显示本传 checkbox */}
-        <div className="flex items-center gap-2 mt-1">
-          <input
-            type="checkbox"
-            id="biography-only"
-            checked={biographyOnly}
-            onChange={e => setBiographyOnly(e.target.checked)}
-            className="w-3.5 h-3.5 rounded border-[#4a5f78] bg-[#1a2f4c] text-amber-500 focus:ring-amber-500"
-          />
-          <label htmlFor="biography-only" className="text-slate-300 select-none cursor-pointer">
-            只显示本传
-          </label>
-        </div>
+      </div>
+
+      {/* Biography Only Checkbox */}
+      <div className="flex items-center gap-2 mt-0.5">
+        <input
+          type="checkbox"
+          id="biographyOnly"
+          checked={filterBiographyOnly}
+          onChange={e => setFilterBiographyOnly(e.target.checked)}
+          className="w-3.5 h-3.5 rounded border-[#4a5f78] bg-[#1a2f4c] text-[#f59e0b] focus:ring-[#f59e0b]/30 accent-[#f59e0b] cursor-pointer"
+        />
+        <label htmlFor="biographyOnly" className="text-slate-400 cursor-pointer select-none">
+          只显示本传
+        </label>
       </div>
 
       {/* Person include OR (Temporarily commented out)
@@ -118,7 +119,7 @@ function FilterPanel({
       {/* Actions */}
       <div className="flex items-center justify-between pt-1 border-t border-[#4a5f78]">
         <button
-          onClick={() => { setFilterPersonInclude(''); setFilterPersonOr(''); setFilterEventType(''); setBiographyOnly(false); setTimeRange([180, 280]); }}
+          onClick={() => { setFilterPersonInclude(''); setFilterPersonOr(''); setFilterEventType(''); setFilterBiographyOnly(false); setTimeRange([180, 280]); }}
           className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
         >
           清除过滤
@@ -142,6 +143,7 @@ interface EventPanelProps {
   selectedEventIds: Set<string>;
   onToggleEvent: (evt: any) => void;
   onHoverEvent: (evt: any, top: number, panelWidth?: number) => void;
+  onLeaveEvent?: () => void;
   showFilter: boolean;
   onToggleFilter: () => void;
   // filter props passthrough
@@ -153,28 +155,28 @@ interface EventPanelProps {
   setFilterPersonOr: (v: string) => void;
   filterEventType: string;
   setFilterEventType: (v: string) => void;
+  filterBiographyOnly: boolean;
+  setFilterBiographyOnly: (v: boolean) => void;
   filterMeta: { event_types: string[] };
   onApplyFilter: () => void;
   onClearSelection?: () => void;
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
-  biographyOnly: boolean;
-  setBiographyOnly: (v: boolean) => void;
 }
 
 export default function EventPanel({
   show, onToggle,
-  eventsList, selectedEventIds, onToggleEvent, onHoverEvent,
+  eventsList, selectedEventIds, onToggleEvent, onHoverEvent, onLeaveEvent,
   showFilter, onToggleFilter,
   timeRange, setTimeRange,
   filterPersonInclude, setFilterPersonInclude,
   filterPersonOr, setFilterPersonOr,
   filterEventType, setFilterEventType,
+  filterBiographyOnly, setFilterBiographyOnly,
   filterMeta, onApplyFilter,
   onClearSelection,
   hasMore, isLoadingMore, onLoadMore,
-  biographyOnly, setBiographyOnly,
 }: EventPanelProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -235,8 +237,8 @@ export default function EventPanel({
           filterPersonInclude={filterPersonInclude} setFilterPersonInclude={setFilterPersonInclude}
           filterPersonOr={filterPersonOr} setFilterPersonOr={setFilterPersonOr}
           filterEventType={filterEventType} setFilterEventType={setFilterEventType}
+          filterBiographyOnly={filterBiographyOnly} setFilterBiographyOnly={setFilterBiographyOnly}
           filterMeta={filterMeta}
-          biographyOnly={biographyOnly} setBiographyOnly={setBiographyOnly}
           onApply={onApplyFilter}
           onClose={onToggleFilter}
         />
@@ -282,14 +284,11 @@ export default function EventPanel({
               <>
                 {eventsList.map((evt, idx) => {
                   const selected = selectedEventIds.has(evt.id);
-                  const namePrefix = showNamePrefix && evt.protagonist ? `[${evt.protagonist}] ` : '';
-                  const seqText = biographyOnly ? `${namePrefix}${localIndices[idx]}. ` : '';
                   return (
                     <div
                       key={idx}
                       ref={(node) => { eventRefs.current[evt.id] = node; }}
-                      onClick={(e) => {
-                        onToggleEvent(evt);
+                      onMouseEnter={(e) => {
                         const wrapperRect = wrapperRef.current?.getBoundingClientRect();
                         if (wrapperRect) {
                           const itemRect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
@@ -297,24 +296,33 @@ export default function EventPanel({
                           onHoverEvent({ ...evt, seqNum: localIndices[idx] }, Math.max(0, Math.min(rawTop, 360)), wrapperRect.width);
                         }
                       }}
+                      onMouseLeave={() => {
+                        if (onLeaveEvent) onLeaveEvent();
+                      }}
+                      onClick={(e) => {
+                        onToggleEvent(evt);
+                      }}
                       className={`text-sm flex flex-col gap-1.5 p-2 rounded cursor-pointer transition-all border ${selected
                         ? 'bg-[#1a2f4c] border-amber-500/70 shadow-[0_0_8px_rgba(245,158,11,0.25)]'
                         : 'border-transparent hover:bg-[#1a2f4c] hover:border-[#4a5f78]'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start gap-2">
                         <div className={`mt-0.5 w-3.5 h-3.5 rounded shrink-0 border transition-colors ${selected ? 'bg-amber-500 border-amber-400' : 'bg-transparent border-slate-600'}`} />
                         <span className="font-bold text-amber-500 min-w-[42px] shrink-0">{evt.year != null ? `${evt.year}年` : '不详'}</span>
                         <span className={`font-semibold leading-tight ${selected ? 'text-amber-200' : 'text-white'}`}>
-                          {seqText}{evt.title}
+                          {evt.title}
                         </span>
                       </div>
                       {evt.type && <span className="ml-[68px] text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded self-start">{evt.type}</span>}
                       {evt.locations?.length > 0 && (
                         <div className="flex flex-wrap gap-1 ml-[68px]">
-                          {evt.locations.map((l: string, i: number) => (
-                            <span key={i} className="text-xs text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded">📍 {l}</span>
-                          ))}
+                          {evt.locations.map((l: any, i: number) => {
+                            const name = typeof l === 'object' ? l.name : l;
+                            return (
+                              <span key={i} className="text-xs text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded">📍 {name}</span>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

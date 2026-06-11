@@ -84,13 +84,21 @@ def get_db_connection():
     return mysql_pool.connect()
 
 
-ADMIN_GEO_PATH = Path(__file__).resolve().parent / "frontend" / "public" / "eastern_han_admin.json"
+ADMIN_GEO_PATH = Path(__file__).resolve().parent / "data" / "eastern_han_admin.json"
 
 
 @lru_cache(maxsize=1)
 def load_admin_geo():
     with ADMIN_GEO_PATH.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+@app.get("/api/eastern-han-admin")
+def get_eastern_han_admin():
+    try:
+        return load_admin_geo()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def expand_location_names(name: str, level: str, province: str = "", commandery: str = "") -> list[str]:
@@ -140,9 +148,13 @@ def serialize_event_rows(results: list[dict]) -> list[dict]:
             "year": r["year"],
             "desc": r["desc"],
             "source_text": r["source_text"],
+            "translation": r.get("translation", ""),
             "type": r["type"],
-            "locations": [x for x in r["locations"] if x],
+            "locations": r.get("locations", []),
+            "characters": r.get("characters", []),
+            "major_events": r.get("major_events", []),
             "protagonist": r.get("protagonist", ""),
+            "is_main_biography": r.get("is_main_biography", False),
             **({"matched_locations": [x for x in r.get("matched_locations", []) if x]} if "matched_locations" in r else {}),
         }
         for r in results
@@ -308,10 +320,10 @@ async def api_events(
     where_clauses = []
     
     if biography_only and person_include:
-        # 只显示本传，忽略时间范围过滤，直接匹配主角
+        # 只显示本传，忽略时间范围过滤，直接匹配主角，且必须是本传核心事件
         names = [n.strip() for n in person_include.split(',') if n.strip()]
         if names:
-            cond = ' OR '.join([f"e.protagonist = '{n}'" for n in names])
+            cond = ' OR '.join([f"(e.protagonist = '{n}' AND e.is_main_biography = true)" for n in names])
             where_clauses.append(f"({cond})")
     else:
         # 有年份的事件才做时间范围过滤；没有年份的事件(std_start_year IS NULL)也包含进来
@@ -343,16 +355,34 @@ async def api_events(
     if event_type:
         where_clauses.append(f"e.type = '{event_type}'")
 
-    loc_filter = f"WHERE '{location}' IN locations" if location else ""
+    loc_filter = f"WHERE any(loc IN locations WHERE loc.name = '{location}')" if location else ""
 
     cypher = f"""
     MATCH (e:Event)
     WHERE {' AND '.join(where_clauses)}
     OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location)
-    WITH e, collect(DISTINCT l.name) AS locations
+    OPTIONAL MATCH (per:Person)-[:PARTICIPATED_IN]->(e)
+    OPTIONAL MATCH (e)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+    WITH e, 
+         collect(DISTINCT CASE WHEN l.name IS NOT NULL THEN {{
+             name: l.name, 
+             lat: l.lat, 
+             lng: l.lng, 
+             level: l.level, 
+             type: l.type, 
+             region: l.region, 
+             modern: l.modern
+         }} ELSE null END) AS locations_raw,
+         collect(DISTINCT per.name) AS characters,
+         collect(DISTINCT me.id) AS major_events
+    WITH e, 
+         [x IN locations_raw WHERE x IS NOT NULL] AS locations,
+         characters,
+         major_events
     {loc_filter}
     RETURN e.id AS id, e.title AS title, e.std_start_year AS year,
-           e.description AS desc, e.source_text AS source_text, e.type AS type, locations, e.protagonist AS protagonist
+           COALESCE(e.translation, e.description) AS desc, e.source_text AS source_text, e.translation AS translation, e.type AS type, 
+           locations, characters, major_events, e.protagonist AS protagonist, e.is_main_biography AS is_main_biography
     ORDER BY e.std_start_year ASC, e.seq_index ASC, e.id ASC
     SKIP {safe_offset}
     LIMIT {safe_limit}
@@ -387,10 +417,24 @@ async def api_location_events(
       AND (e.std_start_year IS NULL OR (e.std_start_year >= $start AND e.std_start_year <= $end))
     WITH DISTINCT e, collect(DISTINCT matched.name) AS matched_locations
     OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location)
-    WITH e, matched_locations, collect(DISTINCT l.name) AS locations
+    OPTIONAL MATCH (per:Person)-[:PARTICIPATED_IN]->(e)
+    OPTIONAL MATCH (e)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+    WITH e, matched_locations,
+         collect(DISTINCT CASE WHEN l.name IS NOT NULL THEN {
+             name: l.name, 
+             lat: l.lat, 
+             lng: l.lng, 
+             level: l.level, 
+             type: l.type, 
+             region: l.region, 
+             modern: l.modern
+         } ELSE null END) AS locations_raw,
+         collect(DISTINCT per.name) AS characters,
+         collect(DISTINCT me.id) AS major_events
     RETURN e.id AS id, e.title AS title, e.std_start_year AS year,
-           e.description AS desc, e.source_text AS source_text, e.type AS type,
-           locations, matched_locations
+           COALESCE(e.translation, e.description) AS desc, e.source_text AS source_text, e.translation AS translation, e.type AS type,
+           [x IN locations_raw WHERE x IS NOT NULL] AS locations,
+           characters, major_events, matched_locations
     ORDER BY e.std_start_year ASC
     LIMIT $limit
     """
@@ -419,9 +463,24 @@ async def api_event_detail(event_id: str):
     cypher = """
     MATCH (e:Event {id: $event_id})
     OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location)
-    WITH e, collect(DISTINCT l.name) AS locations
+    OPTIONAL MATCH (per:Person)-[:PARTICIPATED_IN]->(e)
+    OPTIONAL MATCH (e)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+    WITH e,
+         collect(DISTINCT CASE WHEN l.name IS NOT NULL THEN {
+             name: l.name, 
+             lat: l.lat, 
+             lng: l.lng, 
+             level: l.level, 
+             type: l.type, 
+             region: l.region, 
+             modern: l.modern
+         } ELSE null END) AS locations_raw,
+         collect(DISTINCT per.name) AS characters,
+         collect(DISTINCT me.id) AS major_events
     RETURN e.id AS id, e.title AS title, e.std_start_year AS year,
-           e.description AS desc, e.source_text AS source_text, e.type AS type, locations
+           COALESCE(e.translation, e.description) AS desc, e.source_text AS source_text, e.translation AS translation, e.type AS type,
+           [x IN locations_raw WHERE x IS NOT NULL] AS locations,
+           characters, major_events, e.protagonist AS protagonist
     LIMIT 1
     """
     try:
@@ -462,7 +521,7 @@ async def api_person_timeline(name: str):
     cypher = """
     MATCH (p:Person)-[:PARTICIPATED_IN]->(e:Event)
     WHERE p.name = $name AND e.std_start_year IS NOT NULL
-    RETURN e.title AS title, e.std_start_year AS year, e.description AS desc
+    RETURN e.title AS title, e.std_start_year AS year, COALESCE(e.translation, e.description) AS desc
     ORDER BY e.std_start_year ASC
     """
     try:
@@ -481,8 +540,8 @@ async def api_person_relations(name: str, limit: int = 80):
     profile_cypher = """
     MATCH (center:Person {name: $name})
     OPTIONAL MATCH (center)-[:HOMETOWN]->(h:Location)
-    OPTIONAL MATCH (center)-[:MEMBER_OF]->(c:Clan)
-    RETURN h.name AS hometown, c.name AS clan
+    OPTIONAL MATCH (center)-[:REPRESENTATIVE_OF]->(g:Group)
+    RETURN h.name AS hometown, g.name AS clan
     LIMIT 1
     """
     
@@ -547,7 +606,7 @@ async def api_person_relations(name: str, limit: int = 80):
             
         if clan:
             nodes.append({"id": clan, "label": clan, "type": "clan"})
-            links.append({"source": name, "target": clan, "type": "MEMBER_OF", "desc": "世族"})
+            links.append({"source": name, "target": clan, "type": "REPRESENTATIVE_OF", "desc": "世家/集团"})
             added_nodes.add(clan)
             
         # 添加静态网络

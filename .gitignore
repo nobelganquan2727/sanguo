@@ -43,6 +43,6 @@ coverage/
 **/coverage/
 
 # 原始数据目录
-data/raw/
+data/raw_book/
 sgraw/
 sgraw_backup/

@@ -215,7 +215,7 @@ def get_person_timeline(name: str) -> str:
     """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名（例如 '曹操', '刘备', '徐晃'）。返回按时间顺序排列的事件列表。"""
     cypher = """
     MATCH (p:Person {name: $name})-[:PARTICIPATED_IN]->(e:Event)
-    RETURN e.title AS title, e.description AS description, e.time_text AS time, e.std_start_year AS year, e.source_text AS source
+    RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, e.std_start_year AS year, e.source_text AS source
     ORDER BY e.std_start_year ASC, e.seq_index ASC
     """
     print(f"🔍 [Tool: get_person_timeline] 查询人物: {name}")
@@ -235,9 +235,13 @@ def search_historical_text(keyword: str) -> str:
         return "关键词不能为空。"
     cypher = """
     MATCH (e:Event)
-    WHERE ALL(k IN $keywords WHERE e.title CONTAINS k OR e.description CONTAINS k OR e.source_text CONTAINS k)
+    WHERE ALL(k IN $keywords WHERE e.title CONTAINS k OR COALESCE(e.translation, e.description) CONTAINS k OR e.source_text CONTAINS k)
     OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location)
-    RETURN e.title AS title, e.description AS description, e.time_text AS time, e.std_start_year AS year, e.source_text AS source, l.name AS location
+    OPTIONAL MATCH (e)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+    OPTIONAL MATCH (e)-[:INVOLVES_GROUP]->(g:Group)
+    RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, 
+           e.std_start_year AS year, e.source_text AS source, l.name AS location, 
+           me.title AS major_event, collect(DISTINCT g.name) AS groups
     LIMIT 15
     """
     print(f"🔍 [Tool: search_historical_text] 搜索关键词: {keywords}")
@@ -261,9 +265,12 @@ def search_vector_graph(query: str) -> str:
         YIELD node, score
         OPTIONAL MATCH (node)-[:HAPPENED_AT]->(l:Location)
         OPTIONAL MATCH (p:Person)-[:PARTICIPATED_IN]->(node)
+        OPTIONAL MATCH (node)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+        OPTIONAL MATCH (node)-[:INVOLVES_GROUP]->(g:Group)
         RETURN node.title AS title, node.description AS description, node.time_text AS time,
                node.source_text AS source, collect(DISTINCT l.name) AS locations, 
-               collect(DISTINCT p.name) AS participants, score
+               collect(DISTINCT p.name) AS participants, me.title AS major_event, 
+               collect(DISTINCT g.name) AS groups, score
         """
         results = run_query(cypher, {"query_vector": query_vector})
         if not results:
@@ -331,7 +338,7 @@ async def get_person_timeline_async(name: str) -> str:
     await emit_status(f"🔍 [get_person_timeline] 正在翻阅人物 '{name}' 的生平编年史...")
     cypher = """
     MATCH (p:Person {name: $name})-[:PARTICIPATED_IN]->(e:Event)
-    RETURN e.title AS title, e.description AS description, e.time_text AS time, e.std_start_year AS year, e.source_text AS source
+    RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, e.std_start_year AS year, e.source_text AS source
     ORDER BY e.std_start_year ASC, e.seq_index ASC
     """
     try:
@@ -351,9 +358,13 @@ async def search_historical_text_async(keyword: str) -> str:
     await emit_status(f"🔍 [search_historical_text] 正在全文库检索关键词 {keywords}...")
     cypher = """
     MATCH (e:Event)
-    WHERE ALL(k IN $keywords WHERE e.title CONTAINS k OR e.description CONTAINS k OR e.source_text CONTAINS k)
+    WHERE ALL(k IN $keywords WHERE e.title CONTAINS k OR COALESCE(e.translation, e.description) CONTAINS k OR e.source_text CONTAINS k)
     OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location)
-    RETURN e.title AS title, e.description AS description, e.time_text AS time, e.std_start_year AS year, e.source_text AS source, l.name AS location
+    OPTIONAL MATCH (e)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+    OPTIONAL MATCH (e)-[:INVOLVES_GROUP]->(g:Group)
+    RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, 
+           e.std_start_year AS year, e.source_text AS source, l.name AS location, 
+           me.title AS major_event, collect(DISTINCT g.name) AS groups
     LIMIT 15
     """
     try:
@@ -375,9 +386,12 @@ async def search_vector_graph_async(query: str) -> str:
         YIELD node, score
         OPTIONAL MATCH (node)-[:HAPPENED_AT]->(l:Location)
         OPTIONAL MATCH (p:Person)-[:PARTICIPATED_IN]->(node)
+        OPTIONAL MATCH (node)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+        OPTIONAL MATCH (node)-[:INVOLVES_GROUP]->(g:Group)
         RETURN node.title AS title, node.description AS description, node.time_text AS time,
                node.source_text AS source, collect(DISTINCT l.name) AS locations, 
-               collect(DISTINCT p.name) AS participants, score
+               collect(DISTINCT p.name) AS participants, me.title AS major_event, 
+               collect(DISTINCT g.name) AS groups, score
         """
         results = await run_query_async(cypher, {"query_vector": query_vector})
         if not results:

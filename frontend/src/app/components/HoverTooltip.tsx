@@ -27,7 +27,7 @@ export default function HoverTooltip({
   }, [event]);
 
   const events = Array.isArray(event) ? event : (event ? [event] : []);
-  if (events.length === 0 || !events[0].desc) return null;
+  if (events.length === 0 || (!events[0].desc && !events[0].translation)) return null;
 
   const isList = events.length > 1;
 
@@ -81,11 +81,11 @@ export default function HoverTooltip({
                 <div className="mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
                   {tooltipMode === 'classical' ? (
                     <p className="text-slate-300 text-sm leading-relaxed font-serif text-justify">
-                      {evt.source_text || evt.desc}
+                      {evt.source_text || evt.translation || evt.desc}
                     </p>
                   ) : (
                     <p className="text-slate-300 text-sm leading-relaxed text-justify">
-                      {renderDesc(evt.desc)}
+                      {renderDesc(evt.translation || evt.desc)}
                     </p>
                   )}
                   {/* Actions */}
