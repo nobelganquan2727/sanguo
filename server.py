@@ -153,8 +153,8 @@ def serialize_event_rows(results: list[dict]) -> list[dict]:
             "locations": r.get("locations", []),
             "characters": r.get("characters", []),
             "major_events": r.get("major_events", []),
-            "所属事件": r.get("major_events", []),
             "protagonist": r.get("protagonist", ""),
+            "is_main_biography": r.get("is_main_biography", False),
             **({"matched_locations": [x for x in r.get("matched_locations", []) if x]} if "matched_locations" in r else {}),
         }
         for r in results
@@ -320,10 +320,10 @@ async def api_events(
     where_clauses = []
     
     if biography_only and person_include:
-        # 只显示本传，忽略时间范围过滤，直接匹配主角
+        # 只显示本传，忽略时间范围过滤，直接匹配主角，且必须是本传核心事件
         names = [n.strip() for n in person_include.split(',') if n.strip()]
         if names:
-            cond = ' OR '.join([f"e.protagonist = '{n}'" for n in names])
+            cond = ' OR '.join([f"(e.protagonist = '{n}' AND e.is_main_biography = true)" for n in names])
             where_clauses.append(f"({cond})")
     else:
         # 有年份的事件才做时间范围过滤；没有年份的事件(std_start_year IS NULL)也包含进来
@@ -382,7 +382,7 @@ async def api_events(
     {loc_filter}
     RETURN e.id AS id, e.title AS title, e.std_start_year AS year,
            COALESCE(e.translation, e.description) AS desc, e.source_text AS source_text, e.translation AS translation, e.type AS type, 
-           locations, characters, major_events, e.protagonist AS protagonist
+           locations, characters, major_events, e.protagonist AS protagonist, e.is_main_biography AS is_main_biography
     ORDER BY e.std_start_year ASC, e.seq_index ASC, e.id ASC
     SKIP {safe_offset}
     LIMIT {safe_limit}

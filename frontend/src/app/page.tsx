@@ -82,6 +82,7 @@ export default function Home() {
   const [filterPersonInclude, setFilterPersonInclude] = useState('');
   const [filterPersonOr, setFilterPersonOr] = useState('');
   const [filterEventType, setFilterEventType] = useState('');
+  const [filterBiographyOnly, setFilterBiographyOnly] = useState(false);
   const [eventQueryParams, setEventQueryParams] = useState<URLSearchParams>(() => new URLSearchParams({ start: '190', end: '195' }));
   const [eventOffset, setEventOffset] = useState(EVENT_PAGE_SIZE);
   const [eventsHasMore, setEventsHasMore] = useState(true);
@@ -144,7 +145,12 @@ export default function Home() {
   };
 
   const loadPersonEvents = async (name: string) => {
-    const params = new URLSearchParams({ start: '180', end: '280', person_include: name });
+    const params = new URLSearchParams({
+      start: '180',
+      end: '280',
+      person_include: name,
+      ...(filterBiographyOnly && { biography_only: 'true' }),
+    });
     await replaceEvents(params);
     setFilterPersonInclude(name);
   };
@@ -170,6 +176,7 @@ export default function Home() {
       ...(filterPersonInclude && { person_include: filterPersonInclude }),
       ...(filterPersonOr && { person_or: filterPersonOr }),
       ...(filterEventType && { event_type: filterEventType }),
+      ...(filterBiographyOnly && { biography_only: 'true' }),
     });
     await replaceEvents(params);
   };
@@ -182,6 +189,7 @@ export default function Home() {
       ...(filterPersonInclude && { person_include: filterPersonInclude }),
       ...(filterPersonOr && { person_or: filterPersonOr }),
       ...(filterEventType && { event_type: filterEventType }),
+      ...(filterBiographyOnly && { biography_only: 'true' }),
     });
     await replaceEvents(params);
   };
@@ -448,6 +456,8 @@ export default function Home() {
           setFilterPersonOr={setFilterPersonOr}
           filterEventType={filterEventType}
           setFilterEventType={setFilterEventType}
+          filterBiographyOnly={filterBiographyOnly}
+          setFilterBiographyOnly={setFilterBiographyOnly}
           filterMeta={filterMeta}
           onApplyFilter={() => { handleFetchEvents(); setShowFilter(false); }}
           onClearSelection={clearAllEventSelections}

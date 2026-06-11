@@ -64,6 +64,7 @@ class SanguoEvent(BaseModel):
     groups: List[str] = Field(..., alias="涉及的集团", description="涉及的政治集团或家族")
     major_events: List[str] = Field(..., alias="所属事件", description="所属的三国重大历史事件")
     geography: List[str] = Field(..., alias="地理信息", description="涉及的东汉十三州/郡县地理实体")
+    is_main_biography: bool = Field(..., alias="是否本传", description="该事件是否直接属于当前人物传记主体的核心生平事迹（若是则为 true，若只是作为旁白/提及他人则为 false）")
 
     @field_validator('time', mode='before')
     @classmethod
@@ -98,7 +99,7 @@ def load_context_data():
                     for item in category:
                         if isinstance(item, dict) and "id" in item and "name" in item:
                             group_items.append(f"{item['id']}({item['name']})")
-            context_str += f"【可用政治集团/家族 ID 列表（格式为 ID(名称)）】:\n{', '.join(group_items)}\n\n"
+            context_str += f"[可用政治集团/家族 ID 列表（格式为 ID(名称)）]:\n{', '.join(group_items)}\n\n"
             
     events_path = "data/sanguo_events.json"
     if os.path.exists(events_path):
@@ -109,7 +110,7 @@ def load_context_data():
             for e in events_list:
                 if "id" in e and "title" in e:
                     event_items.append(f"{e['id']}({e['title']})")
-            context_str += f"【重大历史事件 ID 列表（格式为 ID(名称)）】:\n{', '.join(event_items)}\n\n"
+            context_str += f"[重大历史事件 ID 列表（格式为 ID(名称)）]:\n{', '.join(event_items)}\n\n"
             
     admin_path = "data/eastern_han_admin.json"
     if os.path.exists(admin_path):
@@ -129,7 +130,7 @@ def load_context_data():
                         county_id = county.get("id")
                         if county_id:
                             geo_items.append(county_id)
-            context_str += f"【标准地理 ID 列表】:\n{', '.join(geo_items)}\n\n"
+            context_str += f"[标准地理 ID 列表]:\n{', '.join(geo_items)}\n\n"
             
     return context_str
 
@@ -154,7 +155,7 @@ def deduplicate_events(events: List[dict]) -> List[dict]:
 
 def clean_json_quotes(raw_content: str) -> str:
     keys = ["事件标题", "时间", "地点", "原文", "事件翻译"]
-    next_keys_pattern = r"(?:事件标题|时间|地点|相关人物|原文|事件翻译|std_start_year|涉及的集团|所属事件|地理信息)"
+    next_keys_pattern = r"(?:事件标题|时间|地点|相关人物|原文|事件翻译|std_start_year|涉及的集团|所属事件|地理信息|是否本传)"
     lookahead = r'(?=\s*,\s*"' + next_keys_pattern + r'"\s*:|\s*,\s*\}|\s*\})'
     
     cleaned = raw_content
@@ -169,18 +170,18 @@ def clean_json_quotes(raw_content: str) -> str:
         cleaned = re.sub(pattern, replace_match, cleaned, flags=re.DOTALL)
     return cleaned
 
-async def extract_events_from_text(text_chunk: str, context_str: str, history_context: str = "") -> List[dict]:
+async def extract_events_from_text(text_chunk: str, biography_owner: str, context_str: str, history_context: str = "") -> List[dict]:
     system_prompt = f"""
 你是一位精通《三国志》的资深历史学家。请从下面提供的古文原文中，提取出所有有价值的历史事件，并将其转换为结构化的 JSON 数据。
 
 ### 核心要求
 1. **绝对完整性与文本无缝覆盖（Zero Leakage，最重要）**：
-   - 你必须对待提取原文进行**无缝覆盖**。输入原文中的**每一个字**（包括正文、括号 `【】` 内的裴松之注、引用文献、背景介绍、过渡段落等）都必须归属于提取出的某个事件的「原文」字段中，绝对不能有任何漏掉的句子或段落。
-   - 括号 `【...】` 内的注释内容也必须作为一个独立的背景/评论事件提取，或与它所补充的主干事件合并提取，严禁直接丢弃。
+   - 你必须对待提取原文进行**无缝覆盖**。输入原文中的**每一个字**（包括正文、括号 `[]` 内的裴松之注、引用文献、背景介绍、过渡段落等）都必须归属于提取出的某个事件的「原文」字段中，绝对不能有任何漏掉的句子或段落。
+   - 括号 `[...]` 内的注释内容也必须作为一个独立的背景/评论事件提取，或与它所补充的主干事件合并提取，严禁直接丢弃。
    - **如果段落只是纯粹的背景介绍、人物籍贯、外貌描写、或是文末的“评曰”史官评论等（例如“评曰：霍峻孤城不倾...”），也必须将其强制包装为一个事件（例如标题起名为“人物背景”、“早期背景”或“史官评论/历史评价”），绝不能忽略，也绝不能直接输出非JSON文本。**
 2. **完整句段与上下文（Context Integrity）**：
    - 每个事件的「原文」字段必须由**完整、连续的句子或段落**组成，包含明确的历史事实和语境，严禁断章取义地只截取对话或动作那一句而丢弃前面的前置背景介绍句子。
-3. **事件粒度**：以**一个自然段**（或裴注中一个完整引用的段落）为基本事件粒度。由于输入的【待提取原文】本身就是这一个自然段，因此**原则上整个输入应该且只应该提取为一个事件**，绝对不要拆分细化为多个碎小的事件。
+3. **事件粒度**：以**一个自然段**（或裴注中一个完整引用的段落）为基本事件粒度。由于输入的[待提取原文]本身就是这一个自然段，因此**原则上整个输入应该且只应该提取为一个事件**，绝对不要拆分细化为多个碎小的事件。
    - 绝不要逐句拆分：若一个段落内的几句话共同描述同一个完整历史进程或事实（如同一战役的过程、一次对话交往），必须合并为一个事件，其「原文」字段应完整包含输入段落的全部文字，不得拆成多句话。
    - 只有当这一段落中明确包含了多个完全独立、不相关的重大历史事实时，才允许进行拆分。
    - 关键节点（出生、死亡、重要战役、重大任命、名言、史评等）如果在段落内部，必须随整个段落合并提取，其「原文」为这一整段，严禁为了提取关键节点而强行拆散段落。
@@ -198,7 +199,10 @@ async def extract_events_from_text(text_chunk: str, context_str: str, history_co
 - **所属事件**：必须填写为上表提供的**重大事件 ID**（例如：`'huang_jin_qi_yi'`、`'guan_du_zhi_zhan'`）。如果该事件属于某个重大历史事件的分支或节点，则填入其 ID。如果不属于任何已知重大事件，则填写空列表 `[]`。
 - **地理信息**：必须填写为上表提供的**标准行政区划 ID**（例如：`'交州:郁林郡:右江'`）。
 - **细化定位原则**：请根据原文信息尽量细化地理定位，**如果能定位到具体的县，优先写县级 ID**（如 `'A:B:C'`）；如果只能定位到郡，写郡级 ID（如 `'A:B'`）；如果只能定位到州，写州级 ID（如 `'A'`）。必须使用列表中实际存在的 ID。
-10. **严格区分输入区域（极重要）**：如果输入中包含“【背景上下文】”，它仅用于帮助你理解待提取原文中的代词、人物、时间或背景，你**绝对不能**从中提取任何事件。你必须且仅从“【待提取原文】”中提取事件。
+10. **严格区分输入区域（极重要）**：如果输入中包含“[背景上下文]”，它仅用于帮助你理解待提取原文中的代词、人物、时间或背景，你**绝对不能**从中提取任何事件。你必须且仅从“[待提取原文]”中提取事件。
+11. **判定是否本传（is_main_biography，极重要）**：当前正在提取的传记主体（传主）是：**{biography_owner}**。对于每个事件，判定其是否为 **{biography_owner}** 本人的核心生平事迹：
+    - 若该事件直接涉及 **{biography_owner}** 本人的核心生平、主要活动、主要言行、升迁或征战功绩，则该字段必须为 `true`。
+    - 若该事件主要描述的是其他人的活动，而 **{biography_owner}** 仅作为旁白/背景提及或完全没有直接参与核心活动，则该字段 must 为 `false`。
 
 ### 输出 JSON 结构
 必须输出为包含 "events" 数组 of JSON 对象，且各字段名如下：
@@ -214,7 +218,8 @@ async def extract_events_from_text(text_chunk: str, context_str: str, history_co
       "std_start_year": 开始年份(整型，若无明确时间，请结合历史背景与上下文合理推测一个公元纪年；如确实无法确定则写 null，切忌盲目套用默认值),
       "涉及的集团": ["集团 ID（参考上表，如 'ying_chuan_xun'）"],
       "所属事件": ["大事件 ID（参考上表，如 'huang_jin_qi_yi'）"],
-      "地理信息": ["标准地理ID，如'交州:郁林郡:右江'，优先定位到县，若不行则郡，再不行则州（必须匹配上表中的ID）"]
+      "地理信息": ["标准地理ID，如'交州:郁林郡:右江'，优先定位到县，若不行则郡，再不行则州（必须匹配上表中的ID）"],
+      "是否本传": true 或者 false
     }}
   ]
 }}
@@ -224,8 +229,8 @@ async def extract_events_from_text(text_chunk: str, context_str: str, history_co
     try:
         user_prompt = ""
         if history_context:
-            user_prompt += f"【背景上下文（仅供参考，切勿从中提取任何事件）】\n{history_context}\n\n"
-        user_prompt += f"【待提取原文（必须且仅从以下文本中提取所有事件）】\n{text_chunk}"
+            user_prompt += f"[背景上下文（仅供参考，切勿从中提取任何事件）]\n{history_context}\n\n"
+        user_prompt += f"[待提取原文（必须且仅从以下文本中提取所有事件）]\n{text_chunk}"
 
         messages = [
             ("system", system_prompt),
@@ -268,17 +273,9 @@ async def extract_events_from_text(text_chunk: str, context_str: str, history_co
     extracted_text = "".join([ev.get("原文", "") for ev in events_to_return])
     ext_clean = re.sub(r'[^\u4e00-\u9fff]', '', extracted_text)
     
-    # 用与检查脚本完全一致的切分逻辑找出被大模型漏掉的句子
-    sentences = re.split(r'([。；？！])', text_chunk)
-    processed_sentences = []
-    for i in range(0, len(sentences)-1, 2):
-        s = sentences[i].strip() + sentences[i+1]
-        if len(s) > 0:
-            processed_sentences.append(s)
-            
-    # 如果最后还有剩余
-    if len(sentences) % 2 != 0 and sentences[-1].strip():
-        processed_sentences.append(sentences[-1].strip())
+    # 优先匹配中括号内容 [...]；非括号内容则按 [。；？！] 或结尾切分
+    pattern = r'(\[[^\]]*\]|[^\[\]。；？！]+(?:[。；？！]|$))'
+    processed_sentences = [s.strip() for s in re.findall(pattern, text_chunk) if s.strip()]
         
     missed_text = ""
     for s in processed_sentences:
@@ -299,7 +296,8 @@ async def extract_events_from_text(text_chunk: str, context_str: str, history_co
             "std_start_year": None,
             "涉及的集团": [],
             "所属事件": [],
-            "地理信息": []
+            "地理信息": [],
+            "是否本传": False
         }
         events_to_return.append(fallback_event)
         print(f"  ⚠️ 检测到 LLM 遗漏文本，已强制打包找回 ({len(re.sub(r'[^\u4e00-\u9fff]', '', missed_text))} 字)。")
@@ -311,7 +309,16 @@ async def process_file(file_path: str, context_str: str):
     base_name = os.path.splitext(file_name)[0]
     out_path = f"data/raw/{base_name}_events.json"
     
-    print(f"开始处理: {file_name}")
+    if os.path.exists(out_path):
+        print(f"⏭️  跳过已处理文件: {file_name} (输出文件已存在: {out_path})")
+        return
+    
+    # Extract biography owner from filename (e.g. "三国志_卷三十五 蜀书五 诸葛亮传第五" -> "诸葛亮")
+    parts = base_name.split()
+    biography_owner = parts[-1] if parts else "未知"
+    biography_owner = re.sub(r'(?:传|纪)[一二三四五六七八九十百]+$', '', biography_owner)
+    
+    print(f"开始处理: {file_name} (传主: {biography_owner})")
     with open(file_path, "r", encoding="utf-8") as f:
         text = f.read()
         
@@ -322,7 +329,7 @@ async def process_file(file_path: str, context_str: str):
     prev_p = ""
     for i, p in enumerate(paragraphs):
         print(f"  正在提取 {file_name} 的第 {i+1}/{len(paragraphs)} 个自然段...")
-        events = await extract_events_from_text(p, context_str, history_context=prev_p)
+        events = await extract_events_from_text(p, biography_owner, context_str, history_context=prev_p)
         all_events.extend(events)
         prev_p = p
         
@@ -351,7 +358,7 @@ async def main(args):
             raw_files = [args.file]
         print(f"🎯 仅处理指定的单个文件: {raw_files[0]}")
     else:
-        raw_files = glob.glob("data/raw_book/*.txt")
+        raw_files = sorted(glob.glob("data/raw_book/*.md") + glob.glob("data/raw_book/*.txt"))
         print(f"找到 {len(raw_files)} 个原文文件待处理。")
     
     tasks = [process_file(f, context_str) for f in raw_files]

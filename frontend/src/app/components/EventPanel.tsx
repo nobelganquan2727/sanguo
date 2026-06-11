@@ -14,6 +14,8 @@ interface FilterPanelProps {
   setFilterPersonOr: (v: string) => void;
   filterEventType: string;
   setFilterEventType: (v: string) => void;
+  filterBiographyOnly: boolean;
+  setFilterBiographyOnly: (v: boolean) => void;
   filterMeta: { event_types: string[] };
   onApply: () => void;
   onClose: () => void;
@@ -24,6 +26,7 @@ function FilterPanel({
   filterPersonInclude, setFilterPersonInclude,
   filterPersonOr, setFilterPersonOr,
   filterEventType, setFilterEventType,
+  filterBiographyOnly, setFilterBiographyOnly,
   filterMeta,
   onApply, onClose,
 }: FilterPanelProps) {
@@ -70,6 +73,20 @@ function FilterPanel({
         />
       </div>
 
+      {/* Biography Only Checkbox */}
+      <div className="flex items-center gap-2 mt-0.5">
+        <input
+          type="checkbox"
+          id="biographyOnly"
+          checked={filterBiographyOnly}
+          onChange={e => setFilterBiographyOnly(e.target.checked)}
+          className="w-3.5 h-3.5 rounded border-[#4a5f78] bg-[#1a2f4c] text-[#f59e0b] focus:ring-[#f59e0b]/30 accent-[#f59e0b] cursor-pointer"
+        />
+        <label htmlFor="biographyOnly" className="text-slate-400 cursor-pointer select-none">
+          只显示本传
+        </label>
+      </div>
+
       {/* Person include OR (Temporarily commented out)
       <div className="flex flex-col gap-1">
         <label className="text-slate-400 uppercase tracking-widest">
@@ -102,7 +119,7 @@ function FilterPanel({
       {/* Actions */}
       <div className="flex items-center justify-between pt-1 border-t border-[#4a5f78]">
         <button
-          onClick={() => { setFilterPersonInclude(''); setFilterPersonOr(''); setFilterEventType(''); setTimeRange([180, 280]); }}
+          onClick={() => { setFilterPersonInclude(''); setFilterPersonOr(''); setFilterEventType(''); setFilterBiographyOnly(false); setTimeRange([180, 280]); }}
           className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
         >
           清除过滤
@@ -138,6 +155,8 @@ interface EventPanelProps {
   setFilterPersonOr: (v: string) => void;
   filterEventType: string;
   setFilterEventType: (v: string) => void;
+  filterBiographyOnly: boolean;
+  setFilterBiographyOnly: (v: boolean) => void;
   filterMeta: { event_types: string[] };
   onApplyFilter: () => void;
   onClearSelection?: () => void;
@@ -154,6 +173,7 @@ export default function EventPanel({
   filterPersonInclude, setFilterPersonInclude,
   filterPersonOr, setFilterPersonOr,
   filterEventType, setFilterEventType,
+  filterBiographyOnly, setFilterBiographyOnly,
   filterMeta, onApplyFilter,
   onClearSelection,
   hasMore, isLoadingMore, onLoadMore,
@@ -217,6 +237,7 @@ export default function EventPanel({
           filterPersonInclude={filterPersonInclude} setFilterPersonInclude={setFilterPersonInclude}
           filterPersonOr={filterPersonOr} setFilterPersonOr={setFilterPersonOr}
           filterEventType={filterEventType} setFilterEventType={setFilterEventType}
+          filterBiographyOnly={filterBiographyOnly} setFilterBiographyOnly={setFilterBiographyOnly}
           filterMeta={filterMeta}
           onApply={onApplyFilter}
           onClose={onToggleFilter}

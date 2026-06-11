@@ -34,6 +34,7 @@ def main():
            e.title AS title, e.time_text AS time_text, e.type AS type,
            e.description AS description, e.source_text AS source_text, 
            e.std_start_year AS std_start_year, e.std_end_year AS std_end_year,
+           e.is_main_biography AS is_main_biography,
            collect(DISTINCT l.name) AS locations, collect(DISTINCT p.name) AS characters
     """
     
@@ -132,6 +133,11 @@ def main():
                 e["std_end_year"] = item["std_end_year"]
                 file_updated = True
                 
+            is_main = item.get("is_main_biography")
+            if is_main is not None and e.get("是否本传") != is_main:
+                e["是否本传"] = is_main
+                file_updated = True
+                
         # 处理没有序号的事件（直接追加）
         for item in unindexed_items:
             new_event = {
@@ -143,7 +149,8 @@ def main():
                 "事件类型": item["type"] or "",
                 "原文": item["source_text"] or "",
                 "std_start_year": item["std_start_year"],
-                "std_end_year": item["std_end_year"]
+                "std_end_year": item["std_end_year"],
+                "是否本传": item.get("is_main_biography", False)
             }
             events.append(new_event)
             file_updated = True

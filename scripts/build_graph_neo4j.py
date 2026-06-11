@@ -141,15 +141,14 @@ def build_cypher_queries(json_file_path, groups_dict, me_dict, geo_dict):
         event_title = e.get("事件标题", "").replace('\\', '\\\\').replace("'", r"\'")
         time_text = e.get("时间", "").replace('\\', '\\\\').replace("'", r"\'")
         location_text = e.get("地点", "").replace('\\', '\\\\').replace("'", r"\'")
-        source_text = original_text.replace('\\', '\\\\').replace("'", r"\'")
-        translation = e.get("事件翻译", "").replace('\\', '\\\\').replace("'", r"\'")
+        source_text = original_text.replace('\\\\', '\\\\\\\\').replace("'", r"\'")
+        translation = e.get("事件翻译", "").replace('\\\\', '\\\\\\\\').replace("'", r"\'")
+        is_main_biography = e.get("是否本传", e.get("is_main_biography", False))
+        is_main_biography_str = "true" if is_main_biography else "false"
         
         std_start_year = e.get("std_start_year")
         std_start_year_str = str(std_start_year) if std_start_year is not None else "null"
         
-        characters = e.get("相关人物", [])
-        
-        # 1. 创建 Event 节点
         queries.append(
             f"MERGE (e:Event {{id: '{event_id}'}}) "
             f"SET e.title = '{event_title}', "
@@ -158,7 +157,9 @@ def build_cypher_queries(json_file_path, groups_dict, me_dict, geo_dict):
             f"e.source_text = '{source_text}', "
             f"e.translation = '{translation}', "
             f"e.std_start_year = {std_start_year_str}, "
+            f"e.is_main_biography = {is_main_biography_str}, "
             f"e.seq_index = {idx}, "
+            f"e.protagonist = '{chapter_name}', "
             f"e.chapter = '{chapter_name}';"
         )
         

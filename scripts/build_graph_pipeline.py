@@ -48,6 +48,8 @@ def pipeline_to_cypher(json_file_path, geo_dict):
         event_title = e.get('事件标题', '').replace('\\', '\\\\').replace("'", r"\'") 
         original_text = e.get('原文', '').replace('\\', '\\\\').replace("'", r"\'")
         event_desc = e.get('事件简介', '').replace('\\', '\\\\').replace("'", r"\'")
+        is_main_biography = e.get('是否本传', e.get('is_main_biography', False))
+        is_main_biography_str = "true" if is_main_biography else "false"
         
         # 1. 创建 Event 核心节点，新增 seq_index 代表原始史料的叙述顺序，并打上主传记的烙印
         cypher_queries.append(
@@ -55,6 +57,7 @@ def pipeline_to_cypher(json_file_path, geo_dict):
             f"SET e.type='{event_type}', e.time_text='{time_desc}', "
             f"e.std_start_year={std_start_year_str}, e.std_end_year={std_end_year_str}, "
             f"e.seq_index={index}, e.protagonist='{protagonist}', "
+            f"e.is_main_biography={is_main_biography_str}, "
             f"e.title='{event_title}', e.source_text='{original_text}', e.description='{event_desc}';"
         )
         

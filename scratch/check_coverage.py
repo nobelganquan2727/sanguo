@@ -56,7 +56,7 @@ def main():
     txt_dir = "data/raw_book"
     json_dir = "data/raw"
     
-    txt_files = glob.glob(os.path.join(txt_dir, "*.txt"))
+    txt_files = sorted(glob.glob(os.path.join(txt_dir, "*.txt")) + glob.glob(os.path.join(txt_dir, "*.md")))
     if not txt_files:
         print(f"Error: No txt files found in {txt_dir}")
         return
