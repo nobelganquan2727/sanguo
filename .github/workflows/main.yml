@@ -38,13 +38,17 @@ jobs:
           echo "NEXT_PUBLIC_API_BASE=http://124.222.133.106:8000" > .env.production
           npm run build
 
+      - name: Compress Build Artifacts
+        run: |
+          tar -czf frontend.tar.gz frontend/.next frontend/public frontend/package.json frontend/package-lock.json
+
       - name: Copy Frontend Build Artifacts via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "frontend/.next/,frontend/public/,frontend/package.json,frontend/package-lock.json"
+          source: "frontend.tar.gz"
           target: "/root/sanguo"
 
       - name: Install Production Dependencies and Reload Server
@@ -55,8 +59,13 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            cd /root/sanguo/frontend
+            cd /root/sanguo
             
+            echo "📦 Extracting build artifacts..."
+            tar -xzf frontend.tar.gz
+            rm frontend.tar.gz
+
+            cd frontend
             echo "📦 Installing production dependencies..."
             npm install --omit=dev
 

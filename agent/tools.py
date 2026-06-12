@@ -54,11 +54,12 @@ def get_llm(model_type: str = "complex"):
     
     if model_type == "cheap":
         return ChatOpenAI(
-            model="qwen-plus",
-            api_key=os.environ.get("DASHSCOPE_API_KEY"),
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+            model="deepseek-v4-flash",
+            api_key=os.environ.get("DEEPSEEK_API_KEY"),
+            base_url="https://api.deepseek.com/v1",
             temperature=0,
-            callbacks=callbacks
+            callbacks=callbacks,
+            extra_body={"thinking": {"type": "disabled"}}
         )
     else:
         return ChatOpenAI(
@@ -67,7 +68,8 @@ def get_llm(model_type: str = "complex"):
             base_url="https://api.deepseek.com/v1",
             max_tokens=8192,
             temperature=0,
-            callbacks=callbacks
+            callbacks=callbacks,
+            extra_body={"thinking": {"type": "disabled"}}
         )
 
 def truncate_tool_output(output: Any, max_chars: int = 3000) -> str:
