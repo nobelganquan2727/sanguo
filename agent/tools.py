@@ -142,7 +142,18 @@ def truncate_tool_output(output: Any, max_chars: int = 3000) -> str:
 def check_characters_exist(names: List[str]) -> dict[str, bool]:
     if not names:
         return {}
-    cypher = "UNWIND $names AS name OPTIONAL MATCH (p:Person {name: name}) RETURN name, p IS NOT NULL AS exists"
+    cypher = """
+    UNWIND $names AS name
+    OPTIONAL MATCH (p:Person {name: name})
+    WITH name, p IS NOT NULL AS person_exists
+    OPTIONAL MATCH (e:Event)
+    WHERE e.title CONTAINS name 
+       OR e.source_text CONTAINS name 
+       OR e.translation CONTAINS name 
+       OR e.description CONTAINS name
+    WITH name, person_exists, count(e) > 0 AS text_exists
+    RETURN name, (person_exists OR text_exists) AS exists
+    """
     try:
         results = run_query(cypher, {"names": names})
         return {r["name"]: r["exists"] for r in results}
@@ -211,16 +222,28 @@ def query_neo4j(cypher: str) -> str:
     return f"Error executing Cypher query after retries: {last_error}"
 
 @tool
-def get_person_timeline(name: str) -> str:
-    """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名（例如 '曹操', '刘备', '徐晃'）。返回按时间顺序排列的事件列表。"""
-    cypher = """
-    MATCH (p:Person {name: $name})-[:PARTICIPATED_IN]->(e:Event)
+def get_person_timeline(name: str, start_year: Optional[int] = None, end_year: Optional[int] = None) -> str:
+    """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名（例如 '曹操', '刘备'）。可传入可选参数 start_year 和 end_year 进行年份过滤以节省 Token。"""
+    conditions = ["p.name = $name"]
+    params = {"name": name}
+    if start_year is not None:
+        conditions.append("e.std_start_year >= $start_year")
+        params["start_year"] = start_year
+    if end_year is not None:
+        conditions.append("e.std_start_year <= $end_year")
+        params["end_year"] = end_year
+    
+    where_clause = " AND ".join(conditions)
+    cypher = f"""
+    MATCH (p:Person)-[:PARTICIPATED_IN]->(e:Event)
+    WHERE {where_clause}
     RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, e.std_start_year AS year, e.source_text AS source
     ORDER BY e.std_start_year ASC, e.seq_index ASC
     """
-    print(f"🔍 [Tool: get_person_timeline] 查询人物: {name}")
+    filter_desc = f" (时间范围: {start_year or ''} 至 {end_year or ''})" if (start_year or end_year) else ""
+    print(f"🔍 [Tool: get_person_timeline] 查询人物: {name}{filter_desc}")
     try:
-        results = run_query(cypher, {"name": name})
+        results = run_query(cypher, params)
         if not results:
             return f"未找到关于人物 '{name}' 的生平事件记录。"
         return truncate_tool_output(json.dumps(results, ensure_ascii=False))
@@ -333,16 +356,28 @@ async def query_neo4j_async(cypher: str) -> str:
     return f"Database query failed permanently: {last_error}"
 
 @tool
-async def get_person_timeline_async(name: str) -> str:
-    """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名（例如 '曹操', '刘备', '徐晃'）。"""
-    await emit_status(f"🔍 [get_person_timeline] 正在翻阅人物 '{name}' 的生平编年史...")
-    cypher = """
-    MATCH (p:Person {name: $name})-[:PARTICIPATED_IN]->(e:Event)
+async def get_person_timeline_async(name: str, start_year: Optional[int] = None, end_year: Optional[int] = None) -> str:
+    """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名（例如 '曹操', '刘备'）。可传入可选参数 start_year 和 end_year 进行年份过滤以节省 Token。"""
+    conditions = ["p.name = $name"]
+    params = {"name": name}
+    if start_year is not None:
+        conditions.append("e.std_start_year >= $start_year")
+        params["start_year"] = start_year
+    if end_year is not None:
+        conditions.append("e.std_start_year <= $end_year")
+        params["end_year"] = end_year
+    
+    where_clause = " AND ".join(conditions)
+    cypher = f"""
+    MATCH (p:Person)-[:PARTICIPATED_IN]->(e:Event)
+    WHERE {where_clause}
     RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, e.std_start_year AS year, e.source_text AS source
     ORDER BY e.std_start_year ASC, e.seq_index ASC
     """
+    filter_desc = f" (时间范围: {start_year or ''} 至 {end_year or ''})" if (start_year or end_year) else ""
+    await emit_status(f"🔍 [get_person_timeline] 正在翻阅人物 '{name}' 的生平编年史{filter_desc}...")
     try:
-        results = await run_query_async(cypher, {"name": name})
+        results = await run_query_async(cypher, params)
         if not results:
             return f"未找到关于人物 '{name}' 的生平事件记录。"
         return truncate_tool_output(json.dumps(results, ensure_ascii=False))

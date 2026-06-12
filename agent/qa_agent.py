@@ -123,7 +123,18 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
     async def check_characters_exist_async(names: List[str]) -> dict[str, bool]:
         if not names:
             return {}
-        cypher = "UNWIND $names AS name OPTIONAL MATCH (p:Person {name: name}) RETURN name, p IS NOT NULL AS exists"
+        cypher = """
+        UNWIND $names AS name
+        OPTIONAL MATCH (p:Person {name: name})
+        WITH name, p IS NOT NULL AS person_exists
+        OPTIONAL MATCH (e:Event)
+        WHERE e.title CONTAINS name 
+           OR e.source_text CONTAINS name 
+           OR e.translation CONTAINS name 
+           OR e.description CONTAINS name
+        WITH name, person_exists, count(e) > 0 AS text_exists
+        RETURN name, (person_exists OR text_exists) AS exists
+        """
         try:
             results = await run_query_async(cypher, {"names": names})
             return {r["name"]: r["exists"] for r in results}
@@ -139,7 +150,7 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
             HumanMessage(content=f"历史对话与摘要：\n{history_text}\n\n当前查询任务：\n{rewritten_q}")
         ]
         observations = []
-        max_steps = 3
+        max_steps = 5
         step = 0
         
         while step < max_steps:
