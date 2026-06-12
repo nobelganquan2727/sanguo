@@ -31,6 +31,7 @@ from agent.cache import lookup_cache, save_cache
 from agent.graph_client import run_query
 
 load_dotenv()
+from langfuse import Langfuse
 
 from agent.tools import (
     get_llm,
@@ -442,7 +443,9 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
         yield json.dumps({"type": "done", "content": ""}) + "\n"
         return
 
-    handler = AgentObservabilityCallbackHandler()
+    langfuse_client = Langfuse()
+    trace = langfuse_client.trace(name="qa_pipeline", input=question)
+    handler = trace.get_langchain_handler()
     token = active_callback_var.set(handler)
     queue = asyncio.Queue()
     
@@ -456,7 +459,7 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
         finally:
             await queue.put(None)
             ans_str = "".join(pipeline.collected_text)
-            handler.langfuse.flush()
+            langfuse_client.flush()
             save_cache(question, ans_str)
             print("\n")
 
