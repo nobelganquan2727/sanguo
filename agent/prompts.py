@@ -1,4 +1,3 @@
-import re
 
 SYSTEM_PERSONA = "你是精通《三国志》的历史专家。"
 
@@ -188,27 +187,3 @@ RETURN
         "cypher": "MATCH (p:Person {name: '关羽'})-[:PARTICIPATED_IN]->(e:Event) WHERE e.title CONTAINS '死' OR e.description CONTAINS '薨' OR e.description CONTAINS '杀' OR e.title CONTAINS '败' OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location) RETURN e.title, e.description, e.std_start_year, l.name ORDER BY e.std_start_year DESC LIMIT 3"
     }
 ]
-
-def tokenize(text: str) -> set:
-    text = re.sub(r'[^\w\s]', '', text.lower())
-    tokens = set(text)
-    for i in range(len(text) - 1):
-        tokens.add(text[i:i+2])
-    return tokens
-
-def similarity(q1: str, q2: str) -> float:
-    t1 = tokenize(q1)
-    t2 = tokenize(q2)
-    if not t1 or not t2:
-        return 0.0
-    return len(t1.intersection(t2)) / len(t1.union(t2))
-
-def get_relevant_few_shots(question: str, intent: str, top_k: int = 3) -> str:
-    filtered = [ex for ex in FEW_SHOT_EXAMPLES if ex["intent"] == intent]
-    if not filtered:
-        return "（无相关示例）"
-    ranked = sorted(filtered, key=lambda ex: similarity(question, ex["question"]), reverse=True)
-    few_shots = []
-    for i, ex in enumerate(ranked[:top_k]):
-        few_shots.append(f"示例 {i+1}:\n问题: {ex['question']}\nCypher:\n{ex['cypher']}")
-    return "\n\n".join(few_shots)

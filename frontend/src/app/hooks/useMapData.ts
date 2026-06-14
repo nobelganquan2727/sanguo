@@ -189,7 +189,7 @@ export function useMapData() {
   const sendMessage = async (
     query: string,
     chatHistory: { role: string; content: string }[],
-    onChunk: (chunk: { type: 'status' | 'text' | 'done'; content: string }) => void,
+    onChunk: (chunk: { type: 'status' | 'text' | 'done' | 'events'; content: string }) => void,
     signal?: AbortSignal
   ) => {
     const res = await fetch(`${API_BASE}/api/ask`, {

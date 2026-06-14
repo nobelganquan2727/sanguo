@@ -8,7 +8,8 @@ from unittest.mock import patch, MagicMock
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from agent.cache import cosine_similarity, lookup_cache, save_cache, CACHE_FILE
-from agent.qa_agent import truncate_tool_output, ask_question
+from agent.tools import truncate_tool_output
+from agent.qa_agent import ask_question
 
 class TestSemanticCache(unittest.TestCase):
     

@@ -9,9 +9,7 @@ from typing import List, Literal, AsyncGenerator
 # 让脚本可以直接通过 python3 agent/qa_agent.py 运行
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
-from langchain_core.tools import tool
 from dotenv import load_dotenv
 from agent.prompts import (
     SYSTEM_PERSONA,
@@ -20,15 +18,12 @@ from agent.prompts import (
     PLANNING_PROMPT,
     INTENT_ANALYSIS_SYSTEM,
     INTENT_ANALYSIS_PROMPT,
-    CYPHER_GENERATION_TEMPLATE,
     ANSWER_RELATIONSHIP_TEMPLATE,
     ANSWER_FACT_TEMPLATE,
-    ANSWER_PLANNING_TEMPLATE,
-    get_relevant_few_shots
+    ANSWER_PLANNING_TEMPLATE
 )
-from agent.observability import AgentObservabilityCallbackHandler, active_callback_var
+from agent.observability import active_callback_var
 from agent.cache import lookup_cache, save_cache
-from agent.graph_client import run_query
 
 load_dotenv()
 from langfuse import Langfuse
@@ -39,8 +34,7 @@ from agent.tools import (
     get_person_timeline_async,
     search_historical_text_async,
     active_send_event_var,
-    run_query_async,
-    truncate_tool_output
+    run_query_async
 )
 
 
@@ -83,6 +77,114 @@ def has_valid_db_records(observations: list) -> bool:
         return True
     return False
 
+def get_similarity(s1: str, s2: str) -> float:
+    if not s1 or not s2:
+        return 0.0
+    s1, s2 = s1.lower(), s2.lower()
+    t1 = {s1[i:i+2] for i in range(len(s1)-1)}
+    t1.add(s1)
+    t2 = {s2[i:i+2] for i in range(len(s2)-1)}
+    t2.add(s2)
+    return len(t1.intersection(t2)) / len(t1.union(t2))
+
+def get_containment_similarity(short_text: str, long_text: str) -> float:
+    if not short_text or not long_text:
+        return 0.0
+    short_text, long_text = short_text.lower(), long_text.lower()
+    if short_text in long_text:
+        return 1.0
+    t_short = {short_text[i:i+2] for i in range(len(short_text)-1)}
+    t_short.add(short_text)
+    t_long = {long_text[i:i+2] for i in range(len(long_text)-1)}
+    t_long.add(long_text)
+    if not t_short:
+        return 0.0
+    return len(t_short.intersection(t_long)) / len(t_short)
+
+def extract_events_from_observations(observations: list, rewritten_q: str, final_ans: str) -> list[dict]:
+    extracted = []
+    seen_titles = set()
+    for obs in observations:
+        res_data = obs.get("result", "")
+        if not res_data:
+            continue
+        try:
+            # Remove any truncation trailer if present
+            if "\n\n【卷宗纪要说明】" in res_data:
+                res_data = res_data.split("\n\n【卷宗纪要说明】")[0]
+            
+            parsed = json.loads(res_data)
+            if not isinstance(parsed, list):
+                parsed = [parsed]
+                
+            for item in parsed:
+                if not isinstance(item, dict):
+                    continue
+                # Check if it has a title
+                title = item.get("title") or item.get("e.title")
+                if not title:
+                    continue
+                if title in seen_titles:
+                    continue
+                    
+                # Standardize location
+                locations = item.get("locations") or item.get("location") or item.get("l.name")
+                if not locations:
+                    # Try to find location from any key ending with location or loc
+                    for key, val in item.items():
+                         if "location" in key.lower() or key.lower() == "loc":
+                              locations = val
+                              break
+                              
+                # Ensure locations is a list
+                if locations:
+                    if isinstance(locations, str):
+                        locations = [locations]
+                    elif isinstance(locations, dict):
+                        locations = [locations]
+                    elif not isinstance(locations, list):
+                        locations = []
+                else:
+                    locations = []
+                    
+                # Standardize year
+                year = item.get("year") or item.get("std_start_year") or item.get("e.std_start_year")
+                if year is not None:
+                    try:
+                        year = int(year)
+                    except (ValueError, TypeError):
+                        year = None
+                        
+                # Standardize description/desc
+                desc = item.get("description") or item.get("desc") or item.get("translation") or item.get("source_text") or item.get("source") or ""
+                
+                # We construct a clean event dict for the map
+                clean_event = {
+                    "id": item.get("id") or item.get("e.id") or str(uuid.uuid4())[:8],
+                    "title": title,
+                    "year": year,
+                    "desc": desc,
+                    "locations": locations,
+                    "type": item.get("type") or item.get("e.type") or "历史记录",
+                    "protagonist": item.get("protagonist") or item.get("p.name") or ""
+                }
+                
+                # Compute relevance score: Jaccard overlap with question + containment in final answer
+                ans_score = get_containment_similarity(title, final_ans)
+                q_score = get_similarity(title, rewritten_q)
+                relevance_score = ans_score * 0.7 + q_score * 0.3
+                
+                # Filter by relevance threshold
+                if relevance_score >= 0.15:
+                    extracted.append((clean_event, relevance_score))
+                    seen_titles.add(title)
+        except Exception:
+            pass
+            
+    # Sort events by relevance score descending
+    extracted.sort(key=lambda x: x[1], reverse=True)
+    return [x[0] for x in extracted]
+
 # ----------------- Async Streaming Version (Phase 3) -----------------
 
 class QAStreamPipeline:
@@ -96,6 +198,7 @@ class QAStreamPipeline:
         self.collected_text = []
         self.history_to_process = []
         self.history_text = ""
+        self.all_observations = []
 
     async def send_event(self, event_type: str, content: str):
         await self.queue.put({"type": event_type, "content": content})
@@ -303,6 +406,7 @@ class QAStreamPipeline:
 
             q_type = analysis.type
             rewritten_q = analysis.rewritten_question
+            self.rewritten_q = rewritten_q
 
             # 1.5 验证提及的历史人物是否在图数据库中
             if q_type != "generic_chat" and getattr(analysis, "historical_characters", None):
@@ -359,6 +463,7 @@ class QAStreamPipeline:
             # 2c. 常规事实或关系查询
             else:
                 all_observations = await self.run_agent_loop(llm_with_tools_async, rewritten_q, self.history_text)
+            self.all_observations = all_observations
 
             # 2.5 检查是否检索到任何有效的数据库记录
             if not has_valid_db_records(all_observations):
@@ -456,6 +561,12 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
         q_type = None
         try:
             q_type = await pipeline.execute_pipeline()
+            # Extract events and emit as 'events' chunk
+            rewritten_q = getattr(pipeline, "rewritten_q", question)
+            final_ans = "".join(pipeline.collected_text)
+            extracted_events = extract_events_from_observations(pipeline.all_observations, rewritten_q, final_ans)
+            if extracted_events:
+                await queue.put({"type": "events", "content": json.dumps(extracted_events, ensure_ascii=False)})
         finally:
             await queue.put(None)
             ans_str = "".join(pipeline.collected_text)

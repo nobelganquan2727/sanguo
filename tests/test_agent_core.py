@@ -13,7 +13,7 @@ class TestAgentCore(unittest.TestCase):
     @patch('agent.qa_agent.has_valid_db_records')
     @patch('agent.qa_agent.save_cache')
     @patch('agent.qa_agent.lookup_cache')
-    @patch('agent.qa_agent.run_query')
+    @patch('agent.tools.run_query')
     @patch('agent.qa_agent.get_llm')
     def test_memory_summarization_triggers(self, mock_get_llm, mock_run_query, mock_lookup, mock_save, mock_has_valid_db):
         mock_has_valid_db.return_value = True
@@ -84,7 +84,7 @@ class TestAgentCore(unittest.TestCase):
     @patch('agent.qa_agent.has_valid_db_records')
     @patch('agent.qa_agent.save_cache')
     @patch('agent.qa_agent.lookup_cache')
-    @patch('agent.qa_agent.run_query')
+    @patch('agent.tools.run_query')
     @patch('agent.qa_agent.get_llm')
     def test_complex_planning_flow(self, mock_get_llm, mock_run_query, mock_lookup, mock_save, mock_has_valid_db):
         mock_has_valid_db.return_value = True

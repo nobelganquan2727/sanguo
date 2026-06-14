@@ -42,6 +42,3 @@ from contextvars import ContextVar
 from typing import Optional
 
 active_callback_var: ContextVar[Optional[CallbackHandler]] = ContextVar("active_callback", default=None)
-
-# Alias the old handler name to Langfuse's CallbackHandler to maintain backward compatibility for imports
-AgentObservabilityCallbackHandler = CallbackHandler

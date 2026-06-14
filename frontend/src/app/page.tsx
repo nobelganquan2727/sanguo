@@ -95,6 +95,9 @@ export default function Home() {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastProcessedMsgRef = useRef<string | null>(null);
+
+
 
   const handleStopGeneration = () => {
     if (abortControllerRef.current) {
@@ -128,6 +131,90 @@ export default function Home() {
     setMapLoading,
   } = useMapData();
   const allLocationNames = geoData.map((d: any) => d.std_name).filter(Boolean);
+
+  // Automatically pan/zoom to the agent streamed events when AI finishes generating, without green dots highlight
+  useEffect(() => {
+    if (isLoading) return; // Wait until AI finishes generating
+    const lastMsg = chatHistory[chatHistory.length - 1];
+    if (!lastMsg || lastMsg.role !== 'ai' || !lastMsg.content) return;
+    if (lastProcessedMsgRef.current === lastMsg.content) return;
+    lastProcessedMsgRef.current = lastMsg.content;
+
+    // Clear green dots (highlighted locations)
+    setHighlightedLocNames(new Set());
+
+    // Resolve coordinates of events in eventsList
+    const eventCoords: { lat: number; lng: number }[] = [];
+    if (eventsList && eventsList.length > 0) {
+      for (const evt of eventsList) {
+        if (!evt.locations || evt.locations.length === 0) continue;
+        const firstLoc = evt.locations.find((l: any) => l);
+        if (!firstLoc) continue;
+
+        let lat = typeof firstLoc === 'object' ? firstLoc.lat : null;
+        let lng = typeof firstLoc === 'object' ? firstLoc.lng : null;
+
+        if (typeof lat !== 'number' || typeof lng !== 'number') {
+          const firstLocName = typeof firstLoc === 'object' ? firstLoc.name : firstLoc;
+          const geo = geoData.find((d: any) => locationMatchesGeoName(firstLocName, d));
+          if (geo) {
+            lat = geo.lat;
+            lng = geo.lng;
+          }
+        }
+
+        if (typeof lat === 'number' && typeof lng === 'number') {
+          eventCoords.push({ lat, lng });
+        }
+      }
+    }
+
+    if (eventCoords.length > 0) {
+      // Pan/zoom to the event locations
+      if (eventCoords.length === 1) {
+        const target = eventCoords[0];
+        setViewState((vs: any) => ({
+          ...vs,
+          longitude: target.lng,
+          latitude: target.lat,
+          zoom: 6.5,
+          transitionDuration: 1500,
+        }));
+      } else {
+        // Average coordinates for centering
+        const sumLng = eventCoords.reduce((sum, l) => sum + l.lng, 0);
+        const sumLat = eventCoords.reduce((sum, l) => sum + l.lat, 0);
+        const avgLng = sumLng / eventCoords.length;
+        const avgLat = sumLat / eventCoords.length;
+        
+        // Calculate appropriate zoom based on bounding box
+        const lngs = eventCoords.map(l => l.lng);
+        const lats = eventCoords.map(l => l.lat);
+        const minLng = Math.min(...lngs);
+        const maxLng = Math.max(...lngs);
+        const minLat = Math.min(...lats);
+        const maxLat = Math.max(...lats);
+        
+        const deltaLng = maxLng - minLng;
+        const deltaLat = maxLat - minLat;
+        const maxDelta = Math.max(deltaLng, deltaLat);
+        
+        let zoom = 5.0;
+        if (maxDelta > 10) zoom = 4.0;
+        else if (maxDelta > 5) zoom = 4.5;
+        else if (maxDelta > 2) zoom = 5.5;
+        else zoom = 6.0;
+
+        setViewState((vs: any) => ({
+          ...vs,
+          longitude: avgLng,
+          latitude: avgLat,
+          zoom: zoom,
+          transitionDuration: 1500,
+        }));
+      }
+    }
+  }, [chatHistory, isLoading, geoData, eventsList]);
 
   const replaceEvents = async (params: URLSearchParams) => {
     setMapLoading(true);
@@ -272,6 +359,17 @@ export default function Home() {
         query,
         newHistory.map(h => ({ role: h.role, content: h.content })),
         (chunk) => {
+          if (chunk.type === 'events') {
+            try {
+              const parsedEvents = JSON.parse(chunk.content);
+              if (Array.isArray(parsedEvents)) {
+                setEventsList(parsedEvents);
+              }
+            } catch (e) {
+              console.error("Failed to parse streamed events", e);
+            }
+            return;
+          }
           setChatHistory(prev => {
             const updated = [...prev];
             const aiMsg = { ...updated[aiMessageIndex] };
@@ -394,7 +492,7 @@ export default function Home() {
           geoData={geoData}
           highlightedLocNames={highlightedLocNames}
           onLocationClick={handleLocationClick}
-          eventsList={showTimeline ? eventsList : []}
+          eventsList={(showTimeline || showEventPanel || showAgentPanel) ? eventsList : []}
           allPersons={allPersons}
           onEventClick={handleMapEventClick}
           onEventHover={handleMapEventHover}

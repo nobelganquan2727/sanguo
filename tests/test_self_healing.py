@@ -1,7 +1,7 @@
 import os
 import sys
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,7 +12,7 @@ class TestSelfHealing(unittest.TestCase):
     
     @patch('agent.qa_agent.save_cache')
     @patch('agent.qa_agent.lookup_cache')
-    @patch('agent.qa_agent.run_query')
+    @patch('agent.tools.run_query')
     @patch('agent.qa_agent.get_llm')
     def test_correction_success(self, mock_get_llm, mock_run_query, mock_lookup, mock_save):
         mock_lookup.return_value = (None, 0.0)
@@ -28,12 +28,12 @@ class TestSelfHealing(unittest.TestCase):
             entities=["刘备", "臧霸"]
         )
         mock_structured_llm = MagicMock()
-        mock_structured_llm.invoke.return_value = mock_intent_analysis
+        mock_structured_llm.ainvoke = AsyncMock(return_value=mock_intent_analysis)
         mock_llm.with_structured_output.return_value = mock_structured_llm
         
         # 2. Agent Step 1 tool-calling (calls query_neo4j)
         mock_agent_response = MagicMock()
-        mock_agent_response.tool_calls = [{"name": "query_neo4j", "args": {"cypher": "BAD CYPHER"}, "id": "call_1"}]
+        mock_agent_response.tool_calls = [{"name": "query_neo4j_async", "args": {"cypher": "BAD CYPHER"}, "id": "call_1"}]
         mock_agent_response.content = "I need to check neo4j."
         
         mock_llm_with_tools = MagicMock()
@@ -41,7 +41,7 @@ class TestSelfHealing(unittest.TestCase):
         mock_agent_stop_response = MagicMock()
         mock_agent_stop_response.tool_calls = []
         mock_agent_stop_response.content = "Stop."
-        mock_llm_with_tools.invoke.side_effect = [mock_agent_response, mock_agent_stop_response]
+        mock_llm_with_tools.ainvoke = AsyncMock(side_effect=[mock_agent_response, mock_agent_stop_response])
         mock_llm.bind_tools.return_value = mock_llm_with_tools
         
         # 3. Cypher self-correction inside query_neo4j tool
@@ -53,7 +53,7 @@ class TestSelfHealing(unittest.TestCase):
         mock_synthesis_res = MagicMock()
         mock_synthesis_res.content = "根据正史记载，刘备与臧霸关系如下..."
         
-        mock_llm.invoke.side_effect = [mock_correction_res, mock_synthesis_res]
+        mock_llm.ainvoke = AsyncMock(side_effect=[mock_correction_res, mock_synthesis_res])
         
         # Mock run_query: first call fails (syntax error), second call succeeds
         mock_run_query.side_effect = [
@@ -73,7 +73,7 @@ class TestSelfHealing(unittest.TestCase):
         
     @patch('agent.qa_agent.save_cache')
     @patch('agent.qa_agent.lookup_cache')
-    @patch('agent.qa_agent.run_query')
+    @patch('agent.tools.run_query')
     @patch('agent.qa_agent.get_llm')
     def test_graceful_degradation(self, mock_get_llm, mock_run_query, mock_lookup, mock_save):
         mock_lookup.return_value = (None, 0.0)
@@ -88,19 +88,19 @@ class TestSelfHealing(unittest.TestCase):
             entities=["徐晃"]
         )
         mock_structured_llm = MagicMock()
-        mock_structured_llm.invoke.return_value = mock_intent_analysis
+        mock_structured_llm.ainvoke = AsyncMock(return_value=mock_intent_analysis)
         mock_llm.with_structured_output.return_value = mock_structured_llm
         
         # Agent Step 1 tool-calling (calls query_neo4j)
         mock_agent_response = MagicMock()
-        mock_agent_response.tool_calls = [{"name": "query_neo4j", "args": {"cypher": "BAD CYPHER"}, "id": "call_1"}]
+        mock_agent_response.tool_calls = [{"name": "query_neo4j_async", "args": {"cypher": "BAD CYPHER"}, "id": "call_1"}]
         mock_agent_response.content = "Checking neo4j."
         
         mock_llm_with_tools = MagicMock()
         mock_agent_stop_response = MagicMock()
         mock_agent_stop_response.tool_calls = []
         mock_agent_stop_response.content = "Stop."
-        mock_llm_with_tools.invoke.side_effect = [mock_agent_response, mock_agent_stop_response]
+        mock_llm_with_tools.ainvoke = AsyncMock(side_effect=[mock_agent_response, mock_agent_stop_response])
         mock_llm.bind_tools.return_value = mock_llm_with_tools
         
         # Correction calls in query_neo4j (fails up to max_retries = 2, so 2 correction LLM calls)
@@ -113,7 +113,7 @@ class TestSelfHealing(unittest.TestCase):
         mock_synthesis_res = MagicMock()
         mock_synthesis_res.content = "由于藏书阁故障，但依据正史徐晃起初效力于杨奉..."
         
-        mock_llm.invoke.side_effect = [mock_corr_1, mock_corr_2, mock_synthesis_res]
+        mock_llm.ainvoke = AsyncMock(side_effect=[mock_corr_1, mock_corr_2, mock_synthesis_res])
         
         # All run_query calls fail (initial + 2 retries = 3 calls)
         mock_run_query.side_effect = Exception("Database connection lost permanently")
