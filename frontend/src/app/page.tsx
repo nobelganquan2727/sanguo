@@ -96,6 +96,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastProcessedMsgRef = useRef<string | null>(null);
+  const [agentEventsList, setAgentEventsList] = useState<any[]>([]);
+  const [activeEventSource, setActiveEventSource] = useState<'timeline' | 'agent'>('timeline');
 
 
 
@@ -143,10 +145,10 @@ export default function Home() {
     // Clear green dots (highlighted locations)
     setHighlightedLocNames(new Set());
 
-    // Resolve coordinates of events in eventsList
+    // Resolve coordinates of events in agentEventsList
     const eventCoords: { lat: number; lng: number }[] = [];
-    if (eventsList && eventsList.length > 0) {
-      for (const evt of eventsList) {
+    if (agentEventsList && agentEventsList.length > 0) {
+      for (const evt of agentEventsList) {
         if (!evt.locations || evt.locations.length === 0) continue;
         const firstLoc = evt.locations.find((l: any) => l);
         if (!firstLoc) continue;
@@ -214,13 +216,14 @@ export default function Home() {
         }));
       }
     }
-  }, [chatHistory, isLoading, geoData, eventsList]);
+  }, [chatHistory, isLoading, geoData, agentEventsList]);
 
   const replaceEvents = async (params: URLSearchParams) => {
     setMapLoading(true);
     try {
       const { events, hasMore } = await fetchEventsPage(params, 0, EVENT_PAGE_SIZE);
       setEventsList(events);
+      setActiveEventSource('timeline');
       setEventQueryParams(new URLSearchParams(params));
       setEventOffset(events.length);
       setEventsHasMore(hasMore);
@@ -329,6 +332,7 @@ export default function Home() {
     try {
       const { events, expandedLocations } = await fetchLocationEvents(location, 180, 280);
       setEventsList(events);
+      setActiveEventSource('timeline');
       setEventOffset(events.length);
       setEventsHasMore(false);
       setSelectedEventIds(new Set());
@@ -363,7 +367,8 @@ export default function Home() {
             try {
               const parsedEvents = JSON.parse(chunk.content);
               if (Array.isArray(parsedEvents)) {
-                setEventsList(parsedEvents);
+                setAgentEventsList(parsedEvents);
+                setActiveEventSource('agent');
               }
             } catch (e) {
               console.error("Failed to parse streamed events", e);
@@ -482,6 +487,20 @@ export default function Home() {
     }
   };
 
+  const handleToggleAgentPanel = (show: boolean) => {
+    setShowAgentPanel(show);
+    if (show && agentEventsList.length > 0) {
+      setActiveEventSource('agent');
+    }
+  };
+
+  const handleCloseTimeline = () => {
+    setShowTimeline(false);
+    if (showAgentPanel && agentEventsList.length > 0) {
+      setActiveEventSource('agent');
+    }
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#041527] font-sans p-6 flex items-center justify-center">
       <div className="relative w-full h-full border-2 border-[#5c6e83] rounded-lg overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.8)] bg-[#d2cdbe]">
@@ -492,7 +511,7 @@ export default function Home() {
           geoData={geoData}
           highlightedLocNames={highlightedLocNames}
           onLocationClick={handleLocationClick}
-          eventsList={(showTimeline || showEventPanel || showAgentPanel) ? eventsList : []}
+          eventsList={(showTimeline || showEventPanel || showAgentPanel) ? (activeEventSource === 'agent' ? agentEventsList : eventsList) : []}
           allPersons={allPersons}
           onEventClick={handleMapEventClick}
           onEventHover={handleMapEventHover}
@@ -594,7 +613,7 @@ export default function Home() {
 
         <AgentPanel
           show={showAgentPanel}
-          onToggle={setShowAgentPanel}
+          onToggle={handleToggleAgentPanel}
           chatHistory={chatHistory}
           isLoading={isLoading}
           onSend={handleSendMessage}
@@ -620,11 +639,11 @@ export default function Home() {
             currentYear={timelineYear}
             onYearChange={setTimelineYear}
             onYearCommit={handleTimelineCommit}
-            onClose={() => setShowTimeline(false)}
+            onClose={handleCloseTimeline}
           />
         ) : (
           <button
-            onClick={() => setShowTimeline(true)}
+            onClick={() => { setShowTimeline(true); setActiveEventSource('timeline'); }}
             className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 px-5 py-2.5 bg-gradient-to-r from-[#0a1628]/95 to-[#1a2f4c]/95 hover:from-[#1a2f4c] hover:to-[#0a1628] text-[#e2ddce] hover:text-[#f59e0b] border border-[#4a5f78]/70 rounded-full shadow-[0_4px_25px_rgba(0,0,0,0.7)] backdrop-blur-md flex items-center gap-2 text-xs font-serif font-bold tracking-wider transition-all duration-300 cursor-pointer hover:scale-105"
             title="点击展开时间轴"
           >

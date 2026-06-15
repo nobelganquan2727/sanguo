@@ -48,7 +48,7 @@ def get_llm(model_type: str = "complex"):
             extra_body={"thinking": {"type": "disabled"}}
         )
 
-def truncate_tool_output(output: Any, max_chars: int = 3000) -> str:
+def truncate_tool_output(output: Any, max_chars: int = 15000) -> str:
     """
     Safely truncates the tool output to avoid breaking JSON format
     when the output is too long.
@@ -190,9 +190,11 @@ async def get_person_timeline_async(name: str, start_year: Optional[int] = None,
     MATCH (p:Person)-[:PARTICIPATED_IN]->(e:Event)
     WHERE {where_clause}
     OPTIONAL MATCH (e)-[:HAPPENED_AT]->(l:Location)
-    RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, 
-           e.std_start_year AS year, e.source_text AS source, collect(DISTINCT l.name) AS locations
+    OPTIONAL MATCH (e)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+    WITH e, collect(DISTINCT l.name) AS locations, me.title AS major_event
     ORDER BY e.std_start_year ASC, e.seq_index ASC
+    RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, 
+           e.std_start_year AS year, e.source_text AS source, locations, major_event
     """
     filter_desc = f" (时间范围: {start_year or ''} 至 {end_year or ''})" if (start_year or end_year) else ""
     await emit_status(f"🔍 [get_person_timeline] 正在翻阅人物 '{name}' 的生平编年史{filter_desc}...")
@@ -207,9 +209,19 @@ async def get_person_timeline_async(name: str, start_year: Optional[int] = None,
 @tool
 async def search_historical_text_async(keyword: str) -> str:
     """通过关键词模糊搜索相关的历史事件描述和史料原文。当需要查找某个特定事件（如 '赤壁之战'）或含有特定词汇的史料时使用。"""
-    keywords = [k.strip() for k in keyword.split() if k.strip()]
-    if not keywords:
+    raw_keywords = [k.strip() for k in keyword.split() if k.strip()]
+    if not raw_keywords:
         return "关键词不能为空。"
+    
+    keywords = []
+    for k in raw_keywords:
+        if len(k) > 2:
+            if k.endswith("之战"):
+                k = k[:-2]
+            elif k.endswith("战役"):
+                k = k[:-2]
+        keywords.append(k)
+        
     await emit_status(f"🔍 [search_historical_text] 正在全文库检索关键词 {keywords}...")
     cypher = """
     MATCH (e:Event)

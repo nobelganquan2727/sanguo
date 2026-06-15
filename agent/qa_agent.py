@@ -81,10 +81,8 @@ def get_similarity(s1: str, s2: str) -> float:
     if not s1 or not s2:
         return 0.0
     s1, s2 = s1.lower(), s2.lower()
-    t1 = {s1[i:i+2] for i in range(len(s1)-1)}
-    t1.add(s1)
-    t2 = {s2[i:i+2] for i in range(len(s2)-1)}
-    t2.add(s2)
+    t1 = set(s1)
+    t2 = set(s2)
     return len(t1.intersection(t2)) / len(t1.union(t2))
 
 def get_containment_similarity(short_text: str, long_text: str) -> float:
@@ -93,10 +91,8 @@ def get_containment_similarity(short_text: str, long_text: str) -> float:
     short_text, long_text = short_text.lower(), long_text.lower()
     if short_text in long_text:
         return 1.0
-    t_short = {short_text[i:i+2] for i in range(len(short_text)-1)}
-    t_short.add(short_text)
-    t_long = {long_text[i:i+2] for i in range(len(long_text)-1)}
-    t_long.add(long_text)
+    t_short = set(short_text)
+    t_long = set(long_text)
     if not t_short:
         return 0.0
     return len(t_short.intersection(t_long)) / len(t_short)
@@ -158,6 +154,13 @@ def extract_events_from_observations(observations: list, rewritten_q: str, final
                 # Standardize description/desc
                 desc = item.get("description") or item.get("desc") or item.get("translation") or item.get("source_text") or item.get("source") or ""
                 
+                major_ev = item.get("major_event") or item.get("me.title")
+                major_evs = item.get("major_events")
+                if not major_evs and major_ev:
+                    major_evs = [major_ev]
+                if not major_evs:
+                    major_evs = []
+                
                 # We construct a clean event dict for the map
                 clean_event = {
                     "id": item.get("id") or item.get("e.id") or str(uuid.uuid4())[:8],
@@ -166,7 +169,9 @@ def extract_events_from_observations(observations: list, rewritten_q: str, final
                     "desc": desc,
                     "locations": locations,
                     "type": item.get("type") or item.get("e.type") or "历史记录",
-                    "protagonist": item.get("protagonist") or item.get("p.name") or ""
+                    "protagonist": item.get("protagonist") or item.get("p.name") or "",
+                    "major_events": major_evs,
+                    "major_event": major_ev or ""
                 }
                 
                 # Compute relevance score: Jaccard overlap with question + containment in final answer
