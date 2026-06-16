@@ -21,6 +21,16 @@ export default function HoverTooltip({
   onEdit, renderDesc, onClose, onMouseEnter, onMouseLeave,
 }: HoverTooltipProps) {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     setActiveIdx(null);
@@ -31,12 +41,30 @@ export default function HoverTooltip({
 
   const isList = events.length > 1;
 
+  const style: React.CSSProperties = isMobile
+    ? {
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        bottom: '80px',
+        top: 'auto',
+      }
+    : {
+        top,
+        left: left !== undefined ? left : 328,
+      };
+
   return (
     <div
-      className="absolute z-50 w-[420px] bg-[#0c1821]/95 backdrop-blur-md border border-[#e53e3e] rounded-md shadow-[0_0_20px_rgba(229,62,62,0.4)] p-5 max-h-[400px] overflow-y-auto"
-      style={{ top, left: left !== undefined ? left : 328 }}
+      className="absolute z-50 w-[88vw] max-w-[360px] md:w-[420px] bg-[#0c1821]/95 backdrop-blur-md border border-[#e53e3e] rounded-md shadow-[0_0_20px_rgba(229,62,62,0.4)] p-4 md:p-5 max-h-[320px] md:max-h-[400px] overflow-y-auto text-xs md:text-sm"
+      style={style}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
     >
       <button
         onClick={onClose}

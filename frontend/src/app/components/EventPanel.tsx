@@ -208,10 +208,18 @@ export default function EventPanel({
   }
 
   return (
-    <div ref={wrapperRef} className="absolute left-4 top-4 z-20 w-[22vw] min-w-[280px] max-w-[360px] h-[72vh] max-h-[620px] bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md overflow-visible shadow-xl flex flex-col select-none">
+    <div
+      ref={wrapperRef}
+      className="absolute left-2 top-2 md:left-4 md:top-4 z-20 w-[88vw] min-w-[280px] max-w-[340px] md:w-[26vw] md:min-w-[320px] md:max-w-[420px] h-[65vh] max-h-[360px] md:h-[72vh] md:max-h-[620px] bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md overflow-visible shadow-xl flex flex-col select-none text-xs md:text-sm"
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+    >
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-2 px-3 border-b border-[#a4424b] flex items-center justify-between">
-        <h2 className="text-sm font-bold text-white tracking-widest">事件列表</h2>
+      <div className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-1.5 md:py-2 px-2.5 md:px-3 border-b border-[#a4424b] flex items-center justify-between">
+        <h2 className="text-xs md:text-sm font-bold text-white tracking-widest">事件列表</h2>
         <div className="flex items-center gap-1">
           <button
             onClick={(e) => { e.stopPropagation(); onToggleFilter(); }}
@@ -302,25 +310,25 @@ export default function EventPanel({
                       onClick={(e) => {
                         onToggleEvent(evt);
                       }}
-                      className={`text-sm flex flex-col gap-1.5 p-2 rounded cursor-pointer transition-all border ${selected
+                      className={`text-xs md:text-sm flex flex-col gap-1 md:gap-1.5 p-1.5 md:p-2 rounded cursor-pointer transition-all border ${selected
                         ? 'bg-[#1a2f4c] border-amber-500/70 shadow-[0_0_8px_rgba(245,158,11,0.25)]'
                         : 'border-transparent hover:bg-[#1a2f4c] hover:border-[#4a5f78]'
                         }`}
                     >
-                      <div className="flex items-start gap-2">
-                        <div className={`mt-0.5 w-3.5 h-3.5 rounded shrink-0 border transition-colors ${selected ? 'bg-amber-500 border-amber-400' : 'bg-transparent border-slate-600'}`} />
-                        <span className="font-bold text-amber-500 min-w-[42px] shrink-0">{evt.year != null ? `${evt.year}年` : '不详'}</span>
+                      <div className="flex items-start gap-1.5 md:gap-2">
+                        <div className={`mt-0.5 w-3 md:w-3.5 h-3 md:h-3.5 rounded shrink-0 border transition-colors ${selected ? 'bg-amber-500 border-amber-400' : 'bg-transparent border-slate-600'}`} />
+                        <span className="font-bold text-amber-500 min-w-[36px] md:min-w-[42px] shrink-0 text-xs md:text-sm">{evt.year != null ? `${evt.year}年` : '不详'}</span>
                         <span className={`font-semibold leading-tight ${selected ? 'text-amber-200' : 'text-white'}`}>
                           {evt.title}
                         </span>
                       </div>
-                      {evt.type && <span className="ml-[68px] text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded self-start">{evt.type}</span>}
+                      {evt.type && <span className="ml-11 md:ml-[68px] text-[9px] md:text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded self-start">{evt.type}</span>}
                       {evt.locations?.length > 0 && (
-                        <div className="flex flex-wrap gap-1 ml-[68px]">
+                        <div className="flex flex-wrap gap-1 ml-11 md:ml-[68px]">
                           {evt.locations.map((l: any, i: number) => {
                             const name = typeof l === 'object' ? l.name : l;
                             return (
-                              <span key={i} className="text-xs text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded">📍 {name}</span>
+                              <span key={i} className="text-[10px] md:text-xs text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded">📍 {name}</span>
                             );
                           })}
                         </div>

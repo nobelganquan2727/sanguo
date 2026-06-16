@@ -26,8 +26,14 @@ export default function TimelineSlider({ currentYear, onYearChange, onYearCommit
   };
 
   return (
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 w-[55vw] min-w-[320px] max-w-2xl transition-all duration-300">
-      <div className="relative bg-gradient-to-r from-[#0a1628]/95 via-[#1a2f4c]/98 to-[#0a1628]/95 py-2 px-5 rounded-xl shadow-[0_4px_25px_rgba(0,0,0,0.75)] border border-[#4a5f78]/70 backdrop-blur-md flex flex-col items-center gap-1">
+    <div 
+      className="absolute bottom-3 md:bottom-8 left-1/2 -translate-x-1/2 z-10 w-[88vw] md:w-[55vw] min-w-[280px] md:min-w-[320px] max-w-2xl transition-all duration-300"
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div className="relative bg-gradient-to-r from-[#0a1628]/95 via-[#1a2f4c]/98 to-[#0a1628]/95 py-1.5 md:py-2 px-4 md:px-5 rounded-xl shadow-[0_4px_25px_rgba(0,0,0,0.75)] border border-[#4a5f78]/70 backdrop-blur-md flex flex-col items-center gap-1">
         {onClose && (
           <button
             onClick={onClose}
