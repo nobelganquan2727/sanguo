@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import requests
 from typing import Callable, Awaitable, Optional, Any
 from contextvars import ContextVar
 from langchain_openai import ChatOpenAI
@@ -241,3 +242,58 @@ async def search_historical_text_async(keyword: str) -> str:
         return truncate_tool_output(json.dumps(results, ensure_ascii=False))
     except Exception as e:
         return f"查询出错: {str(e)}"
+
+async def get_bge_m3_embedding_async(text: str) -> list[float]:
+    """Fetch BGE-M3 embedding from SiliconFlow API asynchronously."""
+    api_key = os.environ.get("SILICONFLOW_API_KEY")
+    if not api_key:
+        raise ValueError("SILICONFLOW_API_KEY not found in environment!")
+        
+    url = "https://api.siliconflow.cn/v1/embeddings"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "BAAI/bge-m3",
+        "input": text,
+        "encoding_format": "float"
+    }
+    
+    loop = asyncio.get_running_loop()
+    def _post():
+        res = requests.post(url, json=payload, headers=headers, timeout=15)
+        res.raise_for_status()
+        return res.json()["data"][0]["embedding"]
+        
+    return await loop.run_in_executor(None, _post)
+
+@tool
+async def search_vector_graph_async(query: str, k: Optional[int] = 10) -> str:
+    """通过自然语言描述进行语义向量检索，查找与查询最相关的历史事件和史料原文。如果你需要查询特定历史大意/主题（如“曹操在官渡之战前的部署”），或用词难以精准匹配原文时，应首选此工具。"""
+    await emit_status(f"🔍 [search_vector_graph] 正在语义向量检索: '{query}'...")
+    try:
+        embedding = await get_bge_m3_embedding_async(query)
+    except Exception as e:
+        await emit_status(f"⚠️ [search_vector_graph] 获取查询向量失败: {e}")
+        return f"获取查询向量失败: {str(e)}"
+        
+    cypher = """
+    CALL db.index.vector.queryNodes('eventEmbeddings', $k, $embedding)
+    YIELD node, score
+    MATCH (node:Event)
+    OPTIONAL MATCH (node)-[:HAPPENED_AT]->(l:Location)
+    OPTIONAL MATCH (node)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+    RETURN node.title AS title, COALESCE(node.translation, node.description) AS description, 
+           node.time_text AS time, node.std_start_year AS year, node.source_text AS source, 
+           collect(DISTINCT l.name) AS locations, me.title AS major_event, score
+    ORDER BY score DESC
+    """
+    try:
+        results = await run_query_async(cypher, {"k": k or 10, "embedding": embedding})
+        if not results:
+            return f"未找到与查询 '{query}' 相关的历史事件。"
+        return truncate_tool_output(json.dumps(results, ensure_ascii=False))
+    except Exception as e:
+        return f"向量检索出错: {str(e)}"
+

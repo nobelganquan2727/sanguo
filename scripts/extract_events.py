@@ -170,6 +170,66 @@ def clean_json_quotes(raw_content: str) -> str:
         cleaned = re.sub(pattern, replace_match, cleaned, flags=re.DOTALL)
     return cleaned
 
+async def refine_missed_text_with_llm(missed_text: str, biography_owner: str, context_str: str) -> List[dict]:
+    system_prompt = f"""
+你是一位精通《三国志》的资深历史学家。我们从原文中检测到一段被遗漏的历史文言文片段。请将这段遗漏文言文转换为结构化的 JSON 事件数据。
+你需要根据文本内容提取出一个或多个合理的历史事件。
+
+传主是：{biography_owner}
+
+要求：
+1. 「事件标题」要根据内容总结一个合理的标题（例如：“刘巴人物背景”、“刘巴字号与籍贯”），绝对不能起名叫“补充遗漏文本”。
+2. 请合理分析或推测事件的时间、地点、相关人物、涉及集团和地理信息。
+3. 请使用与标准事件相同的 JSON 格式输出：
+{{
+  "events": [
+    {{
+      "事件标题": "事件的简短标题",
+      "时间": "时间描述（如：建安十三年）",
+      "地点": "地点描述（如：赤壁）",
+      "相关人物": ["人物1", "人物2"],
+      "原文": "对应的三国志文言文原文片段",
+      "事件翻译": "对应的现代白话文翻译",
+      "std_start_year": 开始年份(整型，若无明确时间，请结合历史背景与上下文合理推测一个公元纪年；如确实无法确定则写 null),
+      "涉及的集团": ["集团 ID（参考上表，如 'ying_chuan_xun'）"],
+      "所属事件": ["大事件 ID（参考上表，如 'huang_jin_qi_yi'）"],
+      "地理信息": ["标准地理ID，如'交州:郁林郡:右江'，优先定位到县，若不行则郡，再不行则州（必须匹配参考表）"],
+      "是否本传": true 或者 false
+    }}
+  ]
+}}
+请参考以下字典映射补充字段：
+{context_str}
+"""
+    try:
+        user_prompt = f"[遗漏的文本]\n{missed_text}"
+        messages = [
+            ("system", system_prompt),
+            ("user", user_prompt)
+        ]
+        response = await llm.ainvoke(messages)
+        content = response.content
+        content = clean_json_quotes(content)
+        parsed_result = EventExtractionResult.model_validate_json(content)
+        if parsed_result and parsed_result.events:
+            return [e.model_dump(by_alias=True) for e in parsed_result.events]
+    except Exception as e:
+        print(f"  ⚠️ 遗漏文本精细化提取失败 ({e})，将使用基本兜底方案。")
+        
+    return [{
+        "事件标题": f"{biography_owner}背景介绍" if biography_owner else "补充遗漏文本",
+        "时间": "不详",
+        "地点": "不详",
+        "相关人物": [biography_owner] if biography_owner else [],
+        "原文": missed_text,
+        "事件翻译": missed_text,
+        "std_start_year": None,
+        "涉及的集团": [],
+        "所属事件": [],
+        "地理信息": [],
+        "是否本传": True if biography_owner else False
+    }]
+
 async def extract_events_from_text(text_chunk: str, biography_owner: str, context_str: str, history_context: str = "") -> List[dict]:
     system_prompt = f"""
 你是一位精通《三国志》的资深历史学家。请从下面提供的古文原文中，提取出所有有价值的历史事件，并将其转换为结构化的 JSON 数据。
@@ -273,8 +333,8 @@ async def extract_events_from_text(text_chunk: str, biography_owner: str, contex
     extracted_text = "".join([ev.get("原文", "") for ev in events_to_return])
     ext_clean = re.sub(r'[^\u4e00-\u9fff]', '', extracted_text)
     
-    # 优先匹配中括号内容 [...]；非括号内容则按 [。；？！] 或结尾切分
-    pattern = r'(\[[^\]]*\]|[^\[\]。；？！]+(?:[。；？！]|$))'
+    # 优先匹配中括号内容 [...]；非括号内容则按 [。；？！] 或结尾切分，且确保在遭遇中括号时不丢失段前文字
+    pattern = r'(\[[^\]]*\]|[^\[\]。；？！]+(?:[。；？！]|$|(?=\[)))'
     processed_sentences = [s.strip() for s in re.findall(pattern, text_chunk) if s.strip()]
         
     missed_text = ""
@@ -286,21 +346,9 @@ async def extract_events_from_text(text_chunk: str, biography_owner: str, contex
             missed_text += s
             
     if missed_text:
-        fallback_event = {
-            "事件标题": "补充遗漏文本",
-            "时间": "不详",
-            "地点": "不详",
-            "相关人物": [],
-            "原文": missed_text,
-            "事件翻译": missed_text,
-            "std_start_year": None,
-            "涉及的集团": [],
-            "所属事件": [],
-            "地理信息": [],
-            "是否本传": False
-        }
-        events_to_return.append(fallback_event)
-        print(f"  ⚠️ 检测到 LLM 遗漏文本，已强制打包找回 ({len(re.sub(r'[^\u4e00-\u9fff]', '', missed_text))} 字)。")
+        fallback_events = await refine_missed_text_with_llm(missed_text, biography_owner, context_str)
+        events_to_return.extend(fallback_events)
+        print(f"  ⚠️ 检测到 LLM 遗漏文本，已精细化提取找回 ({len(re.sub(r'[^\u4e00-\u9fff]', '', missed_text))} 字)。")
         
     return events_to_return
 

@@ -33,6 +33,7 @@ from agent.tools import (
     query_neo4j_async,
     get_person_timeline_async,
     search_historical_text_async,
+    search_vector_graph_async,
     active_send_event_var,
     run_query_async
 )
@@ -275,6 +276,8 @@ class QAStreamPipeline:
                         obs_str = await get_person_timeline_async.ainvoke(tool_args, config=config)
                     elif tool_name == "search_historical_text_async":
                         obs_str = await search_historical_text_async.ainvoke(tool_args, config=config)
+                    elif tool_name == "search_vector_graph_async":
+                        obs_str = await search_vector_graph_async.ainvoke(tool_args, config=config)
                     else:
                         obs_str = f"Error: Tool '{tool_name}' not found."
                 except Exception as e:
@@ -429,7 +432,7 @@ class QAStreamPipeline:
                 await self.handle_generic_chat()
                 return q_type
 
-            tools_async = [query_neo4j_async, get_person_timeline_async, search_historical_text_async]
+            tools_async = [query_neo4j_async, get_person_timeline_async, search_historical_text_async, search_vector_graph_async]
             llm_with_tools_async = self.llm_complex.bind_tools(tools_async)
             all_observations = []
 
