@@ -77,11 +77,11 @@ def main():
     with driver.session() as session:
         results = session.run(cypher_fetch)
         events = [dict(r) for r in results]
+    driver.close()
     
     print(f"Total events retrieved: {len(events)}")
     if not events:
         print("❌ No events found in database.")
-        driver.close()
         return
 
     # Prepare texts to embed
@@ -123,6 +123,13 @@ def main():
     batch_write_size = 500
     write_batches = [results_to_import[i:i + batch_write_size] for i in range(0, len(results_to_import), batch_write_size)]
     
+    print("Re-connecting to Neo4j for writing...")
+    try:
+        driver = get_driver()
+    except Exception as e:
+        print(f"❌ Failed to reconnect to Neo4j: {e}")
+        return
+
     print(f"Updating Neo4j in {len(write_batches)} batches...")
     
     cypher_update = """
