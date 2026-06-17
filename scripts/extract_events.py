@@ -348,7 +348,8 @@ async def extract_events_from_text(text_chunk: str, biography_owner: str, contex
     if missed_text:
         fallback_events = await refine_missed_text_with_llm(missed_text, biography_owner, context_str)
         events_to_return.extend(fallback_events)
-        print(f"  ⚠️ 检测到 LLM 遗漏文本，已精细化提取找回 ({len(re.sub(r'[^\u4e00-\u9fff]', '', missed_text))} 字)。")
+        missed_len = len(re.sub(r'[^\u4e00-\u9fff]', '', missed_text))
+        print(f"  ⚠️ 检测到 LLM 遗漏文本，已精细化提取找回 ({missed_len} 字)。")
         
     return events_to_return
 
