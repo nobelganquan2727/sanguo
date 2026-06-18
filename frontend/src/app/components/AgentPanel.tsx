@@ -86,7 +86,7 @@ export default function AgentPanel({
     return (
       <button
         onClick={() => onToggle(true)}
-        className="absolute right-4 bottom-12 z-20 flex items-center gap-1 rounded-md border border-[#4a5f78] bg-[#0a1526]/90 px-2.5 py-1.5 text-xs text-slate-200 hover:text-white hover:border-slate-400 transition-colors"
+        className="absolute right-4 top-4 z-20 flex items-center gap-1 rounded-md border border-[#4a5f78] bg-[#0a1526]/90 px-2.5 py-1.5 text-xs text-slate-200 hover:text-white hover:border-slate-400 transition-colors"
         title="展开幕僚"
       >
         <ChevronDown className="w-3.5 h-3.5 rotate-90" />
@@ -97,7 +97,7 @@ export default function AgentPanel({
 
   return (
     <div
-      className="absolute right-2 bottom-3 md:right-4 md:bottom-12 z-20 w-[88vw] min-w-[280px] max-w-[340px] md:w-[32vw] md:min-w-[360px] md:max-w-[500px] h-[65vh] max-h-[360px] md:h-[72vh] md:max-h-[620px] bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md shadow-xl flex flex-col pointer-events-auto text-xs md:text-sm"
+      className="absolute right-2 top-2 md:right-4 md:top-4 z-20 w-[88vw] min-w-[280px] max-w-[340px] md:w-[32vw] md:min-w-[360px] md:max-w-[500px] h-[65vh] max-h-[360px] md:h-[72vh] md:max-h-[620px] bg-[#0a1526]/95 backdrop-blur-sm border border-[#4a5f78] rounded-md shadow-xl flex flex-col pointer-events-auto text-xs md:text-sm"
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
       onTouchEnd={(e) => e.stopPropagation()}
