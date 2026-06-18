@@ -27,7 +27,7 @@ export default function TimelineSlider({ currentYear, onYearChange, onYearCommit
 
   return (
     <div 
-      className="absolute bottom-3 md:bottom-8 left-1/2 -translate-x-1/2 z-10 w-[88vw] md:w-[55vw] min-w-[280px] md:min-w-[320px] max-w-2xl transition-all duration-300"
+      className="absolute bottom-3 md:bottom-8 left-1/2 md:left-[32%] landscape:left-[30%] -translate-x-1/2 z-10 w-[88vw] md:w-[55vw] landscape:w-[45vw] min-w-[280px] landscape:min-w-[240px] md:min-w-[320px] max-w-2xl transition-all duration-300"
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
       onTouchEnd={(e) => e.stopPropagation()}

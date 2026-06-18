@@ -646,7 +646,7 @@ export default function Home() {
             onClick={() => { setShowTimeline(true); setActiveEventSource('timeline'); }}
             onTouchStart={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
-            className="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2 z-10 px-5 py-2.5 bg-gradient-to-r from-[#0a1628]/95 to-[#1a2f4c]/95 hover:from-[#1a2f4c] hover:to-[#0a1628] text-[#e2ddce] hover:text-[#f59e0b] border border-[#4a5f78]/70 rounded-full shadow-[0_4px_25px_rgba(0,0,0,0.7)] backdrop-blur-md flex items-center gap-2 text-xs font-serif font-bold tracking-wider transition-all duration-300 cursor-pointer hover:scale-105"
+            className="absolute bottom-3 md:bottom-6 left-1/2 md:left-[32%] landscape:left-[30%] -translate-x-1/2 z-10 px-5 py-2.5 bg-gradient-to-r from-[#0a1628]/95 to-[#1a2f4c]/95 hover:from-[#1a2f4c] hover:to-[#0a1628] text-[#e2ddce] hover:text-[#f59e0b] border border-[#4a5f78]/70 rounded-full shadow-[0_4px_25px_rgba(0,0,0,0.7)] backdrop-blur-md flex items-center gap-2 text-xs font-serif font-bold tracking-wider transition-all duration-300 cursor-pointer hover:scale-105"
             title="点击展开时间轴"
           >
             <Calendar size={14} className="text-[#f59e0b]" />
