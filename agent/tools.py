@@ -49,74 +49,68 @@ def get_llm(model_type: str = "complex"):
             extra_body={"thinking": {"type": "disabled"}}
         )
 
-def truncate_tool_output(output: Any, max_chars: int = 15000) -> str:
+def truncate_tool_output(output: Any, max_chars: int = 12000, extra_warning: Optional[str] = None) -> str:
     """
     Safely truncates the tool output to avoid breaking JSON format
     when the output is too long.
     """
+    suffix = f"\n\n【卷宗纪要说明】{extra_warning}" if extra_warning else ""
+    
     if isinstance(output, str):
         try:
-            # If it's a JSON string, parse it to do structured truncation
             parsed = json.loads(output)
-            return truncate_tool_output(parsed, max_chars)
+            return truncate_tool_output(parsed, max_chars, extra_warning)
         except Exception:
-            # Fallback string truncation
             if len(output) > max_chars:
-                return output[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。若仍需深究，请缩窄检索条件重新调阅。"
-            return output
+                return output[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。" + suffix
+            return output + suffix
 
-    # If it's a list, safely truncate by popping items
     if isinstance(output, list):
+        limit = max_chars - len(suffix)
         serialized = json.dumps(output, ensure_ascii=False)
-        if len(serialized) <= max_chars:
-            return serialized
-        
+        if len(serialized) <= limit:
+            return serialized + suffix
+            
         truncated = list(output)
         while len(truncated) > 1:
             truncated.pop()
             serialized = json.dumps(truncated, ensure_ascii=False)
-            if len(serialized) <= max_chars:
-                return serialized + f"\n\n【卷宗纪要说明】由于返回史料条数较多（共 {len(output)} 条，已截断，仅展示前 {len(truncated)} 条以防超出篇幅限制）。"
+            if len(serialized) <= limit:
+                return serialized + f"\n\n【卷宗纪要说明】由于返回史料条数较多（共 {len(output)} 条，已截断，仅展示前 {len(truncated)} 条以防超出篇幅限制）。" + suffix
         
-        # If even 1 item is too long, truncate long string fields inside it
         if truncated:
             item = truncated[0]
             if isinstance(item, dict):
                 item_copy = dict(item)
-                for key, val in item_copy.items():
-                    if isinstance(val, str) and len(val) > 2000:
-                        item_copy[key] = val[:2000] + "...(此处略去过长文字)"
+                for key in ["description", "translation", "source", "source_text"]:
+                    if key in item_copy and isinstance(item_copy[key], str) and len(item_copy[key]) > 500:
+                        item_copy[key] = item_copy[key][:500] + "...(此字段文本内容过长，已被强制截短)"
                 truncated[0] = item_copy
-                serialized = json.dumps(truncated, ensure_ascii=False)
-                if len(serialized) <= max_chars:
-                    return serialized + f"\n\n【卷宗纪要说明】单个史料文本内容过长，已作部分删减。"
-                return serialized[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。若仍需深究，请缩窄检索条件重新调阅。"
+                return json.dumps(truncated, ensure_ascii=False) + f"\n\n【卷宗纪要说明】单个史料文本内容过长，已强制截断内部文本以确保 JSON 格式完整。" + suffix
+        return serialized + suffix
 
-    # If it's a dict:
     if isinstance(output, dict):
+        limit = max_chars - len(suffix)
         serialized = json.dumps(output, ensure_ascii=False)
-        if len(serialized) <= max_chars:
-            return serialized
+        if len(serialized) <= limit:
+            return serialized + suffix
         
-        truncated_dict = dict(output)
-        for key, val in truncated_dict.items():
-            if isinstance(val, str) and len(val) > 2000:
-                truncated_dict[key] = val[:2000] + "...(此处略去过长文字)"
-        serialized = json.dumps(truncated_dict, ensure_ascii=False)
-        if len(serialized) <= max_chars:
-            return serialized + f"\n\n【卷宗纪要说明】史料文本内容过长，已作部分删减。"
-        return serialized[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。若仍需深究，请缩窄检索条件重新调阅。"
+        item_copy = dict(output)
+        for key in ["description", "translation", "source", "source_text"]:
+            if key in item_copy and isinstance(item_copy[key], str) and len(item_copy[key]) > 500:
+                item_copy[key] = item_copy[key][:500] + "...(此字段文本内容过长，已被强制截短)"
+        return json.dumps(item_copy, ensure_ascii=False) + f"\n\n【卷宗纪要说明】文本内容过长，已强制截断内部文本以确保 JSON 格式完整。" + suffix
 
     try:
         serialized = json.dumps(output, ensure_ascii=False)
         if len(serialized) > max_chars:
-            return serialized[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。若仍需深究，请缩窄检索条件重新调阅。"
-        return serialized
+            return serialized[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。" + suffix
+        return serialized + suffix
     except Exception:
         s = str(output)
         if len(s) > max_chars:
-            return s[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。若仍需深究，请缩窄检索条件重新调阅。"
-        return s
+            return s[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。" + suffix
+        return s + suffix
 
 async def run_query_async(cypher: str, params: dict = None) -> list[dict]:
     loop = asyncio.get_running_loop()
@@ -176,7 +170,7 @@ async def query_neo4j_async(cypher: str) -> str:
 
 @tool
 async def get_person_timeline_async(name: str, start_year: Optional[int] = None, end_year: Optional[int] = None) -> str:
-    """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名（例如 '曹操', '刘备'）。可传入可选参数 start_year 和 end_year 进行年份过滤以节省 Token。"""
+    """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名。注意：曹操、刘备等大人物的事件极多，查询时必须传入 start_year 和 end_year 过滤到具体的时间段，以避免因返回过多记录而被截断或耗费巨大 Token。"""
     conditions = ["p.name = $name"]
     params = {"name": name}
     if start_year is not None:
@@ -198,12 +192,40 @@ async def get_person_timeline_async(name: str, start_year: Optional[int] = None,
            e.std_start_year AS year, e.source_text AS source, locations, major_event
     """
     filter_desc = f" (时间范围: {start_year or ''} 至 {end_year or ''})" if (start_year or end_year) else ""
-    await emit_status(f"🔍 [get_person_timeline] 正在翻阅人物 '{name}' 的生平编年史{filter_desc}...")
     try:
+        await emit_status(f"🔍 [get_person_timeline] 正在翻阅人物 '{name}' 的生平编年史{filter_desc}...")
         results = await run_query_async(cypher, params)
         if not results:
             return f"未找到关于人物 '{name}' 的生平事件记录。"
-        return truncate_tool_output(json.dumps(results, ensure_ascii=False))
+            
+        is_condensed = False
+        if start_year is None and end_year is None and len(results) > 10:
+            is_condensed = True
+            condensed_results = []
+            for item in results:
+                brief_item = {
+                    "title": item.get("title"),
+                    "time": item.get("time"),
+                    "year": item.get("year"),
+                    "locations": item.get("locations"),
+                    "major_event": item.get("major_event")
+                }
+                condensed_results.append(brief_item)
+            results = condensed_results
+            
+        has_more = False
+        if len(results) > 30:
+            results = results[:30]
+            has_more = True
+            
+        warnings = []
+        if is_condensed:
+            warnings.append("由于未指定年份且生平事迹较多，已简写详细描述与原文。若需特定事件的详细史料，请在查询时指定 start_year 与 end_year 参数，或使用 search_vector_graph_async / search_historical_text_async 进行针对性检索。")
+        if has_more:
+            warnings.append("由于该人物生平记录较多，当前仅展示前 30 条事件。若想深究其他时间段的事迹，请传入 start_year 与 end_year 参数过滤查询。")
+            
+        extra_warning = "；".join(warnings) if warnings else None
+        return truncate_tool_output(results, extra_warning=extra_warning)
     except Exception as e:
         return f"查询出错: {str(e)}"
 
@@ -233,7 +255,7 @@ async def search_historical_text_async(keyword: str) -> str:
     RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, 
            e.std_start_year AS year, e.source_text AS source, collect(DISTINCT l.name) AS locations, 
            me.title AS major_event, collect(DISTINCT g.name) AS groups
-    LIMIT 15
+    LIMIT 8
     """
     try:
         results = await run_query_async(cypher, {"keywords": keywords})
@@ -269,7 +291,7 @@ async def get_bge_m3_embedding_async(text: str) -> list[float]:
     return await loop.run_in_executor(None, _post)
 
 @tool
-async def search_vector_graph_async(query: str, k: Optional[int] = 10) -> str:
+async def search_vector_graph_async(query: str, k: Optional[int] = 5) -> str:
     """通过自然语言描述进行语义向量检索，查找与查询最相关的历史事件和史料原文。如果你需要查询特定历史大意/主题（如“曹操在官渡之战前的部署”），或用词难以精准匹配原文时，应首选此工具。"""
     await emit_status(f"🔍 [search_vector_graph] 正在语义向量检索: '{query}'...")
     try:
@@ -290,7 +312,7 @@ async def search_vector_graph_async(query: str, k: Optional[int] = 10) -> str:
     ORDER BY score DESC
     """
     try:
-        results = await run_query_async(cypher, {"k": k or 10, "embedding": embedding})
+        results = await run_query_async(cypher, {"k": k or 5, "embedding": embedding})
         if not results:
             return f"未找到与查询 '{query}' 相关的历史事件。"
         return truncate_tool_output(json.dumps(results, ensure_ascii=False))

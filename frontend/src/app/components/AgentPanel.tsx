@@ -22,7 +22,7 @@ export default function AgentPanel({
 }: AgentPanelProps) {
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const isAtBottomRef = useRef<boolean>(true);
 
   const handleScroll = () => {
@@ -49,6 +49,7 @@ export default function AgentPanel({
       onSend(val);
       if (inputRef.current) {
         inputRef.current.value = '';
+        inputRef.current.style.height = 'auto';
       }
       isAtBottomRef.current = true;
       scrollToBottom(true);
@@ -179,17 +180,22 @@ export default function AgentPanel({
 
       {/* Input */}
       <div className="p-2 md:p-3 border-t border-[#4a5f78] bg-[#0c1821] pointer-events-auto select-none">
-        <div className="flex gap-1.5 md:gap-2 items-center">
-          <input
-            type="text"
+        <div className="flex gap-1.5 md:gap-2 items-end">
+          <textarea
             ref={inputRef}
+            rows={1}
             onKeyDown={e => {
-              if (e.key === 'Enter') {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 handleSend();
               }
             }}
+            onChange={e => {
+              e.currentTarget.style.height = 'auto';
+              e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+            }}
             placeholder="向幕僚提问..."
-            className="flex-1 bg-[#1a2f4c] border border-[#4a5f78] rounded py-1 md:py-1.5 px-2 md:px-3 text-xs md:text-sm focus:outline-none focus:border-[#e53e3e] text-white placeholder-slate-500"
+            className="flex-1 bg-[#1a2f4c] border border-[#4a5f78] rounded py-1 md:py-1.5 px-2 md:px-3 text-xs md:text-sm focus:outline-none focus:border-[#e53e3e] text-white placeholder-slate-500 resize-none max-h-24 overflow-y-auto leading-normal"
           />
           {isLoading ? (
             <button

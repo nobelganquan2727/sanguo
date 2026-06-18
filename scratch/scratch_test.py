@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from agent.qa_agent import QAStreamPipeline, extract_events_from_observations
 
 async def test():
-    question = "荀彧的四胜论 它的深度如何 它到底好在哪里"
+    question = "荀彧熟悉袁绍阵营的情况，但他只在袁绍那里待了一年，他怎么就那么了解袁绍集团内部的情况？"
     queue = asyncio.Queue()
     
     # We create the pipeline without a Langfuse handler to avoid sending trace data

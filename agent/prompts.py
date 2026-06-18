@@ -1,6 +1,70 @@
+import os
+from agent.advisor_values import VALUES
 
 SYSTEM_PERSONA = "你是精通《三国志》的历史专家。"
 
+def get_system_persona(question: str, limit: int = 2) -> str:
+    question_lower = question.lower()
+    
+    # 1. 识别问题中提及的所有历史人物
+    mentioned_characters = []
+    for item in VALUES:
+        char = item.get("character", "")
+        if char and char in question_lower and char not in mentioned_characters:
+            mentioned_characters.append(char)
+            
+    # 2. 为所有价值观打分
+    scored_values = []
+    for item in VALUES:
+        score = 0.0
+        char = item.get("character", "")
+        if char and char in question_lower:
+            score += 10.0
+            
+        for kw in item.get("keywords", []):
+            if kw.lower() in question_lower:
+                score += 3.0
+                
+        scored_values.append((item, score))
+        
+    scored_values.sort(key=lambda x: x[1], reverse=True)
+    
+    selected = []
+    
+    # 3. 轮询各被提及人物，确保每人至少分到一个最高分案例（保证多人信息的多样性）
+    for char in mentioned_characters:
+        best_item = None
+        best_score = -1.0
+        for item, score in scored_values:
+            if item.get("character") == char and score > 0:
+                if score > best_score:
+                    best_score = score
+                    best_item = item
+        if best_item and len(selected) < limit:
+            selected.append(best_item)
+            
+    # 4. 剩余空位按总分高低填满
+    for item, score in scored_values:
+        if len(selected) >= limit:
+            break
+        if item not in selected:
+            selected.append(item)
+            
+    lines = []
+    for idx, item in enumerate(selected):
+        lines.append(f"{idx+1}. **{item.get('theme')}**（以{item.get('character')}为例）\n   - 历史核心：{item.get('description')}")
+    values_text = "\n".join(lines)
+    
+    return f"""你是精通《三国志》的顶级历史学者与睿智的“三国幕僚”。
+在为阁下剖析、考证史实的同时，你应当秉承“以史为鉴，关照内心”的史道哲学，在回答中自然融入史实背后的人生智慧与价值观导向，为读者提供心理调适、自我定位与人生抉择上的深度启发。
+
+【幕僚史道哲学与案例指引】：
+{values_text}
+
+【答问法则】：
+1. 剖析底层心理：分析人物决策时，多从自我暗示、能力边界（能力圈）、危机下的掌控感等心理与认知结构层面进行解读。
+2. 润物无声：将价值观导向自然地融入历史事件的因果分析、局势工作、或人物评价中，严禁生硬说教，保持幕僚深沉、饱含温情且睿智的学者风骨。
+"""
 MEM_SUMMARY_PROMPT = """
 请对以下对话历史进行简明扼要的中文摘要总结，重点保留已提及的历史人物、事件、时间、地点，以便作为后续对话的上下文参考。
 只输出摘要内容，不要有任何多余的客套话。
@@ -20,6 +84,7 @@ AGENT_SYSTEM_PROMPT = """
 
 工作准则：
 - 仔细阅读用户的问题，并利用工具收集相关史料和事实。
+- **精准与节省 Token 原则（极重要）**：绝对禁止盲目调用不带年份的 `get_person_timeline`。如果提问涉及了特定事件或特定时期（如“官渡之战”、“在袁绍那里待了一年”），你应当优先通过 `search_vector_graph` 检索该事件以获得精确上下文，或者使用 `start_year` 和 `end_year` 过滤生平时间线。绝不能无脑拉取人物全量生平。
 - 只有在你确信已经收集了足够的事实信息（或工具查无更多信息）时，再给出你的 Final Answer，总结你收集到的事实。
 - 收集信息时，应多维度检索，避免漏掉早期交集或关键细节。
 """

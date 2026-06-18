@@ -13,6 +13,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, Tool
 from dotenv import load_dotenv
 from agent.prompts import (
     SYSTEM_PERSONA,
+    get_system_persona,
     MEM_SUMMARY_PROMPT,
     AGENT_SYSTEM_PROMPT,
     PLANNING_PROMPT,
@@ -391,7 +392,7 @@ class QAStreamPipeline:
 
     async def handle_generic_chat(self):
         await self.send_event("status", "💬 [闲聊回答] 无需翻检古籍，正在直接答复...")
-        chat_messages = [SystemMessage(content=f"{SYSTEM_PERSONA}请根据用户的当前问题和对话历史进行回答。")]
+        chat_messages = [SystemMessage(content=f"{get_system_persona(self.question)}请根据用户的当前问题和对话历史进行回答。")]
         for role, content in self.history_to_process:
             if role == "user":
                 chat_messages.append(HumanMessage(content=content))
@@ -516,7 +517,7 @@ class QAStreamPipeline:
                 err_msg = last_error if query_failed else "未找到可用史料"
                 answer_prompt += f"\n\n【注意】由于当前“简牍翻阅多有不便”（底盘检索阻碍：{err_msg}），藏书阁中暂未寻得详尽佐证。请基于你自身强大的《三国志》真实正史知识，直接对用户问题做出详实解答，并合理进行学者推演（回答中需隐晦体现因古籍翻阅不便而自行考证，严禁透露任何技术故障词汇）。"
 
-            answer_messages = [SystemMessage(content=SYSTEM_PERSONA)]
+            answer_messages = [SystemMessage(content=get_system_persona(rewritten_q))]
             for role, content in self.history_to_process:
                 if role == "user":
                     answer_messages.append(HumanMessage(content=content))
