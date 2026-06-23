@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import asyncio
-import uuid
 from pydantic import BaseModel, Field
 from typing import List, Literal, AsyncGenerator
 
@@ -25,6 +24,7 @@ from agent.prompts import (
 )
 from agent.observability import active_callback_var
 from agent.cache import lookup_cache, save_cache
+from agent.utils import has_valid_db_records, extract_events_from_observations
 
 load_dotenv()
 from langfuse import Langfuse
@@ -56,201 +56,126 @@ class IntentAnalysis(BaseModel):
     )
 
 
-
-def has_valid_db_records(observations: list) -> bool:
-    if not observations:
-        return False
-    for obs in observations:
-        res = obs.get("result", "").strip()
-        if not res:
-            continue
-        if "未找到" in res:
-            continue
-        if res == "[]":
-            continue
-        if "Error executing" in res or "Database query failed" in res:
-            continue
-        try:
-            parsed = json.loads(res)
-            if isinstance(parsed, list) and len(parsed) == 0:
-                continue
-        except Exception:
-            pass
-        return True
-    return False
-
-def get_similarity(s1: str, s2: str) -> float:
-    if not s1 or not s2:
-        return 0.0
-    s1, s2 = s1.lower(), s2.lower()
-    t1 = set(s1)
-    t2 = set(s2)
-    return len(t1.intersection(t2)) / len(t1.union(t2))
-
-def get_containment_similarity(short_text: str, long_text: str) -> float:
-    if not short_text or not long_text:
-        return 0.0
-    short_text, long_text = short_text.lower(), long_text.lower()
-    if short_text in long_text:
-        return 1.0
-    t_short = set(short_text)
-    t_long = set(long_text)
-    if not t_short:
-        return 0.0
-    return len(t_short.intersection(t_long)) / len(t_short)
-
-def extract_events_from_observations(observations: list, rewritten_q: str, final_ans: str) -> list[dict]:
-    extracted = []
-    seen_titles = set()
-    for obs in observations:
-        res_data = obs.get("result", "")
-        if not res_data:
-            continue
-        try:
-            # Remove any truncation trailer if present
-            if "\n\n【卷宗纪要说明】" in res_data:
-                res_data = res_data.split("\n\n【卷宗纪要说明】")[0]
-            
-            parsed = json.loads(res_data)
-            if not isinstance(parsed, list):
-                parsed = [parsed]
-                
-            for item in parsed:
-                if not isinstance(item, dict):
-                    continue
-                # Check if it has a title
-                title = item.get("title") or item.get("e.title")
-                if not title:
-                    continue
-                if title in seen_titles:
-                    continue
-                    
-                # Standardize location
-                locations = item.get("locations") or item.get("location") or item.get("l.name")
-                if not locations:
-                    # Try to find location from any key ending with location or loc
-                    for key, val in item.items():
-                         if "location" in key.lower() or key.lower() == "loc":
-                              locations = val
-                              break
-                              
-                # Ensure locations is a list
-                if locations:
-                    if isinstance(locations, str):
-                        locations = [locations]
-                    elif isinstance(locations, dict):
-                        locations = [locations]
-                    elif not isinstance(locations, list):
-                        locations = []
-                else:
-                    locations = []
-                    
-                # Standardize year
-                year = item.get("year") or item.get("std_start_year") or item.get("e.std_start_year")
-                if year is not None:
-                    try:
-                        year = int(year)
-                    except (ValueError, TypeError):
-                        year = None
-                        
-                # Standardize description/desc
-                desc = item.get("description") or item.get("desc") or item.get("translation") or item.get("source_text") or item.get("source") or ""
-                
-                major_ev = item.get("major_event") or item.get("me.title")
-                major_evs = item.get("major_events")
-                if not major_evs and major_ev:
-                    major_evs = [major_ev]
-                if not major_evs:
-                    major_evs = []
-                
-                # We construct a clean event dict for the map
-                clean_event = {
-                    "id": item.get("id") or item.get("e.id") or str(uuid.uuid4())[:8],
-                    "title": title,
-                    "year": year,
-                    "desc": desc,
-                    "locations": locations,
-                    "type": item.get("type") or item.get("e.type") or "历史记录",
-                    "protagonist": item.get("protagonist") or item.get("p.name") or "",
-                    "major_events": major_evs,
-                    "major_event": major_ev or ""
-                }
-                
-                # Compute relevance score: Jaccard overlap with question + containment in final answer
-                ans_score = get_containment_similarity(title, final_ans)
-                q_score = get_similarity(title, rewritten_q)
-                relevance_score = ans_score * 0.7 + q_score * 0.3
-                
-                # Filter by relevance threshold
-                if relevance_score >= 0.15:
-                    extracted.append((clean_event, relevance_score))
-                    seen_titles.add(title)
-        except Exception:
-            pass
-            
-    # Sort events by relevance score descending
-    extracted.sort(key=lambda x: x[1], reverse=True)
-    return [x[0] for x in extracted]
-
-# ----------------- Async Streaming Version (Phase 3) -----------------
-
-class QAStreamPipeline:
-    def __init__(self, question: str, history: list[dict], queue: asyncio.Queue, handler):
-        self.question = question
-        self.history = history
-        self.queue = queue
-        self.handler = handler
-        self.llm_cheap = get_llm("cheap")
-        self.llm_complex = get_llm("complex")
-        self.collected_text = []
-        self.history_to_process = []
-        self.history_text = ""
-        self.all_observations = []
+class BaseSubAgent:
+    def __init__(self, pipeline: 'QAStreamPipeline'):
+        self.pipeline = pipeline
 
     async def send_event(self, event_type: str, content: str):
-        await self.queue.put({"type": event_type, "content": content})
-        if event_type == "status":
-            print(f"⚙️ [Agent Status] {content}")
-        elif event_type == "text":
-            sys.stdout.write(content)
-            sys.stdout.flush()
+        await self.pipeline.send_event(event_type, content)
 
-    async def check_characters_exist(self, names: List[str]) -> dict[str, bool]:
-        if not names:
-            return {}
-        cypher = """
-        UNWIND $names AS name
-        OPTIONAL MATCH (p:Person {name: name})
-        WITH name, p IS NOT NULL AS person_exists
-        OPTIONAL MATCH (e:Event)
-        WHERE e.title CONTAINS name 
-           OR e.source_text CONTAINS name 
-           OR e.translation CONTAINS name 
-           OR e.description CONTAINS name
-        WITH name, person_exists, count(e) > 0 AS text_exists
-        RETURN name, (person_exists OR text_exists) AS exists
-        """
+class IntentAnalyzerAgent(BaseSubAgent):
+    async def analyze(self) -> IntentAnalysis:
+        await self.send_event("status", "🧠 [意图拆解] 正在分析问题意图并消解上下文代词...")
+        analysis = None
         try:
-            results = await run_query_async(cypher, {"names": names})
-            return {r["name"]: r["exists"] for r in results}
+            structured_llm = self.pipeline.llm_cheap.with_structured_output(IntentAnalysis, method="function_calling")
+            analysis_messages = [
+                SystemMessage(content=INTENT_ANALYSIS_SYSTEM),
+                HumanMessage(content=INTENT_ANALYSIS_PROMPT.format(history_text=self.pipeline.history_text, question=self.pipeline.question))
+            ]
+            analysis = await structured_llm.ainvoke(analysis_messages)
         except Exception as e:
-            await self.send_event("status", f"⚠️ [检查人物] 数据库查询失败 ({str(e)})")
-            return {name: True for name in names}
+            await self.send_event("status", f"⚠️ [意图拆解] structured_output 失败 ({str(e)})，正在尝试原生 JSON 兜底。")
+            try:
+                fallback_prompt = INTENT_ANALYSIS_PROMPT.format(history_text=self.pipeline.history_text, question=self.pipeline.question) + "\n请返回一个符合上述 JSON schema 的对象（确保不要用 markdown 代码块标记，只输出 JSON 文本）。"
+                res_msg = await self.pipeline.llm_cheap.ainvoke([
+                    SystemMessage(content=INTENT_ANALYSIS_SYSTEM + " You must output raw JSON only."),
+                    HumanMessage(content=fallback_prompt)
+                ])
+                res = res_msg.content.strip()
+                
+                if res.startswith("```json"):
+                    res = res[7:]
+                elif res.startswith("```"):
+                    res = res[3:]
+                if res.endswith("```"):
+                    res = res[:-3]
+                res = res.strip()
+                
+                data = json.loads(res)
+                analysis = IntentAnalysis(
+                    type=data.get("type", "fact"),
+                    rewritten_question=data.get("rewritten_question", self.pipeline.question),
+                    entities=data.get("entities", []),
+                    historical_characters=data.get("historical_characters", [])
+                )
+            except Exception as e2:
+                await self.send_event("status", f"⚠️ [意图拆解] 兜底解析失败 ({str(e2)})，退水至经验规则分类。")
+                q_type = "fact"
+                if any(w in self.pipeline.question for w in ["关系", "交集", "纠葛", "对比", "和"]):
+                    q_type = "relationship"
+                elif any(w in self.pipeline.question for w in ["刚才", "之前", "什么", "谁", "你好", "哈喽"]):
+                    if "刚才" in self.pipeline.question or "之前" in self.pipeline.question:
+                        q_type = "generic_chat"
+                analysis = IntentAnalysis(
+                    type=q_type,
+                    rewritten_question=self.pipeline.question,
+                    entities=[],
+                    historical_characters=[]
+                )
+        return analysis
 
-    async def run_agent_loop(self, llm_with_tools, rewritten_q: str, history_text: str) -> list:
-        config = {"callbacks": [self.handler]} if self.handler else {}
+    async def handle_generic_chat(self):
+        await self.send_event("status", "💬 [闲聊回答] 无需翻检古籍，正在直接答复...")
+        chat_messages = [SystemMessage(content=f"{get_system_persona(self.pipeline.question)}请根据用户的当前问题和对话历史进行回答。")]
+        for role, content in self.pipeline.history_to_process:
+            if role == "user":
+                chat_messages.append(HumanMessage(content=content))
+            else:
+                chat_messages.append(AIMessage(content=content))
+        chat_messages.append(HumanMessage(content=self.pipeline.question))
+        
+        async for chunk in self.pipeline.llm_cheap.astream(chat_messages):
+            if chunk.content:
+                self.pipeline.collected_text.append(chunk.content)
+                await self.send_event("text", chunk.content)
+
+class PlannerAgent(BaseSubAgent):
+    async def plan(self, rewritten_q: str) -> List[str]:
+        await self.send_event("status", "📋 [复杂规划] 提问宏观，正在将其拆解为多个子课题...")
+        planning_prompt_formatted = PLANNING_PROMPT.format(question=rewritten_q)
+        sub_queries = []
+        try:
+            plan_msg = await self.pipeline.llm_complex.ainvoke([
+                SystemMessage(content="You are a planning assistant. Output JSON only matching the schema."),
+                HumanMessage(content=planning_prompt_formatted)
+            ])
+            plan_res = plan_msg.content.strip()
+            
+            if plan_res.startswith("```json"):
+                plan_res = plan_res[7:]
+            elif plan_res.startswith("```"):
+                plan_res = plan_res[3:]
+            if plan_res.endswith("```"):
+                plan_res = plan_res[:-3]
+            plan_res = plan_res.strip()
+            
+            sub_queries = json.loads(plan_res).get("sub_queries", [])
+        except Exception as e:
+            await self.send_event("status", f"⚠️ [复杂规划] 拆解失败 ({str(e)})，降级至单轮处理。")
+            sub_queries = [rewritten_q]
+            
+        await self.send_event("status", f"📋 [复杂规划] 拆解计划: {sub_queries}")
+        return sub_queries
+
+class ResearcherAgent(BaseSubAgent):
+    async def research(self, rewritten_q: str) -> list:
+        config = {"callbacks": [self.pipeline.handler]} if self.pipeline.handler else {}
         agent_messages = [
             SystemMessage(content=AGENT_SYSTEM_PROMPT),
-            HumanMessage(content=f"历史对话与摘要：\n{history_text}\n\n当前查询任务：\n{rewritten_q}")
+            HumanMessage(content=f"历史对话与摘要：\n{self.pipeline.history_text}\n\n当前查询任务：\n{rewritten_q}")
         ]
         observations = []
         max_steps = 5
         step = 0
         
+        tools_async = [query_neo4j_async, get_person_timeline_async, search_historical_text_async, search_vector_graph_async]
+        llm_with_tools_async = self.pipeline.llm_complex.bind_tools(tools_async)
+        
         while step < max_steps:
-            await self.send_event("status", f"🤖 [幕僚思考中] 正在研判下一步行动 (第 {step+1} 步)...")
+            await self.send_event("status", f"🤖 [{self.pipeline.researcher_agent_name}] 正在研判下一步行动 (第 {step+1} 步)...")
             try:
-                response = await llm_with_tools.ainvoke(agent_messages)
+                response = await llm_with_tools_async.ainvoke(agent_messages)
             except Exception as e:
                 await self.send_event("status", f"⚠️ 研判出现故障: {str(e)}")
                 break
@@ -258,11 +183,11 @@ class QAStreamPipeline:
             agent_messages.append(response)
             
             if not response.tool_calls:
-                await self.send_event("status", "🤖 [幕僚] 研判结束，已搜集到足够卷宗数据。")
+                await self.send_event("status", f"🤖 [{self.pipeline.researcher_agent_name}] 研判结束，已搜集到足够卷宗数据。")
                 break
                 
             tool_names = [tc['name'] for tc in response.tool_calls]
-            await self.send_event("status", f"🤖 [幕僚] 决定翻检对应史书，调用工具: {tool_names}")
+            await self.send_event("status", f"🤖 [{self.pipeline.researcher_agent_name}] 决定翻检对应史书，调用工具: {tool_names}")
             
             for tool_call in response.tool_calls:
                 tool_name = tool_call["name"]
@@ -297,6 +222,110 @@ class QAStreamPipeline:
             step += 1
             
         return observations
+
+class SynthesisAgent(BaseSubAgent):
+    async def synthesize(self, rewritten_q: str, q_type: str, all_observations: list):
+        await self.send_event("status", f"✍️ [{self.pipeline.synthesis_agent_name}] 正在汇编并考证所有搜集到的史料，准备作答...")
+        formatted_data = []
+        query_failed = False
+        last_error = None
+        
+        for obs in all_observations:
+            res_data = obs["result"]
+            if "Database query failed permanently" in res_data:
+                query_failed = True
+                last_error = res_data
+            formatted_data.append(f"【工具: {obs['tool']} | 查询参数: {obs['query']}】\n数据: {res_data}")
+            
+        consolidated_data = "\n\n".join(formatted_data)
+        
+        if q_type == "complex_planning":
+            answer_prompt = ANSWER_PLANNING_TEMPLATE.format(
+                question=rewritten_q,
+                graph_results=consolidated_data
+            )
+        elif q_type == "relationship":
+            answer_prompt = ANSWER_RELATIONSHIP_TEMPLATE.format(
+                question=rewritten_q,
+                graph_results=consolidated_data
+            )
+        else:
+            answer_prompt = ANSWER_FACT_TEMPLATE.format(
+                question=rewritten_q,
+                graph_results=consolidated_data
+            )
+
+        if query_failed or not all_observations:
+            err_msg = last_error if query_failed else "未找到可用史料"
+            answer_prompt += f"\n\n【注意】由于当前“简牍翻阅多有不便”（底盘检索阻碍：{err_msg}），藏书阁中暂未寻得详尽佐证。请基于你自身强大的《三国志》真实正史知识，直接对用户问题做出详实解答，并合理进行学者推演（回答中需隐晦体现因古籍翻阅不便而自行考证，严禁透露任何技术故障词汇）。"
+
+        answer_messages = [SystemMessage(content=get_system_persona(rewritten_q))]
+        for role, content in self.pipeline.history_to_process:
+            if role == "user":
+                answer_messages.append(HumanMessage(content=content))
+            else:
+                answer_messages.append(AIMessage(content=content))
+        answer_messages.append(HumanMessage(content=answer_prompt))
+        
+        async for chunk in self.pipeline.llm_complex.astream(answer_messages):
+            if chunk.content:
+                self.pipeline.collected_text.append(chunk.content)
+                await self.send_event("text", chunk.content)
+
+# ----------------- Async Streaming Version (Phase 3) -----------------
+
+class QAStreamPipeline:
+    def __init__(self, question: str, history: list[dict], queue: asyncio.Queue, handler):
+        self.question = question
+        self.history = history
+        self.queue = queue
+        self.handler = handler
+        self.llm_cheap = get_llm("cheap")
+        self.llm_complex = get_llm("complex")
+        self.collected_text = []
+        self.history_to_process = []
+        self.history_text = ""
+        self.all_observations = []
+
+        # Agent roles names (for status logging)
+        self.researcher_agent_name = "史料检索官"
+        self.synthesis_agent_name = "主考官幕僚"
+
+        # Instantiate specialized agents
+        self.intent_agent = IntentAnalyzerAgent(self)
+        self.planner_agent = PlannerAgent(self)
+        self.researcher_agent = ResearcherAgent(self)
+        self.synthesis_agent = SynthesisAgent(self)
+
+    async def send_event(self, event_type: str, content: str):
+        await self.queue.put({"type": event_type, "content": content})
+        if event_type == "status":
+            print(f"⚙️ [Agent Status] {content}")
+        elif event_type == "text":
+            sys.stdout.write(content)
+            sys.stdout.flush()
+
+    async def check_characters_exist(self, names: List[str]) -> dict[str, bool]:
+        if not names:
+            return {}
+        cypher = """
+        UNWIND $names AS name
+        OPTIONAL MATCH (p:Person {name: name})
+        WITH name, p IS NOT NULL AS person_exists
+        OPTIONAL MATCH (e:Event)
+        WHERE e.title CONTAINS name 
+           OR e.source_text CONTAINS name 
+           OR e.translation CONTAINS name 
+           OR e.description CONTAINS name
+        WITH name, person_exists, count(e) > 0 AS text_exists
+        RETURN name, (person_exists OR text_exists) AS exists
+        """
+        try:
+            results = await run_query_async(cypher, {"names": names})
+            return {r["name"]: r["exists"] for r in results}
+        except Exception as e:
+            await self.send_event("status", f"⚠️ [检查人物] 数据库查询失败 ({str(e)})")
+            return {name: True for name in names}
 
     async def process_history(self):
         if self.history:
@@ -339,77 +368,11 @@ class QAStreamPipeline:
         if not self.history_text:
             self.history_text = "（无历史对话）"
 
-    async def analyze_intent(self) -> IntentAnalysis:
-        await self.send_event("status", "🧠 [意图拆解] 正在分析问题意图并消解上下文代词...")
-        analysis = None
-        try:
-            structured_llm = self.llm_cheap.with_structured_output(IntentAnalysis, method="function_calling")
-            analysis_messages = [
-                SystemMessage(content=INTENT_ANALYSIS_SYSTEM),
-                HumanMessage(content=INTENT_ANALYSIS_PROMPT.format(history_text=self.history_text, question=self.question))
-            ]
-            analysis = await structured_llm.ainvoke(analysis_messages)
-        except Exception as e:
-            await self.send_event("status", f"⚠️ [意图拆解] structured_output 失败 ({str(e)})，正在尝试原生 JSON 兜底。")
-            try:
-                fallback_prompt = INTENT_ANALYSIS_PROMPT.format(history_text=self.history_text, question=self.question) + "\n请返回一个符合上述 JSON schema 的对象（确保不要用 markdown 代码块标记，只输出 JSON 文本）。"
-                res_msg = await self.llm_cheap.ainvoke([
-                    SystemMessage(content=INTENT_ANALYSIS_SYSTEM + " You must output raw JSON only."),
-                    HumanMessage(content=fallback_prompt)
-                ])
-                res = res_msg.content.strip()
-                
-                if res.startswith("```json"):
-                    res = res[7:]
-                elif res.startswith("```"):
-                    res = res[3:]
-                if res.endswith("```"):
-                    res = res[:-3]
-                res = res.strip()
-                
-                data = json.loads(res)
-                analysis = IntentAnalysis(
-                    type=data.get("type", "fact"),
-                    rewritten_question=data.get("rewritten_question", self.question),
-                    entities=data.get("entities", []),
-                    historical_characters=data.get("historical_characters", [])
-                )
-            except Exception as e2:
-                await self.send_event("status", f"⚠️ [意图拆解] 兜底解析失败 ({str(e2)})，退水至经验规则分类。")
-                q_type = "fact"
-                if any(w in self.question for w in ["关系", "交集", "纠葛", "对比", "和"]):
-                    q_type = "relationship"
-                elif any(w in self.question for w in ["刚才", "之前", "什么", "谁", "你好", "哈喽"]):
-                    if "刚才" in self.question or "之前" in self.question:
-                        q_type = "generic_chat"
-                analysis = IntentAnalysis(
-                    type=q_type,
-                    rewritten_question=self.question,
-                    entities=[],
-                    historical_characters=[]
-                )
-        return analysis
-
-    async def handle_generic_chat(self):
-        await self.send_event("status", "💬 [闲聊回答] 无需翻检古籍，正在直接答复...")
-        chat_messages = [SystemMessage(content=f"{get_system_persona(self.question)}请根据用户的当前问题和对话历史进行回答。")]
-        for role, content in self.history_to_process:
-            if role == "user":
-                chat_messages.append(HumanMessage(content=content))
-            else:
-                chat_messages.append(AIMessage(content=content))
-        chat_messages.append(HumanMessage(content=self.question))
-        
-        async for chunk in self.llm_cheap.astream(chat_messages):
-            if chunk.content:
-                self.collected_text.append(chunk.content)
-                await self.send_event("text", chunk.content)
-
     async def execute_pipeline(self) -> str:
         q_type = None
         try:
             await self.process_history()
-            analysis = await self.analyze_intent()
+            analysis = await self.intent_agent.analyze()
             
             await self.send_event("status", f"📋 [意图判定] 分类: {analysis.type} | 重写问题: '{analysis.rewritten_question}'")
 
@@ -430,105 +393,29 @@ class QAStreamPipeline:
 
             # 2a. 闲聊 / 会话历史查询
             if q_type == "generic_chat":
-                await self.handle_generic_chat()
+                await self.intent_agent.handle_generic_chat()
                 return q_type
-
-            tools_async = [query_neo4j_async, get_person_timeline_async, search_historical_text_async, search_vector_graph_async]
-            llm_with_tools_async = self.llm_complex.bind_tools(tools_async)
-            all_observations = []
 
             # 2b. 复杂计划型查询拆解 (Plan-and-Solve)
             if q_type == "complex_planning":
-                await self.send_event("status", "📋 [复杂规划] 提问宏观，正在将其拆解为多个子课题...")
-                planning_prompt_formatted = PLANNING_PROMPT.format(question=rewritten_q)
-                sub_queries = []
-                try:
-                    plan_msg = await self.llm_complex.ainvoke([
-                        SystemMessage(content="You are a planning assistant. Output JSON only matching the schema."),
-                        HumanMessage(content=planning_prompt_formatted)
-                    ])
-                    plan_res = plan_msg.content.strip()
-                    
-                    if plan_res.startswith("```json"):
-                        plan_res = plan_res[7:]
-                    elif plan_res.startswith("```"):
-                        plan_res = plan_res[3:]
-                    if plan_res.endswith("```"):
-                        plan_res = plan_res[:-3]
-                    plan_res = plan_res.strip()
-                    
-                    sub_queries = json.loads(plan_res).get("sub_queries", [])
-                except Exception as e:
-                    await self.send_event("status", f"⚠️ [复杂规划] 拆解失败 ({str(e)})，降级至单轮处理。")
-                    sub_queries = [rewritten_q]
-                    
-                await self.send_event("status", f"📋 [复杂规划] 拆解计划: {sub_queries}")
-                
+                sub_queries = await self.planner_agent.plan(rewritten_q)
                 for idx, sq in enumerate(sub_queries):
                     await self.send_event("status", f"➡️ [课题 {idx+1}/{len(sub_queries)}] 正在搜集: '{sq}'...")
-                    sq_obs = await self.run_agent_loop(llm_with_tools_async, sq, self.history_text)
-                    all_observations.extend(sq_obs)
-                    
-            # 2c. 常规事实或关系查询
+                    sq_obs = await self.researcher_agent.research(sq)
+                    self.all_observations.extend(sq_obs)
             else:
-                all_observations = await self.run_agent_loop(llm_with_tools_async, rewritten_q, self.history_text)
-            self.all_observations = all_observations
+                self.all_observations = await self.researcher_agent.research(rewritten_q)
 
             # 2.5 检查是否检索到任何有效的数据库记录
-            if not has_valid_db_records(all_observations):
+            if not has_valid_db_records(self.all_observations):
                 await self.send_event("status", "⚠️ 未检索到任何有效的 Neo4j 数据库记录，直接拒绝回答。")
                 answer = "抱歉，在正史《三国志》及相关史料库中未搜寻到任何与该问题相关的史实记录，老夫无从考证。"
                 await self.send_event("text", answer)
                 self.collected_text.append(answer)
                 return q_type
 
-            # 3. 汇总数据与自检故障
-            await self.send_event("status", "✍️ 正在汇编并考证所有搜集到的史料，准备作答...")
-            formatted_data = []
-            query_failed = False
-            last_error = None
-            
-            for obs in all_observations:
-                res_data = obs["result"]
-                if "Database query failed permanently" in res_data:
-                    query_failed = True
-                    last_error = res_data
-                formatted_data.append(f"【工具: {obs['tool']} | 查询参数: {obs['query']}】\n数据: {res_data}")
-                
-            consolidated_data = "\n\n".join(formatted_data)
-            
-            if q_type == "complex_planning":
-                answer_prompt = ANSWER_PLANNING_TEMPLATE.format(
-                    question=rewritten_q,
-                    graph_results=consolidated_data
-                )
-            elif q_type == "relationship":
-                answer_prompt = ANSWER_RELATIONSHIP_TEMPLATE.format(
-                    question=rewritten_q,
-                    graph_results=consolidated_data
-                )
-            else:
-                answer_prompt = ANSWER_FACT_TEMPLATE.format(
-                    question=rewritten_q,
-                    graph_results=consolidated_data
-                )
-
-            if query_failed or not all_observations:
-                err_msg = last_error if query_failed else "未找到可用史料"
-                answer_prompt += f"\n\n【注意】由于当前“简牍翻阅多有不便”（底盘检索阻碍：{err_msg}），藏书阁中暂未寻得详尽佐证。请基于你自身强大的《三国志》真实正史知识，直接对用户问题做出详实解答，并合理进行学者推演（回答中需隐晦体现因古籍翻阅不便而自行考证，严禁透露任何技术故障词汇）。"
-
-            answer_messages = [SystemMessage(content=get_system_persona(rewritten_q))]
-            for role, content in self.history_to_process:
-                if role == "user":
-                    answer_messages.append(HumanMessage(content=content))
-                else:
-                    answer_messages.append(AIMessage(content=content))
-            answer_messages.append(HumanMessage(content=answer_prompt))
-            
-            async for chunk in self.llm_complex.astream(answer_messages):
-                if chunk.content:
-                    self.collected_text.append(chunk.content)
-                    await self.send_event("text", chunk.content)
+            # 3. 最终汇总与答复
+            await self.synthesis_agent.synthesize(rewritten_q, q_type, self.all_observations)
 
         except Exception as e:
             print(f"Error in pipeline: {str(e)}")

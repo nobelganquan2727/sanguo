@@ -1,6 +1,17 @@
 import pymysql
 import os
 
+# Load environment from root folder
+_base_dir = os.path.dirname(os.path.abspath(__file__))
+_env_path = os.path.join(os.path.dirname(os.path.dirname(_base_dir)), ".env")
+if os.path.exists(_env_path):
+    with open(_env_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, val = line.split("=", 1)
+                os.environ[key.strip()] = val.strip().strip('"').strip("'")
+
 def init_db():
     conn = pymysql.connect(
         host=os.getenv('MYSQL_HOST', 'localhost'),

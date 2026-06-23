@@ -3,6 +3,18 @@ import json
 import pymysql
 import glob
 
+# Load environment from root folder
+_base_dir = os.path.dirname(os.path.abspath(__file__))
+_root_dir = os.path.dirname(os.path.dirname(_base_dir))
+_env_path = os.path.join(_root_dir, ".env")
+if os.path.exists(_env_path):
+    with open(_env_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, val = line.split("=", 1)
+                os.environ[key.strip()] = val.strip().strip('"').strip("'")
+
 def get_db_connection():
     return pymysql.connect(
         host=os.getenv('MYSQL_HOST', 'localhost'),
@@ -25,7 +37,7 @@ def apply_feedback():
                 return
 
             # 加载所有 data/raw/ 的 JSON 文件
-            raw_files = glob.glob('data/raw/*.json')
+            raw_files = glob.glob(os.path.join(_root_dir, 'data', 'raw', '*.json'))
             
             for fb in feedbacks:
                 event_id = fb['event_id']

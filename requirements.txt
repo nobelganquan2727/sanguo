@@ -24,3 +24,6 @@ tqdm>=4.65.0
 
 # Observability
 langfuse==2.60.10
+
+# Caching & Session Store
+redis>=5.0.0

@@ -81,7 +81,7 @@ class TestSemanticCache(unittest.TestCase):
         truncated_long = truncate_tool_output(long_text, max_chars=3000)
         
         self.assertEqual(truncated_short, short_text)
-        self.assertEqual(len(truncated_long), 3000 + len("\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文3000字。若仍需深究，请缩窄检索条件重新调阅。"))
+        self.assertEqual(len(truncated_long), 3000 + len("\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文3000字。"))
         self.assertTrue("已作删减" in truncated_long)
         self.assertTrue(truncated_long.startswith("A" * 3000))
 

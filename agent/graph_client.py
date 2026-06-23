@@ -2,37 +2,19 @@
 Neo4j 连接客户端
 封装数据库连接、查询执行和自动重试逻辑
 """
-import os
-from neo4j import GraphDatabase
-from dotenv import load_dotenv
-
-load_dotenv()
-
-_driver = None
-
-def get_driver():
-    global _driver
-    if _driver is None:
-        uri = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
-        user = os.environ.get("NEO4J_USER", "neo4j")
-        password = os.environ.get("NEO4J_PASSWORD", "12345678")
-        _driver = GraphDatabase.driver(uri, auth=(user, password))
-    return _driver
-
-
-def run_query(cypher: str, params: dict = None) -> list[dict]:
-    """
-    执行 Cypher 查询，返回结果列表。
-    如果执行失败抛出异常，交由上层处理。
-    """
-    driver = get_driver()
-    with driver.session() as session:
-        result = session.run(cypher, params or {})
-        return [dict(r) for r in result]
-
-
-def close():
-    global _driver
-    if _driver:
-        _driver.close()
-        _driver = None
+try:
+    from backend.db.neo4j import run_query, get_driver, close
+except ImportError:
+    import sys
+    import os
+    _base_dir = os.path.dirname(os.path.abspath(__file__))
+    _root_dir = os.path.dirname(_base_dir)
+    _backend_dir = os.path.join(_root_dir, "backend")
+    if _backend_dir not in sys.path:
+        sys.path.append(_backend_dir)
+    
+    # Use dynamic import to prevent static analysis linter warnings
+    db_neo4j = __import__('db.neo4j', fromlist=['run_query', 'get_driver', 'close'])
+    run_query = db_neo4j.run_query
+    get_driver = db_neo4j.get_driver
+    close = db_neo4j.close

@@ -40,5 +40,37 @@ if 'langchain.schema' not in sys.modules:
 from langfuse.callback import CallbackHandler
 from contextvars import ContextVar
 from typing import Optional
+import logging
+
+# Filter out the annoying Langfuse internal callback exceptions (such as "run not found" or "parent run not found")
+# which are caught internally in Langfuse and printed via self.log.exception(e) rather than raised.
+class LangfuseErrorFilter(logging.Filter):
+    def filter(self, record):
+        if record.exc_info:
+            _, exc_value, _ = record.exc_info
+            if exc_value and ("run not found" in str(exc_value) or "parent run not found" in str(exc_value)):
+                return False
+        msg = str(record.msg)
+        if "run not found" in msg or "parent run not found" in msg:
+            return False
+        return True
+
+logging.getLogger("langfuse").addFilter(LangfuseErrorFilter())
+
+# Monkeypatch Langfuse CallbackHandler to catch and swallow LangChain callback errors (e.g., "run not found")
+def _safe_callback_wrapper(original_method):
+    def wrapper(self, *args, **kwargs):
+        try:
+            return original_method(self, *args, **kwargs)
+        except Exception as e:
+            print(f"⚠️ [Observability] Swallowed Langfuse callback exception: {e}", file=sys.stderr)
+            return None
+    return wrapper
+
+for attr_name in dir(CallbackHandler):
+    if attr_name.startswith("on_"):
+        attr_value = getattr(CallbackHandler, attr_name)
+        if callable(attr_value) and not isinstance(attr_value, type):
+            setattr(CallbackHandler, attr_name, _safe_callback_wrapper(attr_value))
 
 active_callback_var: ContextVar[Optional[CallbackHandler]] = ContextVar("active_callback", default=None)
