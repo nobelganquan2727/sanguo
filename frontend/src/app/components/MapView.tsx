@@ -7,14 +7,14 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useCallback } from 'react';
 import { locationNameMatches, locationMatchesGeoName } from '../utils/locationMatch';
 
-// 使用 Stadia Maps 托管的官方 Stamen Watercolor 水彩底图，本地开发 (localhost) 免 API Key 且完美支持 CORS
+// 使用 Cooper Hewitt 的原始水彩底图链接，国内直连无需 VPN 代理，保持最简前端配置
 const MAP_STYLE = {
   version: 8,
   sources: {
     'watercolor-tiles': {
       type: 'raster',
       tiles: [
-        'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg'
+        'https://watercolormaps.collection.cooperhewitt.org/tile/watercolor/{z}/{x}/{y}.jpg'
       ],
       tileSize: 256,
       maxzoom: 16
