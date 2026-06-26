@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # Add project root to path to import agent modules if needed
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agent.cache import get_dashscope_embedding
+from agent.cache import get_bge_m3_embedding
 
 def main():
     load_dotenv()
@@ -51,7 +51,7 @@ def main():
     if args.query:
         print(f"🧠 Querying semantic cache for: '{args.query}'")
         try:
-            q_vector = get_dashscope_embedding(args.query)
+            q_vector = get_bge_m3_embedding(args.query)
             results = collection.query(
                 query_embeddings=[q_vector],
                 n_results=3
@@ -71,7 +71,7 @@ def main():
                 print(f"A: {answer}")
                 print("-" * 40)
         except Exception as e:
-            print(f"❌ Failed to query: {e}. Make sure DASHSCOPE_API_KEY is configured in your environment.")
+            print(f"❌ Failed to query: {e}. Make sure SILICONFLOW_API_KEY is configured in your environment.")
         return
         
     # Default behavior or --all

@@ -21,8 +21,8 @@ sys.path.append(os.path.join(_root, "backend"))
 
 load_dotenv()
 
-from db.mysql import SessionLocal, Base, engine, UserProfile, UserMemory
-from services.memory_service import format_user_memory, consolidate_memory_task
+from backend.db.mysql import SessionLocal, Base, engine, UserProfile, UserMemory
+from backend.services.memory_service import format_user_memory, consolidate_memory_task
 
 TEST_USER_ID = "test_user_999_advisor"
 

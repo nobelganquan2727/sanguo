@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, useState, useEffect, useRef } from 'react';
-import { X, ChevronDown } from 'lucide-react';
+import { X, ChevronDown, Copy, Check, Share2 } from 'lucide-react';
 
 interface AgentPanelProps {
   show: boolean;
@@ -24,6 +24,108 @@ export default function AgentPanel({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const isAtBottomRef = useRef<boolean>(true);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [sharedIndex, setSharedIndex] = useState<number | null>(null);
+
+  const getQuestion = (index: number) => {
+    for (let j = index - 1; j >= 0; j--) {
+      if (chatHistory[j].role === 'user') {
+        return chatHistory[j].content;
+      }
+    }
+    return '';
+  };
+
+  const copyTextToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      window.focus();
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {
+      console.warn('Clipboard API failed, trying fallback:', e);
+    }
+    
+    // Fallback to execCommand (works even when document focus fluctuates during async operations)
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return successful;
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      return false;
+    }
+  };
+
+  const handleCopy = async (text: string) => {
+    const success = await copyTextToClipboard(text);
+    if (success) {
+      setCopiedText(text);
+      setTimeout(() => setCopiedText(null), 2000);
+    }
+  };
+
+  const handleShare = async (question: string, answer: string, index: number) => {
+    const API_BASE = typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE
+      ? `http://${window.location.hostname}:8000`
+      : (process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000');
+    try {
+      const res = await fetch(`${API_BASE}/api/shares`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, answer }),
+      });
+      const data = await res.json();
+      if (data.success && data.share_id) {
+        const shareUrl = `http://www.sanguo-insight.site/?share=${data.share_id}`;
+        const snippet = answer.length > 80 ? answer.substring(0, 80) + '...' : answer;
+        const shareText = `【《三国志》史料研判】\n问：${question}\n答：${snippet}\n\n打开锦囊，观天下大势：\n${shareUrl}`;
+
+        // Directly copy the beautifully formatted text to the clipboard
+        await copyTextToClipboard(shareText);
+        setSharedIndex(index);
+        setTimeout(() => setSharedIndex(null), 3000);
+
+        const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        if (isMobile && navigator.share) {
+          try {
+            await navigator.share({
+              title: '《三国志》史料研判答卷',
+              text: shareText,
+              url: shareUrl,
+            });
+          } catch (err) {
+            // Silently ignore
+          }
+        }
+      } else {
+        throw new Error('Failed to save share');
+      }
+    } catch (err) {
+      console.error('Failed to share: ', err);
+      const fallbackText = `【《三国志》史料研判】\n问：${question}\n\n答：${answer}`;
+      await copyTextToClipboard(fallbackText);
+      setSharedIndex(index);
+      setTimeout(() => setSharedIndex(null), 3000);
+    }
+  };
+
+  const fallbackShare = async (text: string, index: number) => {
+    const success = await copyTextToClipboard(text);
+    if (success) {
+      setSharedIndex(index);
+      setTimeout(() => setSharedIndex(null), 3000);
+    }
+  };
 
   const handleScroll = () => {
     if (!chatContainerRef.current) return;
@@ -68,7 +170,9 @@ export default function AgentPanel({
   }, [show]);
 
   useEffect(() => {
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000';
+    const API_BASE = typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE
+      ? `http://${window.location.hostname}:8000`
+      : (process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000');
     const checkStatus = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/status`);
@@ -162,6 +266,44 @@ export default function AgentPanel({
                   : msg.content
                 }
               </div>
+              {msg.role === 'ai' && msg.content && (
+                <div className="flex justify-end items-center gap-3 mt-1.5 pt-1.5 border-t border-[#4a5f78]/20 text-slate-400 select-none">
+                  <button
+                    onClick={() => handleCopy(msg.content)}
+                    className="p-0.5 rounded hover:text-white hover:bg-slate-700/40 transition-colors flex items-center gap-1"
+                    title="复制回答"
+                  >
+                    {copiedText === msg.content ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                        <span className="text-[10px] text-green-400">已复制</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span className="text-[10px]">复制</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleShare(getQuestion(i), msg.content, i)}
+                    className="p-0.5 rounded hover:text-white hover:bg-slate-700/40 transition-colors flex items-center gap-1"
+                    title="分享问答"
+                  >
+                    {sharedIndex === i ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                        <span className="text-[10px] text-green-400">已复制分享文案</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span className="text-[10px]">分享</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}

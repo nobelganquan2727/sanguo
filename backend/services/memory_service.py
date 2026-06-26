@@ -1,4 +1,5 @@
 import json
+import asyncio
 import traceback
 from sqlalchemy.orm import Session
 from db.mysql import SessionLocal, UserProfile, UserMemory
@@ -57,15 +58,10 @@ def format_user_memory(profile: UserProfile, memories: list[UserMemory]) -> str:
     return memory_block
 
 
-async def consolidate_memory_task(user_id: str, question: str, actual_answer: str):
-    """
-    Asynchronous background task to extract, merge, and save new user memories to MySQL.
-    Runs after the streaming response is fully sent to avoid slowing down the user experience.
-    """
-    # 1. Open its own database session to prevent session-closed errors in async thread
-    db: Session = SessionLocal()
+def _fetch_existing_memories_sync(user_id: str) -> tuple[str, str, str]:
+    """Helper to fetch profile traits and existing memories from MySQL synchronously."""
+    db = SessionLocal()
     try:
-        # Fetch or create the user profile
         profile = db.query(UserProfile).filter_by(user_id=user_id).first()
         if not profile:
             profile = UserProfile(user_id=user_id)
@@ -73,22 +69,76 @@ async def consolidate_memory_task(user_id: str, question: str, actual_answer: st
             db.commit()
             db.refresh(profile)
             
-        # Fetch existing memories
         memories = db.query(UserMemory).filter_by(user_id=user_id).all()
-        
-        # 2. Format existing memory for LLM context
         existing_mem_desc = "\n".join([f"- {m.topic}: {m.summary}" for m in memories])
+        return profile.preference, profile.knowledge_level, existing_mem_desc
+    finally:
+        db.close()
+
+
+def _save_consolidated_memories_sync(user_id: str, data: dict):
+    """Helper to save, merge, and evict memories in MySQL synchronously."""
+    db = SessionLocal()
+    try:
+        profile = db.query(UserProfile).filter_by(user_id=user_id).first()
+        if not profile:
+            profile = UserProfile(user_id=user_id)
+            db.add(profile)
+            
+        profile.preference = data.get("preference", profile.preference)
+        profile.knowledge_level = data.get("knowledge_level", profile.knowledge_level)
         
+        new_mems = data.get("new_or_updated_memories", {})
+        for topic, summary in new_mems.items():
+            topic = topic.strip()
+            if not topic:
+                continue
+                
+            existing_mem = db.query(UserMemory).filter_by(user_id=user_id, topic=topic).first()
+            if existing_mem:
+                existing_mem.summary = summary
+            else:
+                new_rec = UserMemory(user_id=user_id, topic=topic, summary=summary)
+                db.add(new_rec)
+                
+        db.commit()
+        
+        # Apply LRU eviction if memories exceed 20 topics
+        all_mems = db.query(UserMemory).filter_by(user_id=user_id).order_by(UserMemory.last_discussed_at.desc()).all()
+        if len(all_mems) > 20:
+            to_delete = all_mems[20:]
+            for m in to_delete:
+                db.delete(m)
+            db.commit()
+            print(f"🗑️ [LTM] Evicted {len(to_delete)} oldest memories for user {user_id} (kept top 20).")
+            
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.close()
+
+
+async def consolidate_memory_task(user_id: str, question: str, actual_answer: str):
+    """
+    Asynchronous background task to extract, merge, and save new user memories to MySQL.
+    Uses asyncio.to_thread to run synchronous SQLAlchemy calls in a background thread
+    to prevent blocking the uvicorn event loop.
+    """
+    try:
+        # 1. Fetch profile and memories in a background thread (non-blocking)
+        pref, kl, existing_mem_desc = await asyncio.to_thread(_fetch_existing_memories_sync, user_id)
+        
+        # 2. Format prompt for LLM extractor
         prompt = MEMORY_EXTRACTOR_PROMPT.format(
             question=question,
             answer=actual_answer,
             existing_memory=existing_mem_desc or "（无）"
         )
         
-        # 3. Call LLM to extract memory
+        # 3. Call LLM to extract memory (async, naturally non-blocking)
         llm = get_llm("cheap")
         
-        # Setup fallback just in case structured output or API has hiccups
         res_msg = await llm.ainvoke([
             SystemMessage(content="You are a JSON memory extractor. Output raw JSON only."),
             HumanMessage(content=prompt)
@@ -106,42 +156,10 @@ async def consolidate_memory_task(user_id: str, question: str, actual_answer: st
         
         data = json.loads(res_content)
         
-        # 4. Update Profile traits
-        profile.preference = data.get("preference", profile.preference)
-        profile.knowledge_level = data.get("knowledge_level", profile.knowledge_level)
-        
-        # 5. Save/Update Topic Memories
-        new_mems = data.get("new_or_updated_memories", {})
-        for topic, summary in new_mems.items():
-            # Clean topic name
-            topic = topic.strip()
-            if not topic:
-                continue
-                
-            existing_mem = db.query(UserMemory).filter_by(user_id=user_id, topic=topic).first()
-            if existing_mem:
-                existing_mem.summary = summary
-            else:
-                new_rec = UserMemory(user_id=user_id, topic=topic, summary=summary)
-                db.add(new_rec)
-                
-        db.commit()
-        
-        # 6. Apply LRU eviction if memory size exceeds 20 topics
-        all_mems = db.query(UserMemory).filter_by(user_id=user_id).order_by(UserMemory.last_discussed_at.desc()).all()
-        if len(all_mems) > 20:
-            # Delete the oldest memories beyond the top 20
-            to_delete = all_mems[20:]
-            for m in to_delete:
-                db.delete(m)
-            db.commit()
-            print(f"🗑️ [LTM] Evicted {len(to_delete)} oldest memories for user {user_id} (kept top 20).")
-            
+        # 4. Save and consolidate in a background thread (non-blocking)
+        await asyncio.to_thread(_save_consolidated_memories_sync, user_id, data)
         print(f"💾 [LTM] Successfully updated and consolidated long-term memory for user: {user_id}")
         
     except Exception as e:
-        db.rollback()
         print(f"⚠️ [LTM] Memory consolidation failed: {e}")
         traceback.print_exc()
-    finally:
-        db.close()

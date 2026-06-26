@@ -39,7 +39,7 @@ class TestSemanticCache(unittest.TestCase):
         self.assertAlmostEqual(cosine_similarity(v1, v3), 0.0)
         self.assertAlmostEqual(cosine_similarity(v1, v4), 1.0 / (1.0 * 1.41421356), places=5)
 
-    @patch("agent.cache.get_dashscope_embedding")
+    @patch("agent.cache.get_bge_m3_embedding")
     def test_cache_save_and_lookup(self, mock_embedding):
         # We will mock the vectors returned by DashScope
         # "曹操" and "阿瞒" will have very high similarity

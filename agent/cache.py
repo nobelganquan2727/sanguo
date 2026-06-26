@@ -39,33 +39,31 @@ def cosine_similarity(v1: list[float], v2: list[float]) -> float:
         return 0.0
     return dot_prod / (norm_a * norm_b)
 
-def get_dashscope_embedding(text: str) -> list[float]:
-    """Fetch text embedding vector from DashScope HTTP API."""
-    api_key = os.environ.get("DASHSCOPE_API_KEY")
+def get_bge_m3_embedding(text: str) -> list[float]:
+    """Fetch BGE-M3 embedding from SiliconFlow API synchronously."""
+    api_key = os.environ.get("SILICONFLOW_API_KEY")
     if not api_key:
-        raise ValueError("DASHSCOPE_API_KEY not found in environment!")
+        raise ValueError("SILICONFLOW_API_KEY not found in environment!")
         
-    url = "https://dashscope.aliyuncs.com/api/v1/services/embeddings/text-embedding/text-embedding"
+    url = "https://api.siliconflow.cn/v1/embeddings"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
-    
     payload = {
-        "model": "text-embedding-v2",
-        "input": {
-            "texts": [text]
-        }
+        "model": "BAAI/bge-m3",
+        "input": text,
+        "encoding_format": "float"
     }
     
     res = requests.post(url, json=payload, headers=headers, verify=False, timeout=10)
     res.raise_for_status()
     
     response = res.json()
-    embeddings = response.get("output", {}).get("embeddings", [])
+    embeddings = response.get("data", [{}])[0].get("embedding", [])
     if not embeddings:
-        raise ValueError(f"No embeddings returned from DashScope: {response}")
-    return embeddings[0]["embedding"]
+        raise ValueError(f"No embeddings returned from SiliconFlow: {response}")
+    return embeddings
 
 def lookup_cache(question: str, threshold: float = 0.92) -> Tuple[Optional[str], float]:
     """
@@ -81,7 +79,7 @@ def lookup_cache(question: str, threshold: float = 0.92) -> Tuple[Optional[str],
         return None, 0.0
         
     try:
-        q_vector = get_dashscope_embedding(question)
+        q_vector = get_bge_m3_embedding(question)
     except Exception as e:
         print(f"⚠️ Failed to get embedding for cache lookup: {e}")
         return None, 0.0
@@ -117,7 +115,7 @@ def save_cache(question: str, answer: str) -> None:
         return
         
     try:
-        q_vector = get_dashscope_embedding(question)
+        q_vector = get_bge_m3_embedding(question)
     except Exception as e:
         print(f"⚠️ Failed to get embedding for cache saving: {e}")
         return

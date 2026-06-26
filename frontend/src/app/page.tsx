@@ -13,7 +13,9 @@ import { locationMatchesGeoName } from './utils/locationMatch';
 import { Calendar } from 'lucide-react';
 
 const INITIAL_VIEW_STATE = { longitude: 108.5, latitude: 34.0, zoom: 4.2, pitch: 0, bearing: 0 };
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000';
+const API_BASE = typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE
+  ? `http://${window.location.hostname}:8000`
+  : (process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000');
 const EVENT_PAGE_SIZE = 100;
 console.log('API_BASE:', API_BASE, process.env.NEXT_PUBLIC_API_BASE);
 
@@ -23,6 +25,8 @@ export default function Home() {
   const [timelineYear, setTimelineYear] = useState(190);
   const [showTimeline, setShowTimeline] = useState(true);
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
+  const [sharedQA, setSharedQA] = useState<{ id: string; question: string; answer: string } | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -39,6 +43,36 @@ export default function Home() {
       window.removeEventListener('orientationchange', checkOrientation);
     };
   }, []);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareId = urlParams.get('share');
+    if (shareId) {
+      setShareLoading(true);
+      fetch(`${API_BASE}/api/shares/${shareId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.share) {
+            setSharedQA(data.share);
+          } else {
+            showToast('未找到该分享的锦囊卷宗。');
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch share:', err);
+          showToast('获取分享内容失败，请检查网络。');
+        })
+        .finally(() => {
+          setShareLoading(false);
+        });
+    }
+  }, []);
+
+  const handleEnterSandbox = () => {
+    setSharedQA(null);
+    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+  };
 
   // Selection & hover
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
@@ -717,6 +751,71 @@ export default function Home() {
             <span className="text-[10px] text-slate-500 font-sans mt-3 select-none">
               （若已横置，请确认手机系统的“自动旋转”或“方向锁定”已开启）
             </span>
+          </div>
+        )}
+
+        {shareLoading && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#041527] p-8 text-center backdrop-blur-md">
+            <div className="relative flex items-center justify-center">
+              <div className="w-16 h-16 border-4 border-t-[#f59e0b] border-r-transparent border-b-[#f59e0b]/30 border-l-transparent rounded-full animate-spin"></div>
+              <div className="absolute w-10 h-10 border-4 border-r-[#e2ddce] border-t-transparent border-l-[#e2ddce]/30 border-b-transparent rounded-full animate-spin-reverse"></div>
+              <div className="absolute w-3 h-3 bg-[#f59e0b] rounded-full animate-ping"></div>
+            </div>
+            <p className="mt-4 text-[#e2ddce] text-xs font-serif tracking-[0.2em] font-bold select-none animate-pulse">
+              「正在开启锦囊妙计，请稍候...」
+            </p>
+          </div>
+        )}
+
+        {sharedQA && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#041527]/85 backdrop-blur-md p-4 md:p-8 animate-in fade-in duration-300 select-text">
+            <div className="absolute inset-0 z-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,#8c2a35_0%,transparent_70%)]" />
+            
+            <div className="relative z-10 w-full max-w-2xl max-h-[85vh] bg-[#0c1821]/95 border border-[#4a5f78] rounded-lg shadow-[0_10px_50px_rgba(0,0,0,0.85)] flex flex-col pointer-events-auto overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="bg-gradient-to-r from-[#6b1c23] to-[#8c2a35] py-3.5 px-6 border-b border-[#a4424b] flex justify-between items-center select-none">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-400 text-lg">⚜️</span>
+                  <h2 className="text-sm md:text-base font-serif font-bold text-white tracking-[0.25em]">
+                    三国志数字沙盘 · 锦囊卷宗
+                  </h2>
+                </div>
+                <button
+                  onClick={handleEnterSandbox}
+                  className="px-3 py-1 bg-white/10 hover:bg-white/20 text-[#e2ddce] hover:text-white rounded border border-white/20 text-xs font-serif tracking-widest transition-all duration-200 cursor-pointer"
+                  title="关闭进入沙盘"
+                >
+                  进入沙盘
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 flex flex-col gap-6 font-serif">
+                <div className="bg-[#1a2f4c]/45 border-l-4 border-[#f59e0b] p-4 rounded-r-md">
+                  <div className="text-[#f59e0b] text-xs font-sans tracking-wider uppercase mb-1 font-bold select-none">主公提问：</div>
+                  <h3 className="text-base md:text-lg text-slate-200 leading-relaxed font-bold">
+                    {sharedQA.question}
+                  </h3>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="text-[#8c9bab] text-xs font-sans tracking-wider uppercase mb-1 font-bold select-none">幕僚答卷：</div>
+                  <div className="text-sm md:text-base text-slate-300 leading-relaxed pl-2 border-l border-[#4a5f78]/30 flex flex-col gap-3">
+                    {linkifyChatText(sharedQA.answer)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 md:p-6 border-t border-[#4a5f78]/30 bg-[#070f15] flex flex-col md:flex-row items-center justify-between gap-4 select-none">
+                <div className="text-[11px] md:text-xs text-slate-500 font-sans">
+                  分享自《三国志》数字沙盘史料研判系统 · 建安风骨
+                </div>
+                <button
+                  onClick={handleEnterSandbox}
+                  className="w-full md:w-auto px-6 py-2.5 bg-gradient-to-r from-[#8c2a35] to-[#a4424b] hover:from-[#a4424b] hover:to-[#8c2a35] text-[#e2ddce] hover:text-white border border-[#a4424b] rounded-md shadow-lg text-xs md:text-sm font-serif font-bold tracking-[0.2em] transition-all duration-300 cursor-pointer hover:scale-[1.03] flex items-center justify-center gap-2"
+                >
+                  <span>⚜️ 进入数字沙盘 探寻三国风云</span>
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

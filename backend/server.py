@@ -82,6 +82,10 @@ class AdminApplyItem(BaseModel):
 class AdminApplyRequest(BaseModel):
     items: list[AdminApplyItem]
 
+class ShareCreateRequest(BaseModel):
+    question: str
+    answer: str
+
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "sanguo123")
 
 def verify_admin_password(x_admin_password: str = Header(None)):
@@ -158,6 +162,64 @@ def apply_admin_feedback(req: AdminApplyRequest, x_admin_password: str = Header(
 @app.post("/api/ask")
 async def api_ask(req: AskRequest, db: Session = Depends(get_db)):
     return await chat_service.handle_ask_stream(req.question, req.history, req.session_id, req.user_id, db)
+
+@app.post("/api/shares")
+def create_share(req: ShareCreateRequest, db: Session = Depends(get_db)):
+    import secrets
+    from db.mysql import Share
+    try:
+        for _ in range(5):
+            share_id = "s_" + secrets.token_hex(4)
+            existing = db.query(Share).filter(Share.id == share_id).first()
+            if not existing:
+                break
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate unique share ID")
+
+        new_share = Share(
+            id=share_id,
+            question=req.question,
+            answer=req.answer
+        )
+        db.add(new_share)
+        db.commit()
+        return {"success": True, "share_id": share_id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/shares/{share_id}")
+def get_share(share_id: str, db: Session = Depends(get_db)):
+    from db.mysql import Share
+    try:
+        share = db.query(Share).filter(Share.id == share_id).first()
+        if not share:
+            raise HTTPException(status_code=404, detail="分享的锦囊卷宗不存在。")
+        return {
+            "success": True,
+            "share": {
+                "id": share.id,
+                "question": share.question,
+                "answer": share.answer,
+                "created_at": share.created_at.isoformat() if share.created_at else None
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/lan-ip")
+def get_lan_ip():
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return {"ip": ip}
+    except Exception:
+        return {"ip": "127.0.0.1"}
 
 @app.get("/api/status")
 async def api_status():

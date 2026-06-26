@@ -56,6 +56,15 @@ class UserMemory(Base):
 
     user = relationship("UserProfile", back_populates="memories")
 
+class Share(Base):
+    """Stores shared Q&A results for WeChat and web sharing."""
+    __tablename__ = 'shares'
+
+    id = Column(String(50), primary_key=True)
+    question = Column(Text, nullable=False)
+    answer = Column(Text, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
 def get_db():
     db = SessionLocal()
     try:
