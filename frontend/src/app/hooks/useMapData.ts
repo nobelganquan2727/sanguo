@@ -90,14 +90,32 @@ function flattenAdminGeo(data: AdminGeo) {
   return Array.from(uniqueLocs.values());
 }
 
+const getOrCreateUserId = (): string => {
+  if (typeof window === 'undefined') return '';
+  let stored = localStorage.getItem('sanguo_user_id');
+  if (!stored) {
+    try {
+      stored = `usr_${crypto.randomUUID()}`;
+    } catch (e) {
+      stored = `usr_${Math.random().toString(36).substring(2, 15)}_${Date.now().toString(36)}`;
+    }
+    localStorage.setItem('sanguo_user_id', stored);
+  }
+  return stored;
+};
+
 export function useMapData() {
   const [geoData, setGeoData] = useState<any[]>([]);
   const [eventsList, setEventsList] = useState<any[]>([]);
   const [filterMeta, setFilterMeta] = useState<{ locations: string[]; event_types: string[] }>({ locations: [], event_types: [] });
   const [allPersons, setAllPersons] = useState<string[]>([]);
   const [mapLoading, setMapLoading] = useState(true);
+  const [sessionId, setSessionId] = useState<string>('');
 
   useEffect(() => {
+    // Generate a unique session ID for the current browser session
+    setSessionId(`sess_${Math.random().toString(36).substring(2, 15)}_${Date.now().toString(36)}`);
+
     setMapLoading(true);
     const p1 = fetch(`${API_BASE}/api/eastern-han-admin`).then(r => r.json()).then(data => {
       setGeoData(flattenAdminGeo(data));
@@ -192,10 +210,16 @@ export function useMapData() {
     onChunk: (chunk: { type: 'status' | 'text' | 'done' | 'events'; content: string }) => void,
     signal?: AbortSignal
   ) => {
+    const currentUserId = getOrCreateUserId();
     const res = await fetch(`${API_BASE}/api/ask`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: query, history: chatHistory }),
+      body: JSON.stringify({ 
+        question: query, 
+        history: chatHistory,
+        session_id: sessionId,
+        user_id: currentUserId
+      }),
       signal
     });
 

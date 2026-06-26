@@ -41,6 +41,12 @@ app = FastAPI(title="Sanguozhi Map API")
 @app.on_event("startup")
 async def startup_event():
     await check_redis_connectivity()
+    try:
+        from db.mysql import Base, engine
+        Base.metadata.create_all(bind=engine)
+        print("✅ [Database] Checked and successfully initialized MySQL tables.")
+    except Exception as e:
+        print(f"⚠️ [Database] Failed to initialize MySQL tables: {e}")
 
 # Add CORS for Next.js frontend
 app.add_middleware(
@@ -56,6 +62,7 @@ class AskRequest(BaseModel):
     question: str
     history: list[dict] = []
     session_id: Optional[str] = None
+    user_id: Optional[str] = None
 
 class FeedbackRequest(BaseModel):
     event_id: str
@@ -149,8 +156,8 @@ def apply_admin_feedback(req: AdminApplyRequest, x_admin_password: str = Header(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/ask")
-async def api_ask(req: AskRequest):
-    return await chat_service.handle_ask_stream(req.question, req.history, req.session_id)
+async def api_ask(req: AskRequest, db: Session = Depends(get_db)):
+    return await chat_service.handle_ask_stream(req.question, req.history, req.session_id, req.user_id, db)
 
 @app.get("/api/status")
 async def api_status():

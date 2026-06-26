@@ -117,7 +117,10 @@ class IntentAnalyzerAgent(BaseSubAgent):
 
     async def handle_generic_chat(self):
         await self.send_event("status", "💬 [闲聊回答] 无需翻检古籍，正在直接答复...")
-        chat_messages = [SystemMessage(content=f"{get_system_persona(self.pipeline.question)}请根据用户的当前问题和对话历史进行回答。")]
+        system_content = f"{get_system_persona(self.pipeline.question)}请根据用户的当前问题和对话历史进行回答。"
+        if self.pipeline.user_memory_block:
+            system_content = self.pipeline.user_memory_block + "\n" + system_content
+        chat_messages = [SystemMessage(content=system_content)]
         for role, content in self.pipeline.history_to_process:
             if role == "user":
                 chat_messages.append(HumanMessage(content=content))
@@ -161,8 +164,11 @@ class PlannerAgent(BaseSubAgent):
 class ResearcherAgent(BaseSubAgent):
     async def research(self, rewritten_q: str) -> list:
         config = {"callbacks": [self.pipeline.handler]} if self.pipeline.handler else {}
+        system_content = AGENT_SYSTEM_PROMPT
+        if self.pipeline.user_memory_block:
+            system_content = self.pipeline.user_memory_block + "\n" + system_content
         agent_messages = [
-            SystemMessage(content=AGENT_SYSTEM_PROMPT),
+            SystemMessage(content=system_content),
             HumanMessage(content=f"历史对话与摘要：\n{self.pipeline.history_text}\n\n当前查询任务：\n{rewritten_q}")
         ]
         observations = []
@@ -259,7 +265,10 @@ class SynthesisAgent(BaseSubAgent):
             err_msg = last_error if query_failed else "未找到可用史料"
             answer_prompt += f"\n\n【注意】由于当前“简牍翻阅多有不便”（底盘检索阻碍：{err_msg}），藏书阁中暂未寻得详尽佐证。请基于你自身强大的《三国志》真实正史知识，直接对用户问题做出详实解答，并合理进行学者推演（回答中需隐晦体现因古籍翻阅不便而自行考证，严禁透露任何技术故障词汇）。"
 
-        answer_messages = [SystemMessage(content=get_system_persona(rewritten_q))]
+        system_content = get_system_persona(rewritten_q)
+        if self.pipeline.user_memory_block:
+            system_content = self.pipeline.user_memory_block + "\n" + system_content
+        answer_messages = [SystemMessage(content=system_content)]
         for role, content in self.pipeline.history_to_process:
             if role == "user":
                 answer_messages.append(HumanMessage(content=content))
@@ -275,11 +284,12 @@ class SynthesisAgent(BaseSubAgent):
 # ----------------- Async Streaming Version (Phase 3) -----------------
 
 class QAStreamPipeline:
-    def __init__(self, question: str, history: list[dict], queue: asyncio.Queue, handler):
+    def __init__(self, question: str, history: list[dict], queue: asyncio.Queue, handler, user_memory_block: str = None):
         self.question = question
         self.history = history
         self.queue = queue
         self.handler = handler
+        self.user_memory_block = user_memory_block or ""
         self.llm_cheap = get_llm("cheap")
         self.llm_complex = get_llm("complex")
         self.collected_text = []
@@ -426,31 +436,41 @@ class QAStreamPipeline:
         
         return q_type
 
-async def ask_question_stream(question: str, history: list[dict] = None) -> AsyncGenerator[str, None]:
+async def ask_question_stream(
+    question: str, 
+    history: list[dict] = None, 
+    dataset_item_id: str = None,
+    trace_metadata: dict = None,
+    user_memory_block: str = None
+) -> AsyncGenerator[str, None]:
     """
     异步流式发生器：使用 asyncio.Queue 在生产者线程与消费者生成器之间通信，
     支持实时上报思索轨迹（status）与打字机文本（text）。
     """
-    # 0. Check Semantic Cache
-    cached_ans, similarity = lookup_cache(question)
-    if cached_ans:
-        print(f"⚡ [语义缓存] 命中缓存 (相似度: {similarity * 100:.1f}%)，流式返回历史回答。")
-        yield json.dumps({"type": "status", "content": f"⚡ [语义缓存] 发现高度匹配的历史解答 (相似度: {similarity * 100:.1f}%)，正在调阅历史答案..."}) + "\n"
-        chunk_size = 15
-        for i in range(0, len(cached_ans), chunk_size):
-            chunk = cached_ans[i:i+chunk_size]
-            yield json.dumps({"type": "text", "content": chunk}) + "\n"
-            await asyncio.sleep(0.01)
-        yield json.dumps({"type": "done", "content": ""}) + "\n"
-        return
+    # 0. Check Semantic Cache (Bypass when running evaluations/dataset runs)
+    if not dataset_item_id:
+        cached_ans, similarity = lookup_cache(question)
+        if cached_ans:
+            print(f"⚡ [语义缓存] 命中缓存 (相似度: {similarity * 100:.1f}%)，流式返回历史回答。")
+            yield json.dumps({"type": "status", "content": f"⚡ [语义缓存] 发现高度匹配的历史解答 (相似度: {similarity * 100:.1f}%)，正在调阅历史答案..."}) + "\n"
+            chunk_size = 15
+            for i in range(0, len(cached_ans), chunk_size):
+                chunk = cached_ans[i:i+chunk_size]
+                yield json.dumps({"type": "text", "content": chunk}) + "\n"
+                await asyncio.sleep(0.01)
+            yield json.dumps({"type": "done", "content": ""}) + "\n"
+            return
 
     langfuse_client = Langfuse()
-    trace = langfuse_client.trace(name="qa_pipeline", input=question)
+    trace = langfuse_client.trace(name="qa_pipeline", input=question, dataset_item_id=dataset_item_id)
+    if trace_metadata is not None:
+        trace_metadata["trace_id"] = trace.id
+        
     handler = trace.get_langchain_handler()
     token = active_callback_var.set(handler)
     queue = asyncio.Queue()
     
-    pipeline = QAStreamPipeline(question, history, queue, handler)
+    pipeline = QAStreamPipeline(question, history, queue, handler, user_memory_block=user_memory_block)
     send_event_token = active_send_event_var.set(pipeline.send_event)
 
     async def producer():
@@ -467,7 +487,9 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
             await queue.put(None)
             ans_str = "".join(pipeline.collected_text)
             langfuse_client.flush()
-            save_cache(question, ans_str)
+            # Don't save to cache during evaluation runs
+            if not dataset_item_id:
+                save_cache(question, ans_str)
             print("\n")
 
     try:
@@ -489,13 +511,25 @@ async def ask_question_stream(question: str, history: list[dict] = None) -> Asyn
         if send_event_token:
             active_send_event_var.reset(send_event_token)
 
-def ask_question(question: str, history: list[dict] = None) -> str:
+def ask_question(
+    question: str, 
+    history: list[dict] = None, 
+    dataset_item_id: str = None,
+    trace_metadata: dict = None,
+    user_memory_block: str = None
+) -> str:
     """
     同步版本的问答接口，方便在非异步环境或测试中调用。
     """
     async def _run():
         chunks = []
-        async for raw_chunk in ask_question_stream(question, history):
+        async for raw_chunk in ask_question_stream(
+            question, 
+            history, 
+            dataset_item_id=dataset_item_id, 
+            trace_metadata=trace_metadata,
+            user_memory_block=user_memory_block
+        ):
             try:
                 chunk = json.loads(raw_chunk)
                 if chunk.get("type") == "text":
