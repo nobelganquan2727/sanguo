@@ -37,7 +37,7 @@ def get_llm(model_type: str = "complex"):
             temperature=0,
             callbacks=callbacks,
             extra_body={"thinking": {"type": "disabled"}}
-        )
+        ).with_config(run_name="DeepSeek-Cheap")
     else:
         return ChatOpenAI(
             model="deepseek-chat", 
@@ -47,69 +47,65 @@ def get_llm(model_type: str = "complex"):
             temperature=0,
             callbacks=callbacks,
             extra_body={"thinking": {"type": "disabled"}}
-        )
+        ).with_config(run_name="DeepSeek-Complex")
 
 def truncate_tool_output(output: Any, max_chars: int = 12000, extra_warning: Optional[str] = None) -> str:
     """
-    Safely truncates the tool output to avoid breaking JSON format
-    when the output is too long.
+    Safely truncates the tool output recursively to avoid breaking JSON format
+    and prevent context/token bloat.
     """
     suffix = f"\n\n【卷宗纪要说明】{extra_warning}" if extra_warning else ""
-    
+    limit = max_chars - len(suffix)
+
+    # 递归清理嵌套结构中的超长文本字段
+    def _recursive_truncate(data: Any, max_val_len: int = 400) -> Any:
+        if isinstance(data, dict):
+            new_dict = {}
+            for k, v in data.items():
+                if k in ["description", "translation", "source", "source_text"] and isinstance(v, str) and len(v) > max_val_len:
+                    new_dict[k] = v[:max_val_len] + "...(此字段文本内容过长，已被强制截短)"
+                else:
+                    new_dict[k] = _recursive_truncate(v, max_val_len)
+            return new_dict
+        elif isinstance(data, list):
+            return [_recursive_truncate(item, max_val_len) for item in data]
+        return data
+
+    parsed = output
     if isinstance(output, str):
         try:
             parsed = json.loads(output)
-            return truncate_tool_output(parsed, max_chars, extra_warning)
         except Exception:
-            if len(output) > max_chars:
-                return output[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。" + suffix
+            if len(output) > limit:
+                return output[:limit] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{limit}字。" + suffix
             return output + suffix
 
-    if isinstance(output, list):
-        limit = max_chars - len(suffix)
-        serialized = json.dumps(output, ensure_ascii=False)
+    # 递归截断长字段
+    cleaned_parsed = _recursive_truncate(parsed)
+    
+    try:
+        serialized = json.dumps(cleaned_parsed, ensure_ascii=False)
         if len(serialized) <= limit:
             return serialized + suffix
             
-        truncated = list(output)
-        while len(truncated) > 1:
-            truncated.pop()
-            serialized = json.dumps(truncated, ensure_ascii=False)
-            if len(serialized) <= limit:
-                return serialized + f"\n\n【卷宗纪要说明】由于返回史料条数较多（共 {len(output)} 条，已截断，仅展示前 {len(truncated)} 条以防超出篇幅限制）。" + suffix
-        
-        if truncated:
-            item = truncated[0]
-            if isinstance(item, dict):
-                item_copy = dict(item)
-                for key in ["description", "translation", "source", "source_text"]:
-                    if key in item_copy and isinstance(item_copy[key], str) and len(item_copy[key]) > 500:
-                        item_copy[key] = item_copy[key][:500] + "...(此字段文本内容过长，已被强制截短)"
-                truncated[0] = item_copy
-                return json.dumps(truncated, ensure_ascii=False) + f"\n\n【卷宗纪要说明】单个史料文本内容过长，已强制截断内部文本以确保 JSON 格式完整。" + suffix
-        return serialized + suffix
-
-    if isinstance(output, dict):
-        limit = max_chars - len(suffix)
-        serialized = json.dumps(output, ensure_ascii=False)
-        if len(serialized) <= limit:
-            return serialized + suffix
-        
-        item_copy = dict(output)
-        for key in ["description", "translation", "source", "source_text"]:
-            if key in item_copy and isinstance(item_copy[key], str) and len(item_copy[key]) > 500:
-                item_copy[key] = item_copy[key][:500] + "...(此字段文本内容过长，已被强制截短)"
-        return json.dumps(item_copy, ensure_ascii=False) + f"\n\n【卷宗纪要说明】文本内容过长，已强制截断内部文本以确保 JSON 格式完整。" + suffix
-
-    try:
-        serialized = json.dumps(output, ensure_ascii=False)
-        if len(serialized) > max_chars:
-            return serialized[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。" + suffix
-        return serialized + suffix
+        # 如果整体序列化后依然超限，采用列表项截断
+        if isinstance(cleaned_parsed, list):
+            truncated = list(cleaned_parsed)
+            while len(truncated) > 1:
+                truncated.pop()
+                serialized = json.dumps(truncated, ensure_ascii=False)
+                if len(serialized) <= limit:
+                    return serialized + f"\n\n【卷宗纪要说明】由于返回史料条数较多（共 {len(cleaned_parsed)} 条，已截断，仅展示前 {len(truncated)} 条以防超出篇幅限制）。" + suffix
+            if truncated:
+                return json.dumps(truncated, ensure_ascii=False) + f"\n\n【卷宗纪要说明】单条史料体积依然过大，已强制截短展示。" + suffix
+        elif isinstance(cleaned_parsed, dict):
+            s_dict = json.dumps(cleaned_parsed, ensure_ascii=False)
+            return s_dict[:limit] + f"\n\n【卷宗纪要说明】检索数据文本量过大，已截取前文{limit}字。" + suffix
+        return serialized[:limit] + suffix
     except Exception:
         s = str(output)
-        if len(s) > max_chars:
-            return s[:max_chars] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{max_chars}字。" + suffix
+        if len(s) > limit:
+            return s[:limit] + f"\n\n【卷宗纪要说明】数据文本过长已作删减，仅展示前文{limit}字。" + suffix
         return s + suffix
 
 async def run_query_async(cypher: str, params: dict = None) -> list[dict]:
@@ -169,8 +165,8 @@ async def query_neo4j_async(cypher: str) -> str:
     return f"Database query failed permanently: {last_error}"
 
 @tool
-async def get_person_timeline_async(name: str, start_year: Optional[int] = None, end_year: Optional[int] = None) -> str:
-    """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名。注意：曹操、刘备等大人物的事件极多，查询时必须传入 start_year 和 end_year 过滤到具体的时间段，以避免因返回过多记录而被截断或耗费巨大 Token。"""
+async def get_person_timeline_async(name: str, start_year: Optional[int] = None, end_year: Optional[int] = None, query: Optional[str] = None) -> str:
+    """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名。若需要针对特定主题（如 '初期实力'、'官渡之战'）进行过滤，可传入 query 参数进行语义向量筛选，避免返回过多无关的纪年事件。"""
     conditions = ["p.name = $name"]
     params = {"name": name}
     if start_year is not None:
@@ -181,6 +177,34 @@ async def get_person_timeline_async(name: str, start_year: Optional[int] = None,
         params["end_year"] = end_year
     
     where_clause = " AND ".join(conditions)
+    
+    if query:
+        # 如果提供了 query，执行语义向量过滤，找出该人物生平中与 query 最相关的 top 12 个事件
+        try:
+            embedding = await get_bge_m3_embedding_async(query)
+            params["embedding"] = embedding
+            cypher = f"""
+            CALL db.index.vector.queryNodes('eventEmbeddings', 100, $embedding)
+            YIELD node, score
+            MATCH (p:Person)-[:PARTICIPATED_IN]->(node:Event)
+            WHERE {where_clause.replace("e.", "node.")}
+            OPTIONAL MATCH (node)-[:HAPPENED_AT]->(l:Location)
+            OPTIONAL MATCH (node)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+            WITH node, score, collect(DISTINCT l.name) AS locations, me.title AS major_event
+            ORDER BY score DESC
+            RETURN node.title AS title, COALESCE(node.translation, node.description) AS description, node.time_text AS time, 
+                   node.std_start_year AS year, node.source_text AS source, locations, major_event, score
+            LIMIT 12
+            """
+            await emit_status(f"🔍 [get_person_timeline] 正在执行语义过滤编年史，筛选与主题 '{query}' 相关的事件...")
+            results = await run_query_async(cypher, params)
+            if not results:
+                return f"未找到关于人物 '{name}' 且与主题 '{query}' 相关的生平事件记录。"
+            return truncate_tool_output(json.dumps(results, ensure_ascii=False))
+        except Exception as e:
+            await emit_status(f"⚠️ [get_person_timeline] 语义过滤失败，退回执行标准编年史检索。原因: {e}")
+            pass
+
     cypher = f"""
     MATCH (p:Person)-[:PARTICIPATED_IN]->(e:Event)
     WHERE {where_clause}

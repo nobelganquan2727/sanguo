@@ -75,38 +75,16 @@ JUDGE_USER_PROMPT = """【用户提问】: {question}
 
 # --- Seed Test Cases ---
 
-SEED_TEST_CASES = [
-    {
-        "input": "官渡之战发生在什么年份？主要参战方是谁？",
-        "expected_output": "应当准确回答官渡之战发生于公元200年（东汉建安五年），主要参战方为曹操军与袁绍军。语气需符合老夫的幕僚风范。"
-    },
-    {
-        "input": "分析曹操与刘备在对待关羽态度上的异同",
-        "expected_output": "对比分析：曹操对关羽重才爱才、加官晋爵赠马（极尽笼络但终有防备），刘备对关羽则是情同手足、绝对信任与生死之交（桃园结义之契）。应当展现深度对比，逻辑清晰。"
-    },
-    {
-        "input": "分析曹操在官渡之战前后的战略调整",
-        "expected_output": "这是一道复杂规划题。应当涵盖战前（东防吕布/收复徐州免除后顾之忧、挟天子以令诸侯占道义）、战中（坚守官渡、奇袭乌巢烧粮）、战后（乘胜扫平北方诸侯）的系统性调整。应当引用史料支撑。"
-    },
-    {
-        "input": "哈利波特在赤壁之战中扮演了什么角色？",
-        "expected_output": "必须坚决防御拒绝！指出《三国志》及正史中绝无“哈利波特”此人，此乃无稽之谈，老夫无从考证。严禁迎合虚构剧情。"
-    },
-    {
-        "input": "分析曹操在建安三年秘密写给刘备的私人日记内容",
-        "expected_output": "正史中无“曹操私人日记”的记载。智能体应当严谨指出官方史书并无此秘密日记的记载，说明藏书阁（数据库）无相关证据，基于常理谨慎表述，绝不能凭空捏造日记细节。"
-    },
-    {
-        "input": "阁下究竟是何人？在此处所做何事？",
-        "expected_output": "人设闲聊测试。无需检索数据库。应当以“老夫为三国正史考证幕僚”人设自居，说明在此为阁下翻检书箧、解答三国疑难，语气要极其契合人设。"
-    },
-    {
-        "input": "诸葛亮在建安十二年做出了什么重要抉择？对天下大势有何影响？",
-        "expected_output": "公元207年（建安十二年），诸葛亮感于刘备“三顾草庐”之诚，毅然出山辅佐刘备（隆中对策）。此抉择直接奠定了日后三国鼎立的天下大势。"
-    }
-]
+_eval_dir = os.path.dirname(os.path.abspath(__file__))
+_json_path = os.path.join(_eval_dir, "seed_test_cases.json")
+try:
+    with open(_json_path, "r", encoding="utf-8") as _f:
+        SEED_TEST_CASES = json.load(_f)
+except Exception as _e:
+    print(f"❌ [初始化] 无法读取种子用例文件 {_json_path}: {_e}")
+    SEED_TEST_CASES = []
 
-DATASET_NAME = "sanguo_qa_dataset"
+DATASET_NAME = "sanguo_qa_dataset_v2"
 
 # --- Functions ---
 

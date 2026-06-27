@@ -132,16 +132,14 @@ CYPHER_GENERATION_TEMPLATE = """
 === 动态 Few-Shot 示例（供参考） ===
 {few_shots}
 
-=== 对话历史 ===
-{history_text}
-
 === 当前问题 ===
 {question}
 
 编写 Cypher 查询的准则：
 1. 根据上面的 Schema 编写准确的 Cypher 语句。
 2. 问题是关于“{intent}”。如果是 relationship，应使用宽口径多维召回方式召回人物之间的 direct_events, shared_persons, shared_locations, p1_events, p2_events。如果是 fact，应使用标准的 MATCH/WHERE/RETURN 语句。
-3. 请直接输出 Cypher 查询语句，不要有任何其他解释，不要用 markdown 代码块标记，只输出纯文本。
+3. **重要限制（引述与原文要求）**：当你查询并返回 Event 类型的节点时，**请务必在返回的对象/字典属性中包含 source_text, translation 以及 chapter 字段**（例如：对于 e1:Event，其投影应包含 `{{title: e1.title, description: e1.description, source_text: e1.source_text, translation: e1.translation, chapter: e1.chapter, year: e1.std_start_year}}`）。这样，后续作答智能体才能获得真实的史书古籍原文进行考证和引述。
+4. 请直接输出 Cypher 查询语句，不要有任何其他解释，不要用 markdown 代码块标记，只输出纯文本。
 
 请为此问题生成最合适的 Cypher 语句：
 """

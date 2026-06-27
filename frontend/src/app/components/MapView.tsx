@@ -7,14 +7,14 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useCallback } from 'react';
 import { locationNameMatches, locationMatchesGeoName } from '../utils/locationMatch';
 
-// 使用 Cooper Hewitt 的原始水彩底图链接，国内直连无需 VPN 代理，保持最简前端配置
+// 使用本地 Next.js API 代理的水彩底图，解决 CORS 跨域问题并保留水墨效果
 const MAP_STYLE = {
   version: 8,
   sources: {
     'watercolor-tiles': {
       type: 'raster',
       tiles: [
-        'https://watercolormaps.collection.cooperhewitt.org/tile/watercolor/{z}/{x}/{y}.jpg'
+        '/api/tiles/watercolor/{z}/{x}/{y}.jpg'
       ],
       tileSize: 256,
       maxzoom: 16
