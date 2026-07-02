@@ -6,7 +6,7 @@ import { X, ChevronDown, Copy, Check, Share2 } from 'lucide-react';
 interface AgentPanelProps {
   show: boolean;
   onToggle: (v: boolean) => void;
-  chatHistory: { role: string; content: string; thinkingLogs?: string[] }[];
+  chatHistory: { role: string; content: string; thinkingLogs?: string[]; clarifyOptions?: string[] }[];
   isLoading: boolean;
   onSend: (msg: string) => void;
   onStop?: () => void;
@@ -266,6 +266,19 @@ export default function AgentPanel({
                   : msg.content
                 }
               </div>
+              {msg.role === 'ai' && msg.clarifyOptions && msg.clarifyOptions.length > 0 && i === chatHistory.length - 1 && !isLoading && (
+                <div className="flex flex-wrap gap-1.5 mt-2 select-none">
+                  {msg.clarifyOptions.map((opt, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => onSend(opt)}
+                      className="px-2.5 py-1 md:px-3 md:py-1.5 rounded-full bg-[#142337]/90 hover:bg-[#1f3552] border border-[#3b4e64] hover:border-amber-500/75 text-[#f59e0b] hover:text-white text-[10px] md:text-xs font-serif font-bold tracking-wide transition-all duration-200 cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              )}
               {msg.role === 'ai' && msg.content && (
                 <div className="flex justify-end items-center gap-3 mt-1.5 pt-1.5 border-t border-[#4a5f78]/20 text-slate-400 select-none">
                   <button

@@ -139,3 +139,10 @@ def save_cache(question: str, answer: str) -> None:
     except Exception as e:
         print(f"⚠️ Failed to write to ChromaDB: {e}")
 
+def get_event_embeddings_collection():
+    """Retrieve or create the event embeddings collection in ChromaDB."""
+    return client.get_or_create_collection(
+        name="event_embeddings",
+        metadata={"hnsw:space": "cosine"}
+    )
+

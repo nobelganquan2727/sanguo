@@ -124,7 +124,7 @@ export default function Home() {
 
   // Agent chat
   const [showAgentPanel, setShowAgentPanel] = useState(true);
-  const [chatHistory, setChatHistory] = useState<{ role: string; content: string; thinkingLogs?: string[] }[]>([
+  const [chatHistory, setChatHistory] = useState<{ role: string; content: string; thinkingLogs?: string[]; clarifyOptions?: string[] }[]>([
     { role: 'ai', content: '主公，臣已就绪。可通过图谱调取各方势力的绝密卷宗。点击地图上的地名即可查阅该地史料。', thinkingLogs: [] },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -416,6 +416,16 @@ export default function Home() {
               aiMsg.thinkingLogs = [...(aiMsg.thinkingLogs || []), chunk.content];
             } else if (chunk.type === 'text') {
               aiMsg.content = (aiMsg.content || '') + chunk.content;
+            } else if (chunk.type === 'clarify') {
+              try {
+                const parsed = JSON.parse(chunk.content);
+                aiMsg.clarifyOptions = parsed.options || [];
+                if (!aiMsg.content) {
+                  aiMsg.content = parsed.message;
+                }
+              } catch (e) {
+                console.error("Failed to parse clarify event", e);
+              }
             }
             updated[aiMessageIndex] = aiMsg;
             return updated;

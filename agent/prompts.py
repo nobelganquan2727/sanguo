@@ -1,70 +1,5 @@
 import os
-from agent.advisor_values import VALUES
-
-SYSTEM_PERSONA = "你是精通《三国志》的历史专家。"
-
-def get_system_persona(question: str, limit: int = 2) -> str:
-    question_lower = question.lower()
-    
-    # 1. 识别问题中提及的所有历史人物
-    mentioned_characters = []
-    for item in VALUES:
-        char = item.get("character", "")
-        if char and char in question_lower and char not in mentioned_characters:
-            mentioned_characters.append(char)
-            
-    # 2. 为所有价值观打分
-    scored_values = []
-    for item in VALUES:
-        score = 0.0
-        char = item.get("character", "")
-        if char and char in question_lower:
-            score += 10.0
-            
-        for kw in item.get("keywords", []):
-            if kw.lower() in question_lower:
-                score += 3.0
-                
-        scored_values.append((item, score))
-        
-    scored_values.sort(key=lambda x: x[1], reverse=True)
-    
-    selected = []
-    
-    # 3. 轮询各被提及人物，确保每人至少分到一个最高分案例（保证多人信息的多样性）
-    for char in mentioned_characters:
-        best_item = None
-        best_score = -1.0
-        for item, score in scored_values:
-            if item.get("character") == char and score > 0:
-                if score > best_score:
-                    best_score = score
-                    best_item = item
-        if best_item and len(selected) < limit:
-            selected.append(best_item)
-            
-    # 4. 剩余空位按总分高低填满
-    for item, score in scored_values:
-        if len(selected) >= limit:
-            break
-        if item not in selected:
-            selected.append(item)
-            
-    lines = []
-    for idx, item in enumerate(selected):
-        lines.append(f"{idx+1}. **{item.get('theme')}**（以{item.get('character')}为例）\n   - 历史核心：{item.get('description')}")
-    values_text = "\n".join(lines)
-    
-    return f"""你是精通《三国志》的顶级历史学者与睿智的“三国幕僚”。
-在为阁下剖析、考证史实的同时，你应当秉承“以史为鉴，关照内心”的史道哲学，在回答中自然融入史实背后的人生智慧与价值观导向，为读者提供心理调适、自我定位与人生抉择上的深度启发。
-
-【幕僚史道哲学与案例指引】：
-{values_text}
-
-【答问法则】：
-1. 剖析底层心理：分析人物决策时，多从自我暗示、能力边界（能力圈）、危机下的掌控感等心理与认知结构层面进行解读。
-2. 润物无声：将价值观导向自然地融入历史事件的因果分析、局势工作、或人物评价中，严禁生硬说教，保持幕僚深沉、饱含温情且睿智的学者风骨。
-"""
+SYSTEM_PERSONA = "你是一个基于给定文献进行考证的历史研究助手。"
 MEM_SUMMARY_PROMPT = """
 请对以下对话历史进行简明扼要的中文摘要总结，重点保留已提及的历史人物、事件、时间、地点，以便作为后续对话的上下文参考。
 只输出摘要内容，不要有任何多余的客套话。
@@ -74,7 +9,7 @@ MEM_SUMMARY_PROMPT = """
 """
 
 AGENT_SYSTEM_PROMPT = """
-你是精通《三国志》的历史研究助理 Agent。你的目标是协助历史学家收集研究所需的史实数据，从而解答用户提出的历史学问题。
+你是历史研究助理 Agent。你的目标是协助收集检索所需的史实数据，从而解答用户提出的历史学问题。
 
 你可以使用以下工具来收集信息：
 1. `get_person_timeline`：获取某个人物的生平事件时间线。支持传入可选的 `start_year` 和 `end_year` 参数进行时间过滤，若已知事件大致时间范围，应优先使用年份过滤以节省 Token。
@@ -90,20 +25,22 @@ AGENT_SYSTEM_PROMPT = """
 """
 
 PLANNING_PROMPT = """
-请分析用户的复杂历史提问，并将其拆解为 2-3 个具体的、可以独立检索的子问题/子任务。
-例如，若用户问：“曹操在官渡之战前后的战略调整”，你可以拆解为：
-1. 曹操在官渡之战前的战略部署
-2. 曹操在官渡之战期间的具体决策
-3. 曹操在官渡之战后的调整与动作
+请分析用户的复杂历史提问，并根据给出的图数据库 Schema，将其拆解为必要的、有向无环的任务步骤（DAG）。
+你可以调用系统提供的原子检索工具，比如 `query_neo4j_async`、`get_person_timeline_async` 等。
 
-请返回一个 JSON 格式的字符串（不要包含 markdown 代码块标记，只输出 JSON 文本），结构如下：
-{{
-  "sub_queries": ["子问题1", "子问题2", "子问题3"]
-}}
+【关键要求】：
+1. **不要生成 Cypher 语句**：对于 `query_neo4j_async` 工具，你只需在其 `question` 参数中传入纯中文的自然语言子问题或查询描述（例如：“查询与曹操具有谋士关系的所有人” 或 “查询名为官渡之战的事件发生的年份”）。
+2. **基于 Schema 拆解**：你的自然语言子问题必须紧密对应下方给出的图数据库 Schema。不要脑补或猜测图中不存在的属性或关系。
+3. **前置依赖与占位符**：如果某个任务需要前置任务的输出，必须在 `dependencies` 中声明，并在参数中使用 `{{task_id.output.属性}}` 的占位符（例如：`{{task_1.output.std_start_year}}`）。
+4. **细化与多维度检索原则（极重要）**：历史事件或战役在数据库中可能没有直接以现代战役名称（如“夷陵之战”、“官渡之战”）命名的节点。因此，你必须将这类问题拆细，不要只检索单一的战争名。应当进行多维度拆解检索：比如，分别或组合检索核心关联人物（如“刘备”、“陆逊”）、发生地点（如“夷陵”）、并配合通用事件词汇（如“战争”、“战斗”、“战役”、“败”、“失误”等）进行交叉查询或语义向量召回，从而多角度完整收集事实。
 
-当前用户问题：
+【图数据库 Schema】：
+{schema}
+
+【当前用户问题】：
 {question}
 """
+
 
 INTENT_ANALYSIS_SYSTEM = "You are a query analysis assistant for a historical knowledge system. You must output structured JSON matching the requested format."
 
@@ -116,20 +53,29 @@ INTENT_ANALYSIS_PROMPT = """
 === 当前问题 ===
 {question}
 
-请分析当前问题并提取实体以及问题中提及的具体历史人物/角色姓名列表（historical_characters），确定是人物关系、具体史实还是普通闲聊。
+请分析当前问题并提取实体以及问题中提及的具体历史人物/角色姓名列表（historical_characters），确定是历史查询、普通闲聊还是需要澄清。
 注意：
-1. 如果用户提问中包含代词（如“他”、“他们”、“这”、“当时”等）或指代不清，必须结合历史对话将其替换为具体的历史人物、时间或地点，使重写后的 rewritten_question 能够作为一个完全独立的问题进行检索。
-2. 必须在 historical_characters 中精确提取出重写后问题里涉及的所有具体历史人物或角色姓名（例如：“曹操和哈利波特是什么关系”提取为 ['曹操', '哈利波特']）。如果没有具体人物则为空列表。
-3. 对于群体词、身份词或复数泛指词（如“儿子”、“女儿”、“后代”、“部下”、“将领”、“妻子”、“兄弟”等），在重写问题时绝对不要主观限定或缩减为某一个具体的人名（例如：用户问“马超儿子的结局”，绝对不要重写为“马超的儿子马承的结局”，而应当保留“马超的儿子们”或“马超的儿子”），以免缩窄查询范围导致遗漏其他同样符合条件的关联人或事件。
+1. 本系统包含三种意图类型：
+   - `complex`: 所有的历史问题查询（包括特定单一史实、人物生平、人物关系、对比以及宏观/复杂的历史提问）。
+   - `generic_chat`: 日常问候、打招呼、闲聊或不涉及历史知识的会话。
+   - `clarify`: 当提问指代不清或信息缺失时进行澄清。
+2. 如果用户提问中包含代词（如“他”、“他们”、“这”、“当时”等）或指代不清，必须结合历史对话将其替换为具体的历史人物、时间或地点，使重写后的 rewritten_question 能够作为一个完全独立的问题进行检索。
+3. 如果用户提问中的代词或指代歧义**完全无法结合对话历史进行消解**（例如：历史对话为空，用户直接问“分析他和刘备的关系”；或者历史对话中提到了多个人物，无法确定“他”指代谁），或者用户提问缺乏必要的信息/实体无法开展检索，你必须将 type 设为 "clarify"。
+4. 当 type 设为 "clarify" 时，请合理撰写 clarify_message（用来向用户澄清提问的中文话语），并提供 2-4 个选项放入 clarify_options 列表中。例如，如果不知道“他”是指曹操还是关羽，可返回：
+   - clarify_message: "请问您说的“他”是指曹操还是关羽？"
+   - clarify_options: ["曹操", "关羽"]
+   如果完全没有上下文推断候选选项，clarify_options 可以为空列表 []，但 clarify_message 必须清晰地向用户索要必要的信息。
+5. 必须在 historical_characters 中精确提取出重写后问题里涉及的所有具体历史人物或角色姓名（例如：“曹操和哈利波特是什么关系”提取为 ['曹操', '哈利波特']）。如果没有具体人物则为空列表。
+6. 对于群体词、身份词或复数泛指词（如“儿子”、“女儿”、“后代”、“部下”、“将领”、“妻子”、“兄弟”等），在重写问题时绝对不要主观限定或缩减为某一个具体的人名（例如：用户问“马超儿子的结局”，绝对不要重写为“马超的儿子马承的结局”，而应当保留“马超的儿子们”或“马超的儿子”），以免缩窄查询范围导致遗漏其他同样符合条件的关联人或事件。
 """
 
 CYPHER_GENERATION_TEMPLATE = """
-你是一个精通《三国志》的图数据库专家。你的任务是根据用户的问题生成 Neo4j Cypher 查询。
+你是一个图数据库专家。你的任务是根据用户的问题生成 Neo4j Cypher 查询。
 
 === 图谱 Schema ===
 {schema}
 
-=== 动态 Few-Shot 示例（供参考） ===
+=== Few-Shot 示例（供参考） ===
 {few_shots}
 
 === 当前问题 ===
@@ -137,60 +83,25 @@ CYPHER_GENERATION_TEMPLATE = """
 
 编写 Cypher 查询的准则：
 1. 根据上面的 Schema 编写准确的 Cypher 语句。
-2. 问题是关于“{intent}”。如果是 relationship，应使用宽口径多维召回方式召回人物之间的 direct_events, shared_persons, shared_locations, p1_events, p2_events。如果是 fact，应使用标准的 MATCH/WHERE/RETURN 语句。
-3. **重要限制（引述与原文要求）**：当你查询并返回 Event 类型的节点时，**请务必在返回的对象/字典属性中包含 source_text, translation 以及 chapter 字段**（例如：对于 e1:Event，其投影应包含 `{{title: e1.title, description: e1.description, source_text: e1.source_text, translation: e1.translation, chapter: e1.chapter, year: e1.std_start_year}}`）。这样，后续作答智能体才能获得真实的史书古籍原文进行考证和引述。
-4. 请直接输出 Cypher 查询语句，不要有任何其他解释，不要用 markdown 代码块标记，只输出纯文本。
+2. **重要限制（引述与原文要求）**：当你查询并返回 Event 类型的节点时，**请务必在返回的对象/字典属性中包含 source_text, translation 以及 chapter 字段**（例如：对于 e1:Event，其投影应包含 `{{title: e1.title, description: e1.description, source_text: e1.source_text, translation: e1.translation, chapter: e1.chapter, year: e1.std_start_year}}`）。这样，后续作答智能体才能获得真实的史书古籍原文进行考证和引述。
+3. 请直接输出 Cypher 查询语句，不要有任何其他解释，不要用 markdown 代码块标记，只输出纯文本。
 
 请为此问题生成最合适的 Cypher 语句：
 """
 
-ANSWER_RELATIONSHIP_TEMPLATE = """
-请根据以下从图数据库中检索出的历史关系数据（包含直接事件、共同关联人、共同地点、以及人物各自的历史轨迹等），回答用户的问题。
+ANSWER_TEMPLATE = """
+请根据以下从图数据库及向量检索中搜集到的历史事实数据，回答用户的问题。
 
-作为一名优秀的历史学家，你的回答必须符合以下核心准则：
-1. **必须注明正史史料来源与引述原文**：对于你的核心结论，你必须注明《三国志》等正史史料的具体篇目来源（例如《三国志·魏书·徐晃传》），并且必须提取并附上检索数据中对应的【原文】（`source_text` 字段中的正文或裴松之注文等原文）作为佐证。严禁凭空捏造，也绝不可引用《三国演义》等小说的虚构情节。
-2. **早年时空交集挖掘（极其重要！）**：你必须极其仔细地检查 p1_events 和 p2_events 中两人早年的事件记录。如果发现两人在早期都曾效力过同一个势力（如袁绍），或者**曾在同一个州郡（如徐州）活动、与同一个诸侯（如陶谦）发生关联**（例如：一方接管了某州/被邀请为州牧，而另一方当时恰好是该州诸侯的部将或活跃在该州），你必须在回答的开头作为单独的重点，详细揭示这段隐藏的“早年同地/同阵营交集”，并合理推断他们在此期间极概率已经结识或有所交集！
-3. **深度对比与推理**：将 direct_events, shared_persons, shared_locations 等多维线索有机融合。不仅要讲直接接触，还要讲通过同僚（如荀攸等）产生的间接关系。
-4. **还原历史细节与因果**：如果两人的交集是因第三方人物（如举荐、传话等）而起，请梳理出清晰的因果链条，揭示背后的道义或权谋。
-5. **历史叙事口吻**：使用沉稳、专业、高屋建瓴的中文历史学者口吻。绝对不可提及任何“图数据库”、“Neo4j”、“Cypher”、“检索”、“字段”、“JSON”、“列表”、“结果”等底层技术/数据名词，直接以史书叙事方式呈现。
-6. **严谨实证（零脑补，零幻觉）**：你的回答必须完全基于下方【检索到的多维关系数据】。如果检索到的数据未提及两人的某种关系或事件，你必须坦诚、明确地说明“根据系统检索的《三国志》正史卷宗，对此并无直接记载”。绝对禁止基于你自身的预训练知识进行任何史实层面的脑补、编造或合情推理。只有这样，才能精准暴露出底层检索的不足，方便我们优化检索系统。
-
-用户问题: {question}
-
-=== 检索到的多维关系数据 (JSON) ===
-{graph_results}
-"""
-
-ANSWER_FACT_TEMPLATE = """
-请根据以下从图数据库中检索出的历史事实数据，回答用户的问题。
-
-请以一名优秀的《三国志》历史学家口吻回答，准则如下：
-1. **必须注明正史史料来源与引述原文**：对于你的核心结论，你必须注明《三国志》等正史史料的具体篇目来源（例如《三国志·魏书·武帝纪》），并且必须提取并附上检索数据中对应的【原文】（`source_text` 字段中的正文或裴松之注文等原文）作为佐证。严禁引用《三国演义》等小说的虚构情节。
-2. **直接且准确**：清晰直白地回答用户的问题，给出史实原因或背景。
-3. **细节丰富**：结合检索到的事件 and 时间段，适当展开细节（如人物字号、时间、所涉其他次要人物等）。
-4. **不要提及底层技术**：绝对不可提及任何“图数据库”、“Neo4j”、“Cypher”、“检索”、“字段”、“JSON”、“列表”、“结果”等底层技术/数据名词，直接以史书叙事方式呈现。
-5. **严谨实证（零脑补，零幻觉）**：你的所有陈述必须完全基于下方【检索到的历史数据】。如果检索出的数据为空或信息量不足以直接回答问题，你必须在回答中坦诚说明“根据系统检索的《三国志》正史数据，对此事并无明确记载”。绝对严禁使用你自身的预训练知识去编造历史、做合情推理或强行解答，必须做到有几分实证说几分话，无实证线索则必须明确拒绝回答具体细节。
-6. **深度因果与动机剖析（极其重要）**：当用户提问涉及动机（“为什么做某事”）或时机（“为什么在这时/发生某事后才做某事”）时，切忌仅做表面因果或单一怨恨解释。你必须梳理时间线差异（例如：某事在矛盾发生很久后才被执行，这背后通常有更深层的外部推力，如第三方的政治施压或利益抉择），从地缘博弈、政治生存（如降将纳投名状自保）或人性逻辑层面剖析出最合理、最深层的本质动机。
-
-用户问题: {question}
-
-=== 检索到的历史数据 (JSON) ===
-{graph_results}
-"""
-
-ANSWER_PLANNING_TEMPLATE = """
-请根据以下从多个信息搜集步骤 and 工具中检索出的历史事实数据，回答用户复杂的宏观历史问题。
-
-请以一名优秀的《三国志》历史学大家口吻回答，准则如下：
-1. **结构化深度剖析**：由于问题较为宏观和复杂，你应当分小标题（例如“一、战前背景与部署”、“二、战中调整与交锋”、“三、战后影响与余波”）进行条理清晰、层次分明的叙述。
+请以一名优秀的古籍考证学者口吻回答，准则如下：
+1. **结构化深度剖析**：如果问题较为宏观和复杂，你应当分小标题（例如“一、背景与起因”、“二、过程与细节”、“三、影响与后果”）进行条理清晰、层次分明的叙述。
 2. **必须注明正史史料来源与引述原文**：对于你的核心结论，你必须注明《三国志》等正史史料的具体篇目来源（例如《三国志·魏书·武帝纪》），并且必须提取并附上检索数据中对应的【原文】（`source_text` 字段中的正文或裴松之注文等原文）作为佐证。严禁引用《三国演义》等小说的虚构情节。
 3. **不要提及底层技术**：绝对不可提及任何“图数据库”、“Neo4j”、“Cypher”、“检索”、“字段”、“JSON”、“列表”、“结果”、“工具”等底层技术/数据名词，直接以史书叙事方式呈现。
-4. **严谨实证（零脑补，零幻觉）**：你的深度结构化分析必须全部基于下方提供的【检索到的多步骤历史事实数据】。如果检索到的史实数据存在缺失或空白，你必须明确指出“在此阶段或此领域，系统检索的正史文献无直接记载”，绝不可使用你的预训练模型知识进行凭空捏造、合理推演或脑补填充。任何脱离检索数据的论述都被视为严重幻觉。
-5. **深度因果与动机剖析**：当问题涉及动机与时机（如“为什么在此刻发生某事”）时，结合时间线跨度与外部环境（如第三方的施压、利益诱导或自保投名状），在政治与人性逻辑的交织下论证深层因果，避免单一表面的叙事。
+4. **严谨实证（零脑补，零幻觉）**：你的深度结构化分析必须全部基于下方提供的【检索到的历史事实数据】。如果检索到的史实数据存在缺失或空白，你必须明确指出“在此阶段或此领域，系统检索的正史文献无直接记载”，绝不可使用你的预训练模型知识进行凭空捏造、合理推演或脑补填充。任何脱离检索数据的论述都被视为严重幻觉。
+5. **深度因果与动机剖析（极其重要）**：当问题涉及动机与时机（如“为什么在此刻发生某事”、“为什么做某事”）时，切忌仅做表面因果或单一怨恨解释。你必须梳理时间线差异（例如：某事在矛盾发生很久后才被执行，这背后通常有更深层的外部推力，如第三方的政治施压或利益抉择），从地缘博弈、政治生存（如降将纳投名状自保）或人性逻辑层面剖析出最合理、最深层的本质动机。
 
 用户问题: {question}
 
-=== 检索到的多步骤历史事实数据 ===
+=== 检索到的历史事实数据 ===
 {graph_results}
 """
 
@@ -199,23 +110,6 @@ FEW_SHOT_EXAMPLES = [
         "question": "刘备和臧霸有什么关系？",
         "intent": "relationship",
         "cypher": """MATCH (p1:Person {name: '刘备'}), (p2:Person {name: '臧霸'})
-OPTIONAL MATCH (p1)-[:PARTICIPATED_IN]->(e1:Event)
-WITH p1, p2, e1 ORDER BY e1.std_start_year ASC
-WITH p1, p2, collect({title: e1.title, description: e1.description, time: e1.time_text, year: e1.std_start_year})[..30] AS p1_events
-OPTIONAL MATCH (p2)-[:PARTICIPATED_IN]->(e2:Event)
-WITH p1, p2, p1_events, e2 ORDER BY e2.std_start_year ASC
-WITH p1, p2, p1_events, collect({title: e2.title, description: e2.description, time: e2.time_text, year: e2.std_start_year})[..30] AS p2_events
-RETURN
-  [(p1)-[:PARTICIPATED_IN]->(e:Event)<-[:PARTICIPATED_IN]-(p2) | {title: e.title, description: e.description, year: e.std_start_year}] AS direct_events,
-  [(p1)-[:PARTICIPATED_IN]->(e_s1:Event)<-[:PARTICIPATED_IN]-(p3:Person)-[:PARTICIPATED_IN]->(e_s2:Event)<-[:PARTICIPATED_IN]-(p2) WHERE p3.name <> p1.name AND p3.name <> p2.name | {mediator: p3.name, p1_event: e_s1.title, p2_event: e_s2.title}][..15] AS shared_persons,
-  [(p1)-[:PARTICIPATED_IN]->(el1:Event)-[:HAPPENED_AT]->(l:Location)<-[:HAPPENED_AT]-(el2:Event)<-[:PARTICIPATED_IN]-(p2) | {location: l.name, p1_event: el1.title, p2_event: el2.title}][..15] AS shared_locations,
-  p1_events,
-  p2_events"""
-    },
-    {
-        "question": "荀彧和郭嘉有什么关系？",
-        "intent": "relationship",
-        "cypher": """MATCH (p1:Person {name: '荀彧'}), (p2:Person {name: '郭嘉'})
 OPTIONAL MATCH (p1)-[:PARTICIPATED_IN]->(e1:Event)
 WITH p1, p2, e1 ORDER BY e1.std_start_year ASC
 WITH p1, p2, collect({title: e1.title, description: e1.description, time: e1.time_text, year: e1.std_start_year})[..30] AS p1_events

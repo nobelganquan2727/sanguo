@@ -207,7 +207,7 @@ export function useMapData() {
   const sendMessage = async (
     query: string,
     chatHistory: { role: string; content: string }[],
-    onChunk: (chunk: { type: 'status' | 'text' | 'done' | 'events'; content: string }) => void,
+    onChunk: (chunk: { type: 'status' | 'text' | 'done' | 'events' | 'clarify'; content: string }) => void,
     signal?: AbortSignal
   ) => {
     const currentUserId = getOrCreateUserId();

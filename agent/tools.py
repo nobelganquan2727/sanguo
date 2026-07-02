@@ -2,7 +2,7 @@ import os
 import json
 import asyncio
 import requests
-from typing import Callable, Awaitable, Optional, Any
+from typing import Callable, Awaitable, Optional, Any, List, Union
 from contextvars import ContextVar
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
@@ -25,9 +25,32 @@ async def emit_status(content: str):
 
 # --- Helper Functions ---
 
+from langchain_core.callbacks import BaseCallbackHandler
+from langchain_core.outputs import LLMResult
+
+class ToolCallsFixerCallback(BaseCallbackHandler):
+    def on_llm_end(self, response: LLMResult, **kwargs) -> None:
+        flat_generations = [g for gens in response.generations for g in gens]
+        for g in flat_generations:
+            message = getattr(g, "message", None)
+            tool_calls = getattr(message, "tool_calls", None)
+            if not tool_calls or "tool_calls" in getattr(message, "additional_kwargs", {}):
+                continue
+            message.additional_kwargs["tool_calls"] = [
+                {
+                    "id": tc.get("id"),
+                    "type": "function",
+                    "function": {
+                        "name": tc.get("name"),
+                        "arguments": json.dumps(tc.get("args"), ensure_ascii=False)
+                    }
+                }
+                for tc in tool_calls
+            ]
+
 def get_llm(model_type: str = "complex"):
     handler = active_callback_var.get()
-    callbacks = [handler] if handler else []
+    callbacks = [ToolCallsFixerCallback(), handler] if handler else []
     
     if model_type == "cheap":
         return ChatOpenAI(
@@ -38,6 +61,13 @@ def get_llm(model_type: str = "complex"):
             callbacks=callbacks,
             extra_body={"thinking": {"type": "disabled"}}
         ).with_config(run_name="DeepSeek-Cheap")
+    elif model_type == "reasoner":
+        return ChatOpenAI(
+            model="deepseek-reasoner",
+            api_key=os.environ.get("DEEPSEEK_API_KEY"),
+            base_url="https://api.deepseek.com/v1",
+            callbacks=callbacks,
+        ).with_config(run_name="DeepSeek-Reasoner")
     else:
         return ChatOpenAI(
             model="deepseek-chat", 
@@ -74,7 +104,10 @@ def truncate_tool_output(output: Any, max_chars: int = 12000, extra_warning: Opt
     parsed = output
     if isinstance(output, str):
         try:
-            parsed = json.loads(output)
+            clean_output = output
+            if "\n\n【卷宗纪要说明】" in clean_output:
+                clean_output = clean_output.split("\n\n【卷宗纪要说明】")[0]
+            parsed = json.loads(clean_output)
         except Exception:
             if len(output) > limit:
                 return output[:limit] + f"\n\n【卷宗纪要说明】此处史料文字过长已作删减，仅展示前文{limit}字。" + suffix
@@ -115,36 +148,76 @@ async def run_query_async(cypher: str, params: dict = None) -> list[dict]:
 # ----------------- Tools Definition (Async) -----------------
 
 @tool
-async def query_neo4j_async(cypher: str) -> str:
-    """执行 Neo4j Cypher 语句查询图数据库。当你需要复杂的图关系、多度查询或高度定制化的匹配时使用。"""
+async def query_neo4j_async(question: Optional[str] = None, cypher: Optional[str] = None) -> str:
+    """执行 Neo4j Cypher 语句查询图数据库。你可以传入自然语言子问题描述（在 question 参数中，推荐）或者直接传入 Cypher 语句（在 cypher 参数中）。"""
+    import re
     llm_complex = get_llm("complex")
+    
+    # 1. 确定输入的查询意图
+    query_input = ""
+    is_direct_cypher = False
+    
+    if cypher:
+        query_input = cypher
+        is_direct_cypher = True
+    elif question:
+        query_input = question
+        
+    if not query_input:
+        return "Error: No query question or Cypher provided."
+        
+    current_cypher = ""
+    if is_direct_cypher:
+        current_cypher = query_input
+        
     max_retries = 2
     retry_count = 0
     last_error = None
-    current_cypher = cypher
     
+    # 维护消息历史
     execution_messages = [
         SystemMessage(content=SYSTEM_PERSONA),
         SystemMessage(content=GRAPH_SCHEMA),
-        HumanMessage(content=f"请生成或执行以下查询所需的最合理的 Cypher：\n{cypher}")
     ]
     
+    if not is_direct_cypher:
+        from agent.prompts import CYPHER_GENERATION_TEMPLATE, FEW_SHOT_EXAMPLES
+        
+        # 拼接 Few-shot 示例（静态 3 个典型示例，涵盖关系与单点事实查询）
+        few_shots_str = ""
+        for item in FEW_SHOT_EXAMPLES[:3]:
+            few_shots_str += f"问题: {item['question']}\nCypher:\n{item['cypher']}\n\n"
+            
+        translation_prompt = CYPHER_GENERATION_TEMPLATE.format(
+            schema=GRAPH_SCHEMA,
+            few_shots=few_shots_str,
+            question=query_input
+        )
+        execution_messages.append(HumanMessage(content=translation_prompt))
+    else:
+        execution_messages.append(HumanMessage(content=f"请执行以下 Cypher 查询，并确保它是安全且符合 Schema 的：\n{current_cypher}"))
+        
     while retry_count <= max_retries:
-        if retry_count > 0:
-            await emit_status(f"🔄 [query_neo4j] 正在尝试第 {retry_count} 次自修正 Cypher...")
-            correction_prompt = f"""
-上一次执行生成的 Cypher 语句时数据库报错了。
-【错误信息】：
+        if retry_count > 0 or not current_cypher:
+            if retry_count > 0:
+                await emit_status(f"🔄 [query_neo4j] 正在尝试第 {retry_count} 次自修正 Cypher...")
+                correction_prompt = f"""
+上一次生成的 Cypher 语句在执行或校验时失败了。
+【失败原因】：
 {last_error}
 【当时生成的 Cypher】：
 {current_cypher}
-请仔细对照 Schema 修正语法或逻辑错误。请直接输出修正后的 Cypher 查询语句，不要有任何其他解释，不要用 markdown 代码块标记，直接输出纯文本。
+请仔细对照 Schema 修正语法、逻辑错误或安全问题。请直接输出修正后的 Cypher 查询语句，不要有任何其他解释，不要用 markdown 代码块标记，直接输出纯文本。
 """
-            execution_messages.append(AIMessage(content=current_cypher))
-            execution_messages.append(HumanMessage(content=correction_prompt))
+                execution_messages.append(AIMessage(content=current_cypher))
+                execution_messages.append(HumanMessage(content=correction_prompt))
+            else:
+                await emit_status("🔍 [query_neo4j] 正在将自然语言子问题翻译为 Cypher...")
+                
             res = await llm_complex.ainvoke(execution_messages)
             current_cypher = res.content.strip()
             
+            # 清理 markdown 代码块
             if current_cypher.startswith("```cypher"):
                 current_cypher = current_cypher[9:]
             elif current_cypher.startswith("```"):
@@ -153,7 +226,32 @@ async def query_neo4j_async(cypher: str) -> str:
                 current_cypher = current_cypher[:-3]
             current_cypher = current_cypher.strip()
 
-        await emit_status(f"🔍 [query_neo4j] [第 {retry_count + 1} 次尝试] 执行 Cypher 检索...")
+        # 3. 动态安全审计与校验
+        cypher_upper = current_cypher.upper()
+        safety_error = None
+        
+        # A. 校验写操作
+        if any(kw in cypher_upper for kw in ["CREATE ", "MERGE ", "SET ", "DELETE ", "REMOVE ", "DETACH "]):
+            safety_error = "Cypher 语句包含写操作，必须是只读查询。"
+            
+        # B. 校验允许的节点标签
+        if not safety_error:
+            allowed_labels = ["PERSON", "EVENT", "LOCATION", "GROUP", "MAJOREVENT"]
+            labels_found = re.findall(r"\(\s*(?:[a-zA-Z0-9_]+)?\s*:([a-zA-Z0-9_]+)", current_cypher)
+            for lbl in labels_found:
+                if lbl.upper() not in allowed_labels:
+                    safety_error = f"Cypher 语句包含未授权的节点标签: :{lbl}。仅允许: {allowed_labels}"
+                    break
+                    
+        if safety_error:
+            last_error = f"安全/架构校验失败: {safety_error}"
+            await emit_status(f"⚠️ [query_neo4j] 安全/架构校验未通过: {safety_error}")
+            retry_count += 1
+            current_cypher = ""  # 置空促使重新翻译/修正
+            continue
+
+        # 4. 执行 Cypher
+        await emit_status(f"🔍 [query_neo4j] [第 {retry_count + 1} 次尝试] 执行 Cypher 检索: {current_cypher}")
         try:
             results = await run_query_async(current_cypher)
             return truncate_tool_output(json.dumps(results, ensure_ascii=False))
@@ -164,9 +262,8 @@ async def query_neo4j_async(cypher: str) -> str:
             
     return f"Database query failed permanently: {last_error}"
 
-@tool
-async def get_person_timeline_async(name: str, start_year: Optional[int] = None, end_year: Optional[int] = None, query: Optional[str] = None) -> str:
-    """获取特定三国历史人物的生平事件时间线。参数 name 是历史人物的中文名。若需要针对特定主题（如 '初期实力'、'官渡之战'）进行过滤，可传入 query 参数进行语义向量筛选，避免返回过多无关的纪年事件。"""
+
+async def _get_single_person_timeline(name: str, start_year: Optional[int] = None, end_year: Optional[int] = None, query: Optional[str] = None) -> str:
     conditions = ["p.name = $name"]
     params = {"name": name}
     if start_year is not None:
@@ -182,24 +279,47 @@ async def get_person_timeline_async(name: str, start_year: Optional[int] = None,
         # 如果提供了 query，执行语义向量过滤，找出该人物生平中与 query 最相关的 top 12 个事件
         try:
             embedding = await get_bge_m3_embedding_async(query)
-            params["embedding"] = embedding
+            
+            from agent.cache import get_event_embeddings_collection
+            loop = asyncio.get_running_loop()
+            def _query_chroma():
+                collection = get_event_embeddings_collection()
+                # 召回 100 条可能相关的事件以确保能在图数据库中匹配到该人
+                return collection.query(
+                    query_embeddings=[embedding],
+                    n_results=100
+                )
+            chroma_res = await loop.run_in_executor(None, _query_chroma)
+            
+            if not chroma_res or not chroma_res.get("ids") or len(chroma_res["ids"][0]) == 0:
+                return f"未找到关于人物 '{name}' 且与主题 '{query}' 相关的生平事件记录。"
+                
+            retrieved_ids = chroma_res["ids"][0]
+            distances = chroma_res["distances"][0] if "distances" in chroma_res else [0.0] * len(retrieved_ids)
+            scores_map = {eid: 1.0 - dist for eid, dist in zip(retrieved_ids, distances)}
+            
+            params["ids"] = retrieved_ids
+            
             cypher = f"""
-            CALL db.index.vector.queryNodes('eventEmbeddings', 100, $embedding)
-            YIELD node, score
             MATCH (p:Person)-[:PARTICIPATED_IN]->(node:Event)
-            WHERE {where_clause.replace("e.", "node.")}
+            WHERE {where_clause.replace("e.", "node.")} AND node.id IN $ids
             OPTIONAL MATCH (node)-[:HAPPENED_AT]->(l:Location)
             OPTIONAL MATCH (node)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
-            WITH node, score, collect(DISTINCT l.name) AS locations, me.title AS major_event
-            ORDER BY score DESC
+            WITH node, collect(DISTINCT l.name) AS locations, me.title AS major_event
             RETURN node.title AS title, COALESCE(node.translation, node.description) AS description, node.time_text AS time, 
-                   node.std_start_year AS year, node.source_text AS source, locations, major_event, score
-            LIMIT 12
+                   node.std_start_year AS year, node.source_text AS source, locations, major_event, node.id AS id
             """
-            await emit_status(f"🔍 [get_person_timeline] 正在执行语义过滤编年史，筛选与主题 '{query}' 相关的事件...")
+            await emit_status(f"🔍 [get_person_timeline] [Chroma分离版] 正在执行语义过滤编年史，筛选与主题 '{query}' 相关的事件...")
             results = await run_query_async(cypher, params)
             if not results:
                 return f"未找到关于人物 '{name}' 且与主题 '{query}' 相关的生平事件记录。"
+                
+            # 还原相关性评分并降序排列，取 Top 12
+            for r in results:
+                r["score"] = scores_map.get(r["id"], 0.0)
+            results.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+            results = results[:12]
+            
             return truncate_tool_output(json.dumps(results, ensure_ascii=False))
         except Exception as e:
             await emit_status(f"⚠️ [get_person_timeline] 语义过滤失败，退回执行标准编年史检索。原因: {e}")
@@ -252,6 +372,19 @@ async def get_person_timeline_async(name: str, start_year: Optional[int] = None,
         return truncate_tool_output(results, extra_warning=extra_warning)
     except Exception as e:
         return f"查询出错: {str(e)}"
+
+
+@tool
+async def get_person_timeline_async(name: Union[str, List[str]], start_year: Optional[int] = None, end_year: Optional[int] = None, query: Optional[str] = None) -> str:
+    """获取一个或多个三国历史人物的生平事件时间线。参数 name 可以是单个名字的字符串，或者是包含多个中文名字的列表。若需要针对特定主题（如 '初期实力'、'官渡之战'）进行过滤，可传入 query 参数进行语义向量筛选，避免返回过多无关 of 纪年事件。"""
+    if isinstance(name, list):
+        tasks = []
+        for n in name:
+            tasks.append(_get_single_person_timeline(n, start_year, end_year, query))
+        results = await asyncio.gather(*tasks)
+        return "\n---\n".join(results)
+    else:
+        return await _get_single_person_timeline(name, start_year, end_year, query)
 
 @tool
 async def search_historical_text_async(keyword: str) -> str:
@@ -324,22 +457,49 @@ async def search_vector_graph_async(query: str, k: Optional[int] = 5) -> str:
         await emit_status(f"⚠️ [search_vector_graph] 获取查询向量失败: {e}")
         return f"获取查询向量失败: {str(e)}"
         
+    try:
+        from agent.cache import get_event_embeddings_collection
+        
+        loop = asyncio.get_running_loop()
+        def _query_chroma():
+            collection = get_event_embeddings_collection()
+            return collection.query(
+                query_embeddings=[embedding],
+                n_results=k or 5
+            )
+        chroma_res = await loop.run_in_executor(None, _query_chroma)
+        
+        if not chroma_res or not chroma_res.get("ids") or len(chroma_res["ids"][0]) == 0:
+            return f"未找到与查询 '{query}' 相关的历史事件。"
+            
+        retrieved_ids = chroma_res["ids"][0]
+        distances = chroma_res["distances"][0] if "distances" in chroma_res else [0.0] * len(retrieved_ids)
+        scores_map = {eid: 1.0 - dist for eid, dist in zip(retrieved_ids, distances)}
+        
+    except Exception as e:
+        await emit_status(f"⚠️ [search_vector_graph] ChromaDB 检索失败: {e}")
+        return f"ChromaDB 检索失败: {str(e)}"
+
     cypher = """
-    CALL db.index.vector.queryNodes('eventEmbeddings', $k, $embedding)
-    YIELD node, score
     MATCH (node:Event)
+    WHERE node.id IN $ids
     OPTIONAL MATCH (node)-[:HAPPENED_AT]->(l:Location)
     OPTIONAL MATCH (node)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
     RETURN node.title AS title, COALESCE(node.translation, node.description) AS description, 
            node.time_text AS time, node.std_start_year AS year, node.source_text AS source, 
-           collect(DISTINCT l.name) AS locations, me.title AS major_event, score
-    ORDER BY score DESC
+           collect(DISTINCT l.name) AS locations, me.title AS major_event, node.id AS id
     """
     try:
-        results = await run_query_async(cypher, {"k": k or 5, "embedding": embedding})
+        results = await run_query_async(cypher, {"ids": retrieved_ids})
         if not results:
             return f"未找到与查询 '{query}' 相关的历史事件。"
+            
+        # 还原打分并按相似度高低进行结果重排序，确保 Chroma 的检索顺序不被打乱
+        for r in results:
+            r["score"] = scores_map.get(r["id"], 0.0)
+        results.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+        
         return truncate_tool_output(json.dumps(results, ensure_ascii=False))
     except Exception as e:
-        return f"向量检索出错: {str(e)}"
+        return f"图数据库数据拉取出错: {str(e)}"
 
