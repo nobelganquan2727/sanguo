@@ -7,17 +7,19 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useCallback } from 'react';
 import { locationNameMatches, locationMatchesGeoName } from '../utils/locationMatch';
 
-// 使用本地 Next.js API 代理的水彩底图，解决 CORS 跨域问题并保留水墨效果
+// ESRI World Physical Map — 无需 API Key，国内直连，古贴地形风格
 const MAP_STYLE = {
   version: 8,
   sources: {
     'watercolor-tiles': {
       type: 'raster',
+      // ESRI 地址格式为 {z}/{y}/{x}（row/col），正好对应 MapLibre 的 {z}/{y}/{x}
       tiles: [
-        '/api/tiles/watercolor/{z}/{x}/{y}.jpg'
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}'
       ],
       tileSize: 256,
-      maxzoom: 16
+      attribution: 'Tiles &copy; Esri &mdash; Source: US National Park Service',
+      maxzoom: 8
     }
   },
   layers: [

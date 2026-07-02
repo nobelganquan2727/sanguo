@@ -8,7 +8,8 @@ export async function GET(
   
   // 移除可能由地图库自动追加的 .jpg 或 .png 后缀
   const cleanY = y.replace(/\.(jpg|jpeg|png)$/i, '');
-  const targetUrl = `https://watercolormaps.collection.cooperhewitt.org/tile/watercolor/${z}/${x}/${cleanY}.jpg`;
+  // 服务端走 Stadia Stamen Watercolor（国际节点稳定），浏览器只访问本站代理
+  const targetUrl = `https://tiles.stadiamaps.com/tiles/stamen_watercolor/${z}/${x}/${cleanY}.jpg`;
 
   try {
     const res = await fetch(targetUrl, {
