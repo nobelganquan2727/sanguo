@@ -17,7 +17,7 @@ class TestAgentCore(unittest.TestCase):
     @patch('agent.qa_agent.get_llm')
     def test_memory_summarization_triggers(self, mock_get_llm, mock_run_query, mock_lookup, mock_save, mock_has_valid_db):
         mock_has_valid_db.return_value = True
-        mock_lookup.return_value = (None, 0.0)
+        mock_lookup.return_value = (None, None, 0.0)
         
         # Create a mock LLM instance
         from unittest.mock import AsyncMock
@@ -101,7 +101,7 @@ class TestAgentCore(unittest.TestCase):
     def test_complex_planning_flow(self, mock_get_llm, mock_run_query, mock_lookup, mock_save, mock_has_valid_db):
         mock_has_valid_db.return_value = True
         from unittest.mock import AsyncMock
-        mock_lookup.return_value = (None, 0.0)
+        mock_lookup.return_value = (None, None, 0.0)
         mock_llm = MagicMock()
         mock_get_llm.return_value = mock_llm
         

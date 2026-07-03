@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.tools import tool
 
-from agent.schema import GRAPH_SCHEMA
+from agent.schema import COMPACT_GRAPH_SCHEMA
 from agent.graph_client import run_query
 from agent.prompts import SYSTEM_PERSONA
 from agent.observability import active_callback_var
@@ -177,7 +177,7 @@ async def query_neo4j_async(question: Optional[str] = None, cypher: Optional[str
     # 维护消息历史
     execution_messages = [
         SystemMessage(content=SYSTEM_PERSONA),
-        SystemMessage(content=GRAPH_SCHEMA),
+        SystemMessage(content=COMPACT_GRAPH_SCHEMA),
     ]
     
     if not is_direct_cypher:
@@ -189,7 +189,7 @@ async def query_neo4j_async(question: Optional[str] = None, cypher: Optional[str
             few_shots_str += f"问题: {item['question']}\nCypher:\n{item['cypher']}\n\n"
             
         translation_prompt = CYPHER_GENERATION_TEMPLATE.format(
-            schema=GRAPH_SCHEMA,
+            schema=COMPACT_GRAPH_SCHEMA,
             few_shots=few_shots_str,
             question=query_input
         )
@@ -275,56 +275,6 @@ async def _get_single_person_timeline(name: str, start_year: Optional[int] = Non
     
     where_clause = " AND ".join(conditions)
     
-    if query:
-        # 如果提供了 query，执行语义向量过滤，找出该人物生平中与 query 最相关的 top 12 个事件
-        try:
-            embedding = await get_bge_m3_embedding_async(query)
-            
-            from agent.cache import get_event_embeddings_collection
-            loop = asyncio.get_running_loop()
-            def _query_chroma():
-                collection = get_event_embeddings_collection()
-                # 召回 100 条可能相关的事件以确保能在图数据库中匹配到该人
-                return collection.query(
-                    query_embeddings=[embedding],
-                    n_results=100
-                )
-            chroma_res = await loop.run_in_executor(None, _query_chroma)
-            
-            if not chroma_res or not chroma_res.get("ids") or len(chroma_res["ids"][0]) == 0:
-                return f"未找到关于人物 '{name}' 且与主题 '{query}' 相关的生平事件记录。"
-                
-            retrieved_ids = chroma_res["ids"][0]
-            distances = chroma_res["distances"][0] if "distances" in chroma_res else [0.0] * len(retrieved_ids)
-            scores_map = {eid: 1.0 - dist for eid, dist in zip(retrieved_ids, distances)}
-            
-            params["ids"] = retrieved_ids
-            
-            cypher = f"""
-            MATCH (p:Person)-[:PARTICIPATED_IN]->(node:Event)
-            WHERE {where_clause.replace("e.", "node.")} AND node.id IN $ids
-            OPTIONAL MATCH (node)-[:HAPPENED_AT]->(l:Location)
-            OPTIONAL MATCH (node)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
-            WITH node, collect(DISTINCT l.name) AS locations, me.title AS major_event
-            RETURN node.title AS title, COALESCE(node.translation, node.description) AS description, node.time_text AS time, 
-                   node.std_start_year AS year, node.source_text AS source, locations, major_event, node.id AS id
-            """
-            await emit_status(f"🔍 [get_person_timeline] [Chroma分离版] 正在执行语义过滤编年史，筛选与主题 '{query}' 相关的事件...")
-            results = await run_query_async(cypher, params)
-            if not results:
-                return f"未找到关于人物 '{name}' 且与主题 '{query}' 相关的生平事件记录。"
-                
-            # 还原相关性评分并降序排列，取 Top 12
-            for r in results:
-                r["score"] = scores_map.get(r["id"], 0.0)
-            results.sort(key=lambda x: x.get("score", 0.0), reverse=True)
-            results = results[:12]
-            
-            return truncate_tool_output(json.dumps(results, ensure_ascii=False))
-        except Exception as e:
-            await emit_status(f"⚠️ [get_person_timeline] 语义过滤失败，退回执行标准编年史检索。原因: {e}")
-            pass
-
     cypher = f"""
     MATCH (p:Person)-[:PARTICIPATED_IN]->(e:Event)
     WHERE {where_clause}
@@ -333,7 +283,7 @@ async def _get_single_person_timeline(name: str, start_year: Optional[int] = Non
     WITH e, collect(DISTINCT l.name) AS locations, me.title AS major_event
     ORDER BY e.std_start_year ASC, e.seq_index ASC
     RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, 
-           e.std_start_year AS year, e.source_text AS source, locations, major_event
+           e.std_start_year AS year, e.source_text AS source, locations, major_event, e.id AS id
     """
     filter_desc = f" (时间范围: {start_year or ''} 至 {end_year or ''})" if (start_year or end_year) else ""
     try:
@@ -342,8 +292,43 @@ async def _get_single_person_timeline(name: str, start_year: Optional[int] = Non
         if not results:
             return f"未找到关于人物 '{name}' 的生平事件记录。"
             
+        # 如果指定了语义 query，先在内存中利用向量进行精筛（先从图捞，再用向量过滤）
+        if query and len(results) > 12:
+            try:
+                import math
+                embedding = await get_bge_m3_embedding_async(query)
+                from agent.cache import get_event_embeddings_collection
+                loop = asyncio.get_running_loop()
+                
+                event_ids = [r["id"] for r in results if r.get("id")]
+                def _get_embeddings():
+                    collection = get_event_embeddings_collection()
+                    return collection.get(ids=event_ids, include=["embeddings"])
+                chroma_res = await loop.run_in_executor(None, _get_embeddings)
+                
+                if chroma_res is not None and chroma_res.get("embeddings") is not None and len(chroma_res["embeddings"]) > 0:
+                    chroma_ids = chroma_res["ids"]
+                    chroma_embs = chroma_res["embeddings"]
+                    
+                    scores_map = {}
+                    for idx, cid in enumerate(chroma_ids):
+                        v1 = embedding
+                        v2 = chroma_embs[idx]
+                        dot = sum(a*b for a, b in zip(v1, v2))
+                        norm1 = math.sqrt(sum(a*a for a in v1))
+                        norm2 = math.sqrt(sum(b*b for b in v2))
+                        sim = dot / (norm1 * norm2) if norm1 and norm2 else 0.0
+                        scores_map[cid] = sim
+                        
+                    for r in results:
+                        r["score"] = scores_map.get(r["id"], 0.0)
+                    results.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+                    results = results[:12]
+            except Exception as e:
+                print(f"⚠️ [get_person_timeline] 语义过滤未生效，退回到全量列表。原因: {e}")
+                
         is_condensed = False
-        if start_year is None and end_year is None and len(results) > 10:
+        if not query and start_year is None and end_year is None and len(results) > 10:
             is_condensed = True
             condensed_results = []
             for item in results:
@@ -352,21 +337,15 @@ async def _get_single_person_timeline(name: str, start_year: Optional[int] = Non
                     "time": item.get("time"),
                     "year": item.get("year"),
                     "locations": item.get("locations"),
-                    "major_event": item.get("major_event")
+                    "major_event": item.get("major_event"),
+                    "id": item.get("id")
                 }
                 condensed_results.append(brief_item)
             results = condensed_results
             
-        has_more = False
-        if len(results) > 30:
-            results = results[:30]
-            has_more = True
-            
         warnings = []
         if is_condensed:
             warnings.append("由于未指定年份且生平事迹较多，已简写详细描述与原文。若需特定事件的详细史料，请在查询时指定 start_year 与 end_year 参数，或使用 search_vector_graph_async / search_historical_text_async 进行针对性检索。")
-        if has_more:
-            warnings.append("由于该人物生平记录较多，当前仅展示前 30 条事件。若想深究其他时间段的事迹，请传入 start_year 与 end_year 参数过滤查询。")
             
         extra_warning = "；".join(warnings) if warnings else None
         return truncate_tool_output(results, extra_warning=extra_warning)
@@ -385,6 +364,177 @@ async def get_person_timeline_async(name: Union[str, List[str]], start_year: Opt
         return "\n---\n".join(results)
     else:
         return await _get_single_person_timeline(name, start_year, end_year, query)
+
+
+_admin_data = None
+
+def get_admin_data():
+    global _admin_data
+    if _admin_data is None:
+        try:
+            path = os.path.join(os.path.dirname(__file__), "..", "data", "eastern_han_admin.json")
+            with open(path, "r", encoding="utf-8") as f:
+                _admin_data = json.load(f)
+        except Exception:
+            _admin_data = {"provinces": []}
+    return _admin_data
+
+def resolve_locations(location_name: str) -> list[str]:
+    data = get_admin_data()
+    
+    def normalize(name: str) -> str:
+        for suffix in ["郡", "国", "县", "属国", "州"]:
+            if name.endswith(suffix) and len(name) > len(suffix):
+                return name[:-len(suffix)]
+        return name
+
+    norm_input = normalize(location_name)
+    target_names = {location_name, norm_input}
+    
+    is_commandery = False
+    
+    for province in data.get("provinces", []):
+        for cmdy in province.get("commanderies", []):
+            cmdy_name = cmdy.get("name", "")
+            norm_cmdy = normalize(cmdy_name)
+            
+            if norm_input == norm_cmdy:
+                is_commandery = True
+                target_names.add(cmdy_name)
+                target_names.add(norm_cmdy)
+                
+                for county in cmdy.get("counties", []):
+                    c_name = county.get("name", "")
+                    norm_c = normalize(c_name)
+                    target_names.add(c_name)
+                    target_names.add(norm_c)
+                    if not c_name.endswith("县"):
+                        target_names.add(c_name + "县")
+                break
+        if is_commandery:
+            break
+            
+    if not is_commandery:
+        # If it's a county, add its county suffix versions just in case
+        target_names.add(location_name + "县")
+        target_names.add(location_name + "郡")
+        target_names.add(location_name + "州")
+        
+    return sorted(list(target_names))
+
+async def _get_single_location_timeline(
+    location: str,
+    start_year: Optional[int] = None,
+    end_year: Optional[int] = None,
+    query: Optional[str] = None
+) -> str:
+    target_locations = resolve_locations(location)
+    
+    conditions = ["l.name IN $target_locations"]
+    params = {"target_locations": target_locations}
+    
+    if start_year is not None:
+        conditions.append("e.std_start_year >= $start_year")
+        params["start_year"] = start_year
+    if end_year is not None:
+        conditions.append("e.std_start_year <= $end_year")
+        params["end_year"] = end_year
+        
+    where_clause = " AND ".join(conditions)
+    
+    cypher = f"""
+    MATCH (e:Event)-[:HAPPENED_AT]->(l:Location)
+    WHERE {where_clause}
+    OPTIONAL MATCH (e)-[:BELONGS_TO_MAJOR]->(me:MajorEvent)
+    WITH e, collect(DISTINCT l.name) AS locations, me.title AS major_event
+    ORDER BY e.std_start_year ASC, e.seq_index ASC
+    RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, 
+           e.std_start_year AS year, e.source_text AS source, locations, major_event, e.id AS id
+    """
+    filter_desc = f" (时间范围: {start_year or ''} 至 {end_year or ''})" if (start_year or end_year) else ""
+    try:
+        await emit_status(f"🔍 [get_location_timeline] 正在翻阅地点 '{location}' 的历史事件时间线{filter_desc}...")
+        results = await run_query_async(cypher, params)
+        if not results:
+            return f"未找到关于地点 '{location}' 的事件记录。"
+            
+        # 如果指定了语义 query，先在内存中利用向量做精准相关性过滤（Graph-first, Vector-second）
+        if query and len(results) > 12:
+            try:
+                import math
+                embedding = await get_bge_m3_embedding_async(query)
+                from agent.cache import get_event_embeddings_collection
+                loop = asyncio.get_running_loop()
+                
+                event_ids = [r["id"] for r in results if r.get("id")]
+                def _get_embeddings():
+                    collection = get_event_embeddings_collection()
+                    return collection.get(ids=event_ids, include=["embeddings"])
+                chroma_res = await loop.run_in_executor(None, _get_embeddings)
+                
+                if chroma_res is not None and chroma_res.get("embeddings") is not None and len(chroma_res["embeddings"]) > 0:
+                    chroma_ids = chroma_res["ids"]
+                    chroma_embs = chroma_res["embeddings"]
+                    
+                    scores_map = {}
+                    for idx, cid in enumerate(chroma_ids):
+                        v1 = embedding
+                        v2 = chroma_embs[idx]
+                        dot = sum(a*b for a, b in zip(v1, v2))
+                        norm1 = math.sqrt(sum(a*a for a in v1))
+                        norm2 = math.sqrt(sum(b*b for b in v2))
+                        sim = dot / (norm1 * norm2) if norm1 and norm2 else 0.0
+                        scores_map[cid] = sim
+                        
+                    for r in results:
+                        r["score"] = scores_map.get(r["id"], 0.0)
+                    results.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+                    results = results[:12]
+            except Exception as e:
+                print(f"⚠️ [get_location_timeline] 语义过滤未生效，退回到全量列表。原因: {e}")
+                
+        is_condensed = False
+        if not query and start_year is None and end_year is None and len(results) > 10:
+            is_condensed = True
+            condensed_results = []
+            for item in results:
+                brief_item = {
+                    "title": item.get("title"),
+                    "time": item.get("time"),
+                    "year": item.get("year"),
+                    "locations": item.get("locations"),
+                    "major_event": item.get("major_event"),
+                    "id": item.get("id")
+                }
+                condensed_results.append(brief_item)
+            results = condensed_results
+            
+        warnings = []
+        if is_condensed:
+            warnings.append("由于未指定年份且事件较多，已简写详细描述与原文。若需特定事件的详细史料，请在查询时指定 start_year 与 end_year 参数。")
+            
+        extra_warning = "；".join(warnings) if warnings else None
+        return truncate_tool_output(results, extra_warning=extra_warning)
+    except Exception as e:
+        return f"查询出错: {str(e)}"
+
+@tool
+async def get_location_timeline_async(
+    location: Union[str, List[str]],
+    start_year: Optional[int] = None,
+    end_year: Optional[int] = None,
+    query: Optional[str] = None
+) -> str:
+    """获取特定地理位置（如“南海郡”、“吴县”）的历史事件时间线。如果子任务是查询某个地点（或多个地点）在一段时间内发生的事情，必须且首选此工具。如果输入的地点是郡，会包含它下面所有县的事件。"""
+    if isinstance(location, list):
+        tasks = []
+        for l in location:
+            tasks.append(_get_single_location_timeline(l, start_year, end_year, query))
+        results = await asyncio.gather(*tasks)
+        return "\n---\n".join(results)
+    else:
+        return await _get_single_location_timeline(location, start_year, end_year, query)
+
 
 @tool
 async def search_historical_text_async(keyword: str) -> str:

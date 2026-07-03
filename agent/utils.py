@@ -52,12 +52,16 @@ def has_valid_db_records(observations: list, rewritten_q: Optional[str] = None) 
                         if rewritten_q:
                             title = clean_item.get("title") or ""
                             desc = clean_item.get("description") or clean_item.get("desc") or clean_item.get("translation") or clean_item.get("source_text") or clean_item.get("source") or ""
-                            query_words = re.findall(r"[\u4e00-\u9fa5]{2,}", rewritten_q)
+                            # 使用 2 字符滑动窗口生成候选词，避免连续中文不分词导致匹配失效
+                            query_words = []
+                            for i in range(len(rewritten_q) - 1):
+                                w = rewritten_q[i:i+2]
+                                # 排除常见无意义词与虚词
+                                if not any(x in w for x in ["怎样", "如何", "战略", "调整", "重大", "失误", "分析", "关系", "什么", "哪些", "前后", "在", "的", "之", "与", "及", "和", "或"]):
+                                    query_words.append(w)
                             if query_words:
                                 match_found = False
                                 for word in query_words:
-                                    if word in ["怎样", "如何", "战略", "调整", "重大", "失误", "分析", "关系", "什么", "哪些", "前后"]:
-                                        continue
                                     if word in title or word in desc:
                                         match_found = True
                                         break
@@ -403,65 +407,231 @@ def clean_obs_for_synthesis(obs_str: str) -> str:
         return obs_str
 
 
-def clean_obs_for_react(obs_str: str) -> str:
+def clean_obs_for_react(obs_str: str, rewritten_q: Optional[str] = None, relevant_ids: Optional[set] = None) -> str:
     """
     用纯 Python 过滤发给 ReAct 循环历史的消息，丢弃全部重型古文和翻译，仅保留标题和简述，防止 ReAct 步步累积 Token 爆炸。
+    如果列表长度大于 10 且提供了 rewritten_q，则优先通过全局语义过滤器或 bigram 候选词对事件进行核心相关性初筛。
     """
     try:
+        if isinstance(obs_str, str):
+            if "\n\n【卷宗纪要说明】" in obs_str:
+                obs_str = obs_str.split("\n\n【卷宗纪要说明】")[0]
+            parsed = json.loads(obs_str)
+        else:
+            parsed = obs_str
         def _keep_react_fields(data):
             if isinstance(data, dict):
                 discard_keys = ["source_text", "source", "translation", "source_quote"]
-                return {k: _keep_react_fields(v) for k, v in data.items() if k not in discard_keys}
+                res = {}
+                for k, v in data.items():
+                    if k in discard_keys:
+                        continue
+                    if isinstance(v, str) and len(v) > 80:
+                        res[k] = v[:80] + "..."
+                    else:
+                        res[k] = _keep_react_fields(v)
+                return res
             elif isinstance(data, list):
                 return [_keep_react_fields(item) for item in data]
             return data
-        parsed = json.loads(obs_str)
-        return json.dumps(_keep_react_fields(parsed), ensure_ascii=False)
+        
+        cleaned = _keep_react_fields(parsed)
+        
+        if isinstance(cleaned, list) and len(cleaned) > 10 and rewritten_q:
+            filtered_list = []
+            
+            # 1. 优先使用全局语义过滤器进行过滤
+            if relevant_ids:
+                filtered_list = [item for item in cleaned if isinstance(item, dict) and item.get("id") in relevant_ids]
+            
+            # 2. 如果没有语义过滤器或过滤完为空，退化为 bigram 滑动匹配
+            if not filtered_list:
+                query_words = []
+                for i in range(len(rewritten_q) - 1):
+                    w = rewritten_q[i:i+2]
+                    if not any(x in w for x in ["怎样", "如何", "战略", "调整", "重大", "失误", "分析", "关系", "什么", "哪些", "前后", "在", "的", "之", "与", "及", "和", "或"]):
+                        query_words.append(w)
+                
+                if query_words:
+                    for item in cleaned:
+                        if not isinstance(item, dict):
+                            filtered_list.append(item)
+                            continue
+                        
+                        title = item.get("title") or ""
+                        desc = item.get("description") or item.get("desc") or ""
+                        
+                        match_found = False
+                        for word in query_words:
+                            if word in title or word in desc:
+                                match_found = True
+                                break
+                        if match_found:
+                            filtered_list.append(item)
+            
+            # 防止过滤后为空，若不为空则替换
+            if filtered_list:
+                cleaned = filtered_list
+                
+        # 硬上限限制：在 ReAct 状态提取中，最多保留前 12 条记录以防单步骤 Token 爆炸
+        if isinstance(cleaned, list) and len(cleaned) > 12:
+            cleaned = cleaned[:12]
+            
+        return json.dumps(cleaned, ensure_ascii=False)
     except Exception:
         return obs_str
 
 
-def consolidate_and_deduplicate_observations(all_observations: list) -> str:
+def consolidate_and_deduplicate_observations(
+    all_observations: list, 
+    rewritten_q: Optional[str] = None,
+    historical_characters: Optional[list] = None,
+    relevant_ids: Optional[set] = None
+) -> str:
     """
-    汇编所有工具召回的观测事实并去重。通过标题 (title) 对事件节点去重，防止多个不同工具检索到完全相同的重复数据，彻底压缩合成层 Token 消耗。
+    汇编所有工具召回的观测事实并去重。
+    - 针对 timeline 工具（get_person_timeline_async, get_location_timeline_async）召回的事件，保留其原有的时间线先后顺序（不基于关键词相似度过滤，以防过滤掉未来的战略经历或战后连锁反应）。
+    - 针对其他工具（如向量检索、Neo4j自定义查询），基于关键词匹配相似度排序并筛选。
+    - 去重并通过硬上限防止 Token 爆炸。
     """
-    unique_events = {}
+    timeline_events = {}
+    other_events = {}
     other_records = []
     
+    # 识别问题是否在问某人“之后”、“死后”的事件
+    after_characters = []
+    if rewritten_q and historical_characters:
+        for char in historical_characters:
+            if re.search(rf"{char}(?:之后|死后|逝世后|去世后|后)", rewritten_q):
+                after_characters.append(char)
+                
     for obs in all_observations:
-        res_data = obs["result"]
-        tool_name = obs["tool"]
+        res_data = obs.get("raw_result") or obs.get("result", "")
+        if not res_data:
+            continue
+        if isinstance(res_data, str):
+            if "\n\n【卷宗纪要说明】" in res_data:
+                res_data = res_data.split("\n\n【卷宗纪要说明】")[0]
+        tool_name = obs.get("tool", "")
         
         try:
             parsed = json.loads(res_data)
-            if isinstance(parsed, list):
-                for item in parsed:
-                    if isinstance(item, dict) and "title" in item:
-                        title = item["title"]
-                        if title not in unique_events:
-                            unique_events[title] = item
+            
+            def process_item(item):
+                if isinstance(item, dict) and "title" in item:
+                    title = item["title"]
+                    # 过滤“之后/死后”事件中涉及人物自身的无关记录
+                    is_irrelevant = False
+                    if after_characters:
+                        for char in after_characters:
+                            if char in title:
+                                is_irrelevant = True
+                                break
+                    if is_irrelevant:
+                        return
+                        
+                    # 根据来源工具分类
+                    if tool_name in ["get_person_timeline", "get_location_timeline"]:
+                        if title not in timeline_events:
+                            timeline_events[title] = item
                         else:
-                            existing = unique_events[title]
+                            existing = timeline_events[title]
                             for k, v in item.items():
                                 if v and (k not in existing or not existing[k]):
                                     existing[k] = v
                     else:
+                        if title not in other_events:
+                            other_events[title] = item
+                        else:
+                            existing = other_events[title]
+                            for k, v in item.items():
+                                if v and (k not in existing or not existing[k]):
+                                    existing[k] = v
+                elif isinstance(item, dict):
+                    # 检查是否嵌套了事件列表
+                    nested_lists = [v for v in item.values() if isinstance(v, list)]
+                    has_nested = False
+                    for lst in nested_lists:
+                        sub_events = [x for x in lst if isinstance(x, dict) and "title" in x]
+                        if sub_events:
+                            has_nested = True
+                            for sub_item in sub_events:
+                                process_item(sub_item)
+                    if not has_nested:
                         other_records.append(item)
-            elif isinstance(parsed, dict):
-                if "title" in parsed:
-                    title = parsed["title"]
-                    if title not in unique_events:
-                        unique_events[title] = parsed
                 else:
-                    other_records.append(parsed)
-            else:
-                other_records.append(parsed)
+                    other_records.append(item)
+                    
+            if isinstance(parsed, list):
+                for x in parsed:
+                    process_item(x)
+            elif isinstance(parsed, dict):
+                process_item(parsed)
         except Exception:
             other_records.append(res_data)
             
+    # 汇整并排序时间线事件（保持时间先后顺序）
+    timeline_list = list(timeline_events.values())
+    timeline_list.sort(key=lambda x: x.get("year") if x.get("year") is not None else -999)
+    
+    # 若时间线事件过多（> 15），则利用核心词对时间线事件进行相关性初筛，防 token 爆炸
+    if len(timeline_list) > 15 and rewritten_q:
+        filtered_timeline = []
+        
+        # 1. 优先使用全局语义过滤器进行过滤
+        if relevant_ids:
+            filtered_timeline = [item for item in timeline_list if item.get("id") in relevant_ids]
+            
+        # 2. 如果没有语义过滤器或过滤后为空，退化为 bigram 滑动匹配
+        if not filtered_timeline:
+            query_words = []
+            for i in range(len(rewritten_q) - 1):
+                w = rewritten_q[i:i+2]
+                if not any(x in w for x in ["怎样", "如何", "战略", "调整", "重大", "失误", "分析", "关系", "什么", "哪些", "前后", "在", "的", "之", "与", "及", "和", "或"]):
+                    query_words.append(w)
+            if historical_characters:
+                if len(historical_characters) == 1:
+                    query_words = [w for w in query_words if not any(hc in w or w in hc for hc in historical_characters)]
+                else:
+                    query_words.extend(historical_characters)
+                
+            if query_words:
+                for item in timeline_list:
+                    title = item.get("title") or ""
+                    desc = item.get("description") or item.get("translation") or item.get("source_text") or item.get("source") or ""
+                    full_text = title + " " + desc
+                    
+                    match_found = False
+                    for word in query_words:
+                        if word in full_text:
+                            match_found = True
+                            break
+                    if match_found:
+                        filtered_timeline.append(item)
+                        
+        if filtered_timeline:
+            timeline_list = filtered_timeline
+    
+    # 筛选其他事件（基于与 rewritten_q 的关键词重合度排序，防止大量非时间线数据膨胀）
+    other_events_list = list(other_events.values())
+    if rewritten_q and other_events_list:
+        scored_events = []
+        for item in other_events_list:
+            title = item.get("title") or ""
+            desc = item.get("description") or item.get("translation") or item.get("source_text") or item.get("source") or ""
+            full_text = title + " " + desc
+            score = get_containment_similarity(rewritten_q, full_text)
+            scored_events.append((item, score))
+        scored_events.sort(key=lambda x: x[1], reverse=True)
+        # 其他事件只取最相关的前 6 个
+        other_events_list = [x[0] for x in scored_events[:6]]
+        
+    # 合并：时间线事件放前，补充匹配事件放后
+    events_list = timeline_list + other_events_list
+    
     consolidated = {}
-    if unique_events:
-        consolidated["events"] = list(unique_events.values())
+    if events_list:
+        consolidated["events"] = events_list
     if other_records:
         consolidated["other_retrievals"] = other_records
         

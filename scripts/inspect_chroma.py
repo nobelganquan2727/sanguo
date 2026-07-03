@@ -21,7 +21,8 @@ def main():
     
     args = parser.parse_args()
     
-    db_path = "logs/chroma_cache"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(os.path.dirname(script_dir), "logs", "chroma_cache")
     if not os.path.exists(db_path):
         print(f"❌ ChromaDB path '{db_path}' does not exist yet. Run some queries first.")
         return
@@ -37,10 +38,11 @@ def main():
     print("=" * 60)
     
     if args.clear:
-        confirm = input("⚠️ Are you sure you want to clear the ENTIRE cache? (y/n): ")
-        if confirm.lower() == 'y':
+        try:
             client.delete_collection("semantic_cache")
-            print("扫 Cache cleared successfully.")
+            print("🧹 Semantic cache collection deleted successfully.")
+        except Exception as e:
+            print(f"❌ Failed to delete semantic_cache collection: {e}")
         return
         
     if args.delete:

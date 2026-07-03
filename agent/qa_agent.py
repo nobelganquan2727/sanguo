@@ -16,9 +16,9 @@ from agent.prompts import (
     INTENT_ANALYSIS_PROMPT,
     ANSWER_TEMPLATE,
 )
-from agent.schema import GRAPH_SCHEMA
+from agent.schema import COMPACT_GRAPH_SCHEMA
 from agent.observability import active_callback_var
-from agent.cache import lookup_cache, save_cache
+from agent.cache import save_cache
 
 from agent.utils import (
     has_valid_db_records,
@@ -26,14 +26,40 @@ from agent.utils import (
     validate_dag_plan,
     resolve_args_placeholders,
     clean_obs_for_synthesis,
+    clean_obs_for_react,
     consolidate_and_deduplicate_observations
 )
+
+from pydantic import BaseModel, Field
+from typing import Optional, Any
 
 from agent.schemas import (
     IntentAnalysis,
     TaskSpec,
-    DAGPlan
+    DAGPlan,
+    DAGPlanNoNeo4j
 )
+
+class StateUpdate(BaseModel):
+    resolved_facts: dict[str, Any] = Field(default={}, description="从本轮结果中提取出的关键史实/公元年份等，如 {'陆逊去世年份': 245}")
+    new_entities: List[str] = Field(default=[], description="本轮发现或提及的、需要作为后续延伸线索的新历史人物或地点")
+    suggested_time_range: Optional[str] = Field(default=None, description="根据本轮发现的事实，建议后续检索锁定的公元年份区间，例如 '公元245年至公元255年'")
+
+EXTRACTION_SYSTEM_PROMPT = "You are a Sanguozhi historical data extraction assistant. You must extract key timeline facts and entities from retrieved texts into a structured JSON."
+EXTRACTION_HUMAN_PROMPT = """
+请仔细阅读本轮检索出的历史事实数据，并结合当前问题，提取出能够辅助后续规划的关键线索。
+
+=== 当前用户问题 ===
+{question}
+
+=== 本轮检索出的历史事实数据 ===
+{observations}
+
+请分析并提取：
+1. 本轮数据中提及的任何关键年份/事件（如人物死亡公元年份、战役年份、官职变动年份），写入 resolved_facts；
+2. 本轮新出现的、对解答用户问题至关重要的历史人物、地点，写入 new_entities；
+3. 如果本轮明确了时间锚点，请建议接下来的检索应该锁定在哪个年份区间（如 '公元219年至公元225年'），写入 suggested_time_range。
+"""
 
 load_dotenv()
 from langfuse import Langfuse
@@ -42,6 +68,7 @@ from agent.tools import (
     get_llm,
     query_neo4j_async,
     get_person_timeline_async,
+    get_location_timeline_async,
     search_historical_text_async,
     search_vector_graph_async,
     active_send_event_var,
@@ -92,9 +119,7 @@ class IntentAnalyzerAgent(BaseSubAgent):
                     type=data.get("type", "complex"),
                     rewritten_question=data.get("rewritten_question", self.pipeline.question),
                     entities=data.get("entities", []),
-                    historical_characters=data.get("historical_characters", []),
-                    clarify_message=data.get("clarify_message"),
-                    clarify_options=data.get("clarify_options")
+                    historical_characters=data.get("historical_characters", [])
                 )
             except Exception as e2:
                 await self.send_event("status", f"⚠️ [意图分析] 兜底解析失败 ({str(e2)})，降级至经验规则分类。")
@@ -130,66 +155,115 @@ class IntentAnalyzerAgent(BaseSubAgent):
 
 
 class PlannerAgent(BaseSubAgent):
-    async def plan(self, rewritten_q: str) -> DAGPlan:
-        await self.send_event("status", "📋 [复杂规划] 正在启动 DeepSeek-R1 深度逻辑推理拆解...")
+    async def plan(self, rewritten_q: str, exclude_neo4j: bool = False, state_info: dict = None) -> DAGPlan:
+        await self.send_event("status", "📋 [复杂规划] 正在启动 DeepSeek-Chat 逻辑推理与结构化拆解...")
         
-        # 1. 深度推理拆解规划建议
-        llm_reasoner = get_llm("reasoner")
-        planning_prompt_formatted = PLANNING_PROMPT.format(schema=GRAPH_SCHEMA, question=rewritten_q)
-        
-        messages = [
-            SystemMessage(content="You are a planning assistant for a historical knowledge base. You must logically analyze the question, map it to the graph schema, and decide how to decompose it into steps."),
-            HumanMessage(content=planning_prompt_formatted)
+        # 1. 动态收集原子工具注释说明，防止硬编码重复
+        from agent.tools import (
+            get_person_timeline_async,
+            get_location_timeline_async,
+            search_vector_graph_async,
+            search_historical_text_async,
+            query_neo4j_async
+        )
+        tools_list = [
+            get_person_timeline_async,
+            get_location_timeline_async,
+            search_vector_graph_async,
+            search_historical_text_async
         ]
-        
-        reasoning_thought = ""
-        try:
-            res_reason = await llm_reasoner.ainvoke(messages)
-            reasoning_content = res_reason.additional_kwargs.get("reasoning_content", "")
-            if reasoning_content:
-                reasoning_thought = f"【R1 深度推理思考过程】:\n{reasoning_content}\n\n【规划建议】:\n{res_reason.content}"
-            else:
-                reasoning_thought = res_reason.content
+        if not exclude_neo4j:
+            tools_list.append(query_neo4j_async)
             
-            # 打印 R1 推导出的规划建议概要
-            await self.send_event("status", f"📋 [复杂规划] R1 思考完毕。推导出的规划建议为：\n{res_reason.content}")
-            await self.send_event("status", "📋 [复杂规划] 正在转化为结构化任务链...")
-        except Exception as e:
-            await self.send_event("status", f"⚠️ [复杂规划] R1 思考时发生异常 ({str(e)})，降级为标准拆解模式...")
-            reasoning_thought = "直接根据问题进行结构化拆解。"
+        tool_descriptions = []
+        for idx, t in enumerate(tools_list):
+            desc = getattr(t, "description", None) or t.__doc__ or ""
+            desc_clean = " ".join(desc.split())
+            
+            # 动态抽取参数 schema 定义，防止参数名称幻觉
+            args_fields = []
+            if hasattr(t, "args_schema") and t.args_schema:
+                for f_name, f_field in t.args_schema.model_fields.items():
+                    f_desc = f_field.description or ""
+                    args_fields.append(f"     - `{f_name}`: {f_desc}")
+            args_str = "\n".join(args_fields)
+            
+            tool_descriptions.append(
+                f"{idx+1}. `{t.name}`：{desc_clean}\n"
+                f"   参数格式 (args):\n"
+                f"{args_str}"
+            )
+        tools_str = "\n".join(tool_descriptions)
 
-        # 2. 将非结构化推理建议转换为 DAGPlan
-        llm_structured = self.pipeline.llm_complex.with_structured_output(DAGPlan, method="function_calling")
+        # Convert state_info to formatted text block if present
+        state_str = ""
+        if state_info:
+            parts = []
+            if state_info.get("time_range"):
+                parts.append(f"- 已锁定的时间范围: {state_info['time_range']}")
+            if state_info.get("resolved_facts"):
+                facts_str = "\n".join(f"  * {k}: {v}" for k, v in state_info["resolved_facts"].items())
+                parts.append(f"- 已明确的史实/年份:\n{facts_str}")
+            if state_info.get("entities"):
+                parts.append(f"- 关联人物/地点: {', '.join(state_info['entities'])}")
+            if parts:
+                state_str = "\n".join(parts)
+
+        plan_model = DAGPlanNoNeo4j if exclude_neo4j else DAGPlan
+        llm_structured = self.pipeline.llm_complex.with_structured_output(plan_model, method="function_calling")
+        planning_prompt_formatted = PLANNING_PROMPT.format(
+            schema=COMPACT_GRAPH_SCHEMA, 
+            tools=tools_str, 
+            question=rewritten_q
+        )
+        if state_str:
+            planning_prompt_formatted += f"\n\n【当前已搜集到的时空线索与事实状态】：\n{state_str}\n请结合这些已知线索进一步拆解或延伸。如果已收集到足够史实（即已能完整回答问题），请将 is_finished 设为 true 并保持 tasks 为空列表。"
         
-        synthesis_prompt = f"""请根据以下深度思考推导出的规划建议，严格对照图数据库 Schema 生成对应的有向无环图（DAG）任务链 JSON 结构。
-请直接将推理得出的思考逻辑填入 `thought` 字段。
+        planning_prompt_formatted += """
 
-【用户的原始问题】：
-{rewritten_q}
-
-【R1 深度思考推导的规划建议】：
-{reasoning_thought}
+【高效与防冗余检索规约（极重要，必须严格遵守）】：
+1. **单轮任务上限**：本轮规划的子任务数量（tasks 列表长度）绝对不可超过 3 个！请采用步进式探索策略，每次只解决当前最急需的检索问题。
+2. **禁止重复抓取生平**：如果已知事实中已经抓取过某个角色的生平时间线，绝对禁止在后续规划中再次调用 `get_person_timeline_async` 抓取该人物在重叠年份的时间线。
+3. **避免大面积铺网**：不要同时对 4-5 个以上的将领/谋士调用 `get_person_timeline_async` 去拼凑同一个战役的细节。如需查询事件，应直接用 `search_vector_graph_async` 进行语义查询。
+4. **提前终止**：一旦已明确的事实已经包含解答用户问题所需的前因后果，请立刻将 `is_finished` 设为 true 结束检索，tasks 设为空列表。
+5. **必须指定语义查询词**：在使用 `get_person_timeline_async` 或 `get_location_timeline_async` 时，若问题有明确的主题偏向，**必须在 args 中填写 query 参数（如 '内政 法律'、'战略 军事'、'死 薨'）**，以触发底层语义过滤，严禁查流水账。
+6. **向量检索词严禁拼接具体年份**：在调用 `search_vector_graph_async` 时，`query` 词条必须简短、核心（如 '曹操 死亡 去世'），**绝对禁止**在查询中人为拼接尚未证实的具体公元年份（如 '公元220年'），这会导致向量检索匹配失效。
 """
         
-        messages_structured = [
-            SystemMessage(content="You are a schema mapping assistant. Convert the provided unstructured plan and thought process into a structured DAGPlan JSON strictly matching the defined schema."),
-            HumanMessage(content=synthesis_prompt)
+        messages = [
+            SystemMessage(content="You are a structured planning assistant for a historical knowledge base. "
+                                  "You must logically analyze the question, map it to the graph schema, and "
+                                  "output a structured DAGPlan JSON strictly matching the defined schema."),
+            HumanMessage(content=planning_prompt_formatted)
         ]
         
         try:
             # 首次生成
-            plan = await llm_structured.ainvoke(messages_structured)
+            plan = await llm_structured.ainvoke(messages)
+            if getattr(plan, "is_finished", False):
+                return plan
             errors = validate_dag_plan(plan)
+            
+            if exclude_neo4j:
+                for t in plan.tasks:
+                    if t.tool == "query_neo4j_async":
+                        errors.append("首次规划中禁用 query_neo4j_async。请优先使用 get_person_timeline_async, get_location_timeline_async, search_historical_text_async 或 search_vector_graph_async。")
             
             if errors:
                 error_msg = "; ".join(errors)
-                await self.send_event("status", f"⚠️ [复杂规划] 结构化转换校验未通过: {error_msg}。启动自纠正...")
+                await self.send_event("status", f"⚠️ [复杂规划] 结构化任务链校验未通过: {error_msg}。启动自纠正...")
                 
-                messages_structured.append(AIMessage(content=plan.model_dump_json()))
-                messages_structured.append(HumanMessage(content=f"你生成的计划校验未通过，错误如下：\n{error_msg}\n请结合错误提示重新修正，输出无错的 DAG 计划。"))
+                messages.append(AIMessage(content=plan.model_dump_json()))
+                messages.append(HumanMessage(content=f"你生成的计划校验未通过，错误如下：\n{error_msg}\n请结合错误提示重新修正，输出无错的 DAG 计划。"))
                 
-                plan = await llm_structured.ainvoke(messages_structured)
+                plan = await llm_structured.ainvoke(messages)
+                if getattr(plan, "is_finished", False):
+                    return plan
                 errors = validate_dag_plan(plan)
+                if exclude_neo4j:
+                    for t in plan.tasks:
+                        if t.tool == "query_neo4j_async":
+                            errors.append("首次规划中禁用 query_neo4j_async。请优先使用 get_person_timeline_async, get_location_timeline_async, search_historical_text_async 或 search_vector_graph_async。")
                 if errors:
                     raise ValueError(f"二次纠正依旧未通过: {'; '.join(errors)}")
                     
@@ -203,8 +277,7 @@ class PlannerAgent(BaseSubAgent):
             return plan
             
         except Exception as e:
-            await self.send_event("status", f"⚠️ [复杂规划] 任务链结构化转换或校验失败：{str(e)}")
-            await self.send_event("status", f"📋 [复杂规划] R1 原始推导规划记录以备查考：\n{reasoning_thought}")
+            await self.send_event("status", f"⚠️ [复杂规划] 任务链结构化生成或校验失败：{str(e)}")
             await self.send_event("status", "📋 [复杂规划] 已触发安全兜底策略，使用向量库进行直接检索...")
             # 构造安全兜底计划
             return DAGPlan(
@@ -231,6 +304,7 @@ class ResearcherAgent(BaseSubAgent):
         tool_map = {
             "query_neo4j_async": query_neo4j_async,
             "get_person_timeline_async": get_person_timeline_async,
+            "get_location_timeline_async": get_location_timeline_async,
             "search_historical_text_async": search_historical_text_async,
             "search_vector_graph_async": search_vector_graph_async
         }
@@ -248,20 +322,26 @@ class ResearcherAgent(BaseSubAgent):
             resolved_args = resolve_args_placeholders(args_dict, raw_results)
             
             tool_name = task_spec.tool
+            tool_func = tool_map.get(tool_name)
+            
             # 2.2 参数规范化，防御大模型参数幻觉
-            if isinstance(resolved_args, dict):
-                if tool_name == "search_historical_text_async":
-                    for old_k in ["query", "keywords", "text"]:
-                        if old_k in resolved_args and "keyword" not in resolved_args:
-                            resolved_args["keyword"] = resolved_args.pop(old_k)
-                elif tool_name == "get_person_timeline_async":
-                    for old_k in ["query", "keyword"]:
-                        if old_k in resolved_args and "name" not in resolved_args:
-                            resolved_args["name"] = resolved_args.pop(old_k)
-                elif tool_name == "search_vector_graph_async":
-                    for old_k in ["keyword", "keywords", "text"]:
-                        if old_k in resolved_args and "query" not in resolved_args:
-                            resolved_args["query"] = resolved_args.pop(old_k)
+            if isinstance(resolved_args, dict) and tool_func:
+                try:
+                    import inspect
+                    func = tool_func.func if hasattr(tool_func, "func") else tool_func
+                    sig = inspect.signature(func)
+                    params = list(sig.parameters.keys())
+                    if params:
+                        first_param = params[0]
+                        if first_param not in resolved_args:
+                            # 尝试从常见别名中匹配并映射到函数的首个主参数
+                            aliases = ["query", "keyword", "keywords", "text", "name", "location"]
+                            for alias in aliases:
+                                if alias in resolved_args:
+                                    resolved_args[first_param] = resolved_args.pop(alias)
+                                    break
+                except Exception:
+                    pass
                             
             config = {"callbacks": [self.pipeline.handler]} if self.pipeline.handler else {}
             
@@ -286,7 +366,8 @@ class ResearcherAgent(BaseSubAgent):
             observations.append({
                 "tool": tool_name.replace("_async", ""),
                 "query": resolved_args,
-                "result": synthesis_obs_str
+                "result": synthesis_obs_str,
+                "raw_result": obs_str  # 保留原始结果供 has_valid_db_records 主题校验使用
             })
         
         # 将任务包装为 asyncio Task 并行调度，依赖关系会在协程内部自等待
@@ -312,7 +393,12 @@ class SynthesisAgent(BaseSubAgent):
                 last_error = res_data
             
         # 对搜集到的所有史料进行去重并设置全局硬天花板，防止 token 膨胀
-        raw_consolidated = consolidate_and_deduplicate_observations(all_observations)
+        raw_consolidated = consolidate_and_deduplicate_observations(
+            all_observations, 
+            rewritten_q, 
+            self.pipeline.historical_characters, 
+            getattr(self.pipeline, "relevant_ids", None)
+        )
         consolidated_data = truncate_tool_output(raw_consolidated, max_chars=12000)
         
         answer_prompt = ANSWER_TEMPLATE.format(
@@ -352,6 +438,7 @@ class QAStreamPipeline:
         self.history_to_process = []
         self.history_text = ""
         self.all_observations = []
+        self.historical_characters = []
 
         # Agent roles names (for status logging)
         self.researcher_agent_name = "史料检索官"
@@ -415,20 +502,27 @@ class QAStreamPipeline:
             rewritten_q = analysis.rewritten_question
             self.rewritten_q = rewritten_q
 
-            # 1.3 处理澄清（Human-in-the-loop）
-            if q_type == "clarify":
-                clarify_data = {
-                    "message": getattr(analysis, "clarify_message", None) or "阁下的提问指代未明，敢问具体所指何事或何人？",
-                    "options": getattr(analysis, "clarify_options", None) or []
-                }
-                await self.send_event("clarify", json.dumps(clarify_data, ensure_ascii=False))
-                await self.send_event("text", clarify_data["message"])
-                self.collected_text.append(clarify_data["message"])
-                return q_type
+            # 一次性检索出与当前重写问题最相关的 Top 80 个事件 ID 作为全局语义过滤器
+            self.relevant_ids = set()
+            if q_type != "generic_chat":
+                try:
+                    from agent.tools import get_bge_m3_embedding_async
+                    from agent.cache import get_event_embeddings_collection
+                    q_emb = await get_bge_m3_embedding_async(rewritten_q)
+                    loop = asyncio.get_running_loop()
+                    def _query_chroma_filter():
+                        coll = get_event_embeddings_collection()
+                        return coll.query(query_embeddings=[q_emb], n_results=80)
+                    chroma_filter_res = await loop.run_in_executor(None, _query_chroma_filter)
+                    if chroma_filter_res and chroma_filter_res.get("ids") and len(chroma_filter_res["ids"][0]) > 0:
+                        self.relevant_ids = set(chroma_filter_res["ids"][0])
+                except Exception as e:
+                    await self.send_event("status", f"⚠️ 初始化全局语义过滤器失败: {e}")
 
             # 1.5 验证提及的历史人物是否在图数据库中
-            if q_type != "generic_chat" and getattr(analysis, "historical_characters", None):
-                missing_chars = [name for name, exists in (await self.check_characters_exist(analysis.historical_characters)).items() if not exists]
+            self.historical_characters = getattr(analysis, "historical_characters", None) or []
+            if q_type != "generic_chat" and self.historical_characters:
+                missing_chars = [name for name, exists in (await self.check_characters_exist(self.historical_characters)).items() if not exists]
                 if missing_chars:
                     missing_str = "、".join(missing_chars)
                     await self.send_event("status", f"⚠️ 发现人物不在三国志中: {missing_str}")
@@ -444,9 +538,118 @@ class QAStreamPipeline:
 
             # 2b. 复杂问答逻辑
             if q_type == "complex":
-                plan = await self.planner_agent.plan(rewritten_q)
-                observations = await self.researcher_agent.research(plan)
-                self.all_observations.extend(observations)
+                self.state_info = {
+                    "time_range": "",
+                    "resolved_facts": {},
+                    "entities": [],
+                    "previous_tasks": {}
+                }
+                
+                observations = []
+                # 最多迭代 3 轮
+                for turn in range(3):
+                    await self.send_event("status", f"📋 [循迹规划] 正在进行第 {turn + 1} 轮迭代检索规划...")
+                    
+                    # 首次检索强制排除 query_neo4j_async，除非已经是后面的轮次
+                    exclude_neo4j = True
+                    if turn > 0:
+                        exclude_neo4j = False
+                        
+                    try:
+                        plan = await self.planner_agent.plan(rewritten_q, exclude_neo4j=exclude_neo4j, state_info=self.state_info)
+                    except Exception as e:
+                        if exclude_neo4j:
+                            await self.send_event("status", f"⚠️ 专用工具规划失败（{e}），尝试启用 query_neo4j_async 重新规划...")
+                            plan = await self.planner_agent.plan(rewritten_q, exclude_neo4j=False, state_info=self.state_info)
+                        else:
+                            raise e
+                            
+                    if getattr(plan, "is_finished", False) or not plan.tasks:
+                        await self.send_event("status", "📋 [循迹规划] 规划器判定事实已搜集完备，结束迭代检索。")
+                        break
+                        
+                    # 执行当前轮的任务计划
+                    step_obs = await self.researcher_agent.research(plan)
+                    observations.extend(step_obs)
+                    self.all_observations.extend(step_obs)
+                    
+                    # 记录并提取本轮事实，更新 state_info
+                    try:
+                        obs_summary = []
+                        for obs in step_obs:
+                            tool_n = obs.get("tool")
+                            query_n = obs.get("query")
+                            res_n = clean_obs_for_react(
+                                obs.get("raw_result") or obs.get("result", ""),
+                                rewritten_q,
+                                getattr(self, "relevant_ids", None)
+                            )
+                            obs_summary.append(f"工具: {tool_n}, 参数: {query_n}\n结果: {res_n}")
+                        obs_str_summary = "\n---\n".join(obs_summary)
+                        
+                        llm_extract = self.llm_cheap.with_structured_output(StateUpdate, method="function_calling")
+                        extract_prompt = EXTRACTION_HUMAN_PROMPT.format(
+                            question=rewritten_q,
+                            observations=obs_str_summary
+                        )
+                        extraction_msg = [
+                            SystemMessage(content=EXTRACTION_SYSTEM_PROMPT),
+                            HumanMessage(content=extract_prompt)
+                        ]
+                        update = await llm_extract.ainvoke(extraction_msg)
+                        
+                        # 合并更新
+                        if update.resolved_facts:
+                            self.state_info["resolved_facts"].update(update.resolved_facts)
+                        for ent in update.new_entities:
+                            if ent not in self.state_info["entities"]:
+                                self.state_info["entities"].append(ent)
+                        if update.suggested_time_range:
+                            self.state_info["time_range"] = update.suggested_time_range
+                            
+                        # 记录上一步任务
+                        for obs in step_obs:
+                            self.state_info["previous_tasks"][obs.get("tool")] = obs.get("result")
+                            
+                        await self.send_event("status", f"📋 [状态更新] 当前已锁定时间: {self.state_info['time_range']} | 新发现实体: {update.new_entities} | 累计事实: {self.state_info['resolved_facts']}")
+                    except Exception as e:
+                        await self.send_event("status", f"⚠️ [事实提取] 提取关键事实失败: {str(e)}")
+
+                # 2.3 检查 Cypher 查询结果是否过少或质量不高，若是，触发补充向量检索以增加数据召回
+                has_neo4j = False
+                neo4j_count = 0
+                for obs in observations:
+                    if obs.get("tool") == "query_neo4j":
+                        has_neo4j = True
+                        try:
+                            res_data = json.loads(obs.get("raw_result") or "[]")
+                            if isinstance(res_data, list):
+                                for row in res_data:
+                                    if isinstance(row, dict):
+                                        events = row.get("events")
+                                        if isinstance(events, list):
+                                            neo4j_count += len(events)
+                                        else:
+                                            neo4j_count += 1
+                                    else:
+                                        neo4j_count += 1
+                        except Exception:
+                            pass
+                
+                if has_neo4j and neo4j_count < 3:
+                    await self.send_event("status", f"⚠️ 图数据库查询结果较少 (共 {neo4j_count} 条记录)，触发语义向量补充检索...")
+                    config = {"callbacks": [self.handler]} if self.handler else {}
+                    try:
+                        supp_obs = await search_vector_graph_async.ainvoke({"query": rewritten_q, "k": 6}, config=config)
+                        synthesis_obs_str = truncate_tool_output(clean_obs_for_synthesis(supp_obs))
+                        self.all_observations.append({
+                            "tool": "search_vector_graph",
+                            "query": {"query": rewritten_q, "k": 6},
+                            "result": synthesis_obs_str,
+                            "raw_result": supp_obs
+                        })
+                    except Exception as e:
+                        await self.send_event("status", f"⚠️ 语义向量补充检索失败: {str(e)}")
 
             # 2.5 检查是否检索到任何有效的数据库记录，若无，则启动向量库进行兜底
             if not has_valid_db_records(self.all_observations, rewritten_q):
@@ -458,7 +661,8 @@ class QAStreamPipeline:
                     self.all_observations.append({
                         "tool": "search_vector_graph",
                         "query": {"query": rewritten_q, "k": 8},
-                        "result": synthesis_obs_str
+                        "result": synthesis_obs_str,
+                        "raw_result": fallback_obs  # 保留原始结果以防地图事件过滤掉年份和地点
                     })
                 except Exception as e:
                     await self.send_event("status", f"⚠️ 向量库兜底检索失败: {str(e)}")
@@ -495,11 +699,13 @@ async def ask_question_stream(
     支持实时上报思索轨迹（status）与打字机文本（text）。
     """
     # 0. Check Semantic Cache
-    if not dataset_item_id:
-        cached_ans, similarity = lookup_cache(question)
+    if not dataset_item_id and False:
+        cached_ans, cached_events, similarity = lookup_cache(question)
         if cached_ans:
-            print(f"⚡ [语义缓存] 命中缓存 (相似度: {similarity * 100:.1f}%)，流式返回历史回答。")
+            print(f"⚡ [语义缓存] 命中缓存 (相似度: {similarity * 100:.1f}%)，流式返回历史回答与地图事件。")
             yield json.dumps({"type": "status", "content": f"⚡ [语义缓存] 发现高度匹配的历史解答 (相似度: {similarity * 100:.1f}%)，正在调阅历史答案..."}) + "\n"
+            if cached_events:
+                yield json.dumps({"type": "events", "content": json.dumps(cached_events, ensure_ascii=False)}) + "\n"
             chunk_size = 15
             for i in range(0, len(cached_ans), chunk_size):
                 chunk = cached_ans[i:i+chunk_size]
@@ -530,6 +736,7 @@ async def ask_question_stream(
     send_event_token = active_send_event_var.set(pipeline.send_event)
 
     async def run_pipeline():
+        extracted_events_to_cache = None
         try:
             await pipeline.execute_pipeline()
             rewritten_q = getattr(pipeline, "rewritten_q", question)
@@ -553,6 +760,7 @@ async def ask_question_stream(
                 await put_event("status", f"📊 [地图事件提取] {log_msg}")
                 
             if extracted_events:
+                extracted_events_to_cache = extracted_events
                 await put_event("status", f"📊 [地图事件提取] 成功提取出 {len(extracted_events)} 个关联地图事件，正在向前端推送地图渲染。")
                 await put_event("events", json.dumps(extracted_events, ensure_ascii=False))
             else:
@@ -562,7 +770,7 @@ async def ask_question_stream(
             ans_str = "".join(pipeline.collected_text)
             langfuse_client.flush()
             if not dataset_item_id:
-                save_cache(question, ans_str)
+                save_cache(question, ans_str, extracted_events_to_cache)
             print("\n")
 
     producer_task = asyncio.create_task(run_pipeline())
@@ -634,7 +842,20 @@ def ask_question(
 
 if __name__ == "__main__":
     async def run_main():
-        async for chunk in ask_question_stream("分析曹操在官渡之战前后的战略调整"):
+        import subprocess
+        print("🧹 Clearing semantic cache...")
+        subprocess.run(["python3", "scripts/inspect_chroma.py", "--clear"])
+        
+        print("\n🚀 Executing question pipeline...")
+        meta = {}
+        async for chunk in ask_question_stream("陆逊死后谁是东吴的顶梁柱", trace_metadata=meta):
             print(chunk.strip())
+            
+        trace_id = meta.get("trace_id")
+        if trace_id:
+            print(f"\n📡 Found trace ID: {trace_id}. Running trace analysis...")
+            subprocess.run(["python3", "scratch/analyze_trace.py", trace_id])
+        else:
+            print("⚠️ No trace ID was returned.")
             
     asyncio.run(run_main())

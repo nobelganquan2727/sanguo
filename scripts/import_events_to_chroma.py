@@ -91,7 +91,9 @@ def main():
 
     print("Connecting to ChromaDB...")
     try:
-        chroma_client = chromadb.PersistentClient(path="logs/chroma_cache")
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        db_path = os.path.join(os.path.dirname(script_dir), "logs", "chroma_cache")
+        chroma_client = chromadb.PersistentClient(path=db_path)
         collection = chroma_client.get_or_create_collection(
             name="event_embeddings",
             metadata={"hnsw:space": "cosine"}

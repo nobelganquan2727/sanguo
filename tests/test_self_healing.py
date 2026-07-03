@@ -16,7 +16,7 @@ class TestSelfHealing(unittest.TestCase):
     @patch('agent.tools.get_llm')
     @patch('agent.qa_agent.get_llm')
     def test_correction_success(self, mock_get_llm, mock_tools_get_llm, mock_run_query, mock_lookup, mock_save):
-        mock_lookup.return_value = (None, 0.0)
+        mock_lookup.return_value = (None, None, 0.0)
         
         # Mock LLM
         mock_llm = MagicMock()
@@ -87,7 +87,7 @@ class TestSelfHealing(unittest.TestCase):
     @patch('agent.tools.get_llm')
     @patch('agent.qa_agent.get_llm')
     def test_graceful_degradation(self, mock_get_llm, mock_tools_get_llm, mock_run_query, mock_lookup, mock_save):
-        mock_lookup.return_value = (None, 0.0)
+        mock_lookup.return_value = (None, None, 0.0)
         
         mock_llm = MagicMock()
         mock_get_llm.return_value = mock_llm

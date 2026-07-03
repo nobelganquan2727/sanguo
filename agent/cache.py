@@ -10,7 +10,8 @@ from typing import Optional, Tuple
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-CACHE_FILE = "logs/semantic_cache.json"
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CACHE_FILE = os.path.join(PROJECT_ROOT, "logs", "semantic_cache.json")
 
 # Detect if running under a testing framework
 IS_TESTING = "unittest" in sys.modules or "pytest" in sys.modules
@@ -20,7 +21,7 @@ if IS_TESTING:
     client = chromadb.EphemeralClient()
 else:
     # Use PersistentClient for production caching
-    client = chromadb.PersistentClient(path="logs/chroma_cache")
+    client = chromadb.PersistentClient(path=os.path.join(PROJECT_ROOT, "logs", "chroma_cache"))
 
 def _get_collection():
     return client.get_or_create_collection(
@@ -65,24 +66,24 @@ def get_bge_m3_embedding(text: str) -> list[float]:
         raise ValueError(f"No embeddings returned from SiliconFlow: {response}")
     return embeddings
 
-def lookup_cache(question: str, threshold: float = 0.92) -> Tuple[Optional[str], float]:
+def lookup_cache(question: str, threshold: float = 0.92) -> Tuple[Optional[str], Optional[list], float]:
     """
     Lookup a question in the local semantic cache.
-    Returns (cached_answer, similarity_score) if a match above the threshold is found,
-    otherwise (None, best_similarity_score).
+    Returns (cached_answer, map_events, similarity_score) if a match above the threshold is found,
+    otherwise (None, None, best_similarity_score).
     """
     if not os.path.exists(CACHE_FILE):
         try:
             client.delete_collection("semantic_cache")
         except Exception:
             pass
-        return None, 0.0
+        return None, None, 0.0
         
     try:
         q_vector = get_bge_m3_embedding(question)
     except Exception as e:
         print(f"⚠️ Failed to get embedding for cache lookup: {e}")
-        return None, 0.0
+        return None, None, 0.0
         
     try:
         collection = _get_collection()
@@ -92,24 +93,34 @@ def lookup_cache(question: str, threshold: float = 0.92) -> Tuple[Optional[str],
         )
     except Exception as e:
         print(f"⚠️ Failed to query ChromaDB collection: {e}")
-        return None, 0.0
+        return None, None, 0.0
         
     if not results or not results.get("ids") or len(results["ids"][0]) == 0:
-        return None, 0.0
+        return None, None, 0.0
         
     distance = results["distances"][0][0]
     similarity = 1.0 - distance
     if similarity >= 0.99999:
         similarity = 1.0
-    answer = results["metadatas"][0][0].get("answer", "")
-    
-    if similarity >= threshold:
-        return answer, similarity
         
-    return None, similarity
+    metadata = results["metadatas"][0][0]
+    answer = metadata.get("answer", "")
+    map_events_str = metadata.get("map_events")
+    map_events = None
+    if map_events_str:
+        try:
+            map_events = json.loads(map_events_str)
+        except Exception:
+            pass
+     
+    if similarity >= threshold:
+        return answer, map_events, similarity
+        
+    return None, None, similarity
 
-def save_cache(question: str, answer: str) -> None:
-    """Save a question and its answer to the local semantic cache."""
+
+def save_cache(question: str, answer: str, map_events: Optional[list] = None) -> None:
+    """Save a question, its answer, and associated map events to the local semantic cache."""
     # Do not cache error results or standard model fallback messages
     if not answer or answer.startswith("Error") or "病体抱恙" in answer or "简牍翻阅多有不便" in answer:
         return
@@ -123,17 +134,22 @@ def save_cache(question: str, answer: str) -> None:
     # Ensure logs folder exists
     os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
     try:
-        with open(CACHE_FILE, "w", encoding="utf-8") as f:
-            f.write("{}")
+        if not os.path.exists(CACHE_FILE):
+            with open(CACHE_FILE, "w", encoding="utf-8") as f:
+                f.write("{}")
     except Exception as e:
         print(f"⚠️ Failed to write CACHE_FILE placeholder: {e}")
         
     try:
         collection = _get_collection()
+        metadata = {"answer": answer}
+        if map_events:
+            metadata["map_events"] = json.dumps(map_events, ensure_ascii=False)
+            
         collection.upsert(
             ids=[question],
             embeddings=[q_vector],
-            metadatas=[{"answer": answer}]
+            metadatas=[metadata]
         )
         print(f"💾 Saved query to semantic cache: '{question}'")
     except Exception as e:

@@ -52,24 +52,24 @@ class TestSemanticCache(unittest.TestCase):
         mock_embedding.side_effect = lambda text: vectors.get(text, [0.0, 0.0, 0.0])
         
         # Initially, cache lookup should miss
-        ans, sim = lookup_cache("曹操是谁？")
+        ans, events, sim = lookup_cache("曹操是谁？")
         self.assertIsNone(ans)
         
         # Save a reply
         save_cache("曹操是谁？", "魏武帝曹操，字孟德。")
         
         # Exact lookup should hit
-        ans, sim = lookup_cache("曹操是谁？")
+        ans, events, sim = lookup_cache("曹操是谁？")
         self.assertEqual(ans, "魏武帝曹操，字孟德。")
         self.assertAlmostEqual(sim, 1.0)
         
         # Similar lookup should hit
-        ans, sim = lookup_cache("阿瞒是谁？")
+        ans, events, sim = lookup_cache("阿瞒是谁？")
         self.assertEqual(ans, "魏武帝曹操，字孟德。")
         self.assertTrue(sim > 0.92)
         
         # Unrelated lookup should miss
-        ans, sim = lookup_cache("诸葛亮是谁？")
+        ans, events, sim = lookup_cache("诸葛亮是谁？")
         self.assertIsNone(ans)
         self.assertTrue(sim < 0.92)
 
@@ -87,7 +87,7 @@ class TestSemanticCache(unittest.TestCase):
 
     @patch("agent.qa_agent.lookup_cache")
     def test_ask_question_hits_cache(self, mock_lookup):
-        mock_lookup.return_value = ("魏武帝曹操，字孟德。", 0.98)
+        mock_lookup.return_value = ("魏武帝曹操，字孟德。", None, 0.98)
         
         # Call ask_question, it should return the cached answer immediately
         # without running any LLM logic
