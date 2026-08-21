@@ -294,7 +294,7 @@ export default function EventPanel({
                   const selected = selectedEventIds.has(evt.id);
                   return (
                     <div
-                      key={idx}
+                      key={evt.id || idx}
                       ref={(node) => { eventRefs.current[evt.id] = node; }}
                       onMouseEnter={(e) => {
                         const wrapperRect = wrapperRef.current?.getBoundingClientRect();

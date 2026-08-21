@@ -41,18 +41,28 @@ export default function HoverTooltip({
 
   const isList = events.length > 1;
 
-  const style: React.CSSProperties = isMobile
-    ? {
-        position: 'absolute',
+  const style: React.CSSProperties = (() => {
+    if (isMobile) {
+      return {
+        position: 'absolute' as const,
         left: '50%',
         transform: 'translateX(-50%)',
         bottom: '80px',
         top: 'auto',
-      }
-    : {
-        top,
-        left: left !== undefined ? left : 328,
       };
+    }
+    const width = 420;
+    const height = 280;
+    const vw = typeof window === 'undefined' ? 1280 : window.innerWidth;
+    const vh = typeof window === 'undefined' ? 800 : window.innerHeight;
+    let nextLeft = left ?? 328;
+    let nextTop = top;
+    if (nextLeft + width + 16 > vw) nextLeft = Math.max(12, vw - width - 16);
+    if (nextLeft < 12) nextLeft = 12;
+    if (nextTop + height + 16 > vh) nextTop = Math.max(12, top - height - 20);
+    if (nextTop < 12) nextTop = 12;
+    return { top: nextTop, left: nextLeft };
+  })();
 
   return (
     <div
@@ -75,7 +85,7 @@ export default function HoverTooltip({
       </button>
       <div className="flex flex-col gap-3">
         {events.map((evt, idx) => {
-          const isActive = isList ? activeIdx === idx : true;
+          const isActive = isList ? activeIdx === idx || (activeIdx === null && idx === 0) : true;
           return (
             <div 
               key={evt.id || idx} 

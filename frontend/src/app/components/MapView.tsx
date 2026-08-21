@@ -3,8 +3,10 @@
 import DeckGL from '@deck.gl/react';
 import MapGL from 'react-map-gl/maplibre';
 import { ScatterplotLayer, TextLayer, PathLayer } from '@deck.gl/layers';
+import { FlyToInterpolator } from '@deck.gl/core';
+import { CollisionFilterExtension } from '@deck.gl/extensions';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { locationNameMatches, locationMatchesGeoName } from '../utils/locationMatch';
 
 // ESRI World Physical Map — 无需 API Key，国内直连，古贴地形风格
@@ -73,60 +75,64 @@ const SMOOTHED_RIVERS = RIVERS.map(r => ({
   path: smoothPath(r.path, 3)
 }));
 
-const BIOGRAPHY_PALETTE: {
-  name: string;
-  bg: [number, number, number, number];
-  border: [number, number, number, number];
-  path: [number, number, number, number];
-  pathGlow: [number, number, number, number];
-}[] = [
-  {
-    name: 'amber',
-    bg: [217, 119, 6, 230], // Amber
-    border: [251, 191, 36, 255],
-    path: [245, 158, 11, 220],
-    pathGlow: [245, 158, 11, 80]
-  },
-  {
-    name: 'teal',
-    bg: [13, 148, 136, 230], // Teal
-    border: [45, 212, 191, 255],
-    path: [20, 184, 166, 220],
-    pathGlow: [20, 184, 166, 80]
-  },
-  {
-    name: 'indigo',
-    bg: [79, 70, 229, 230], // Indigo
-    border: [129, 140, 248, 255],
-    path: [99, 102, 241, 220],
-    pathGlow: [99, 102, 241, 80]
-  },
-  {
-    name: 'rose',
-    bg: [225, 29, 72, 230], // Rose
-    border: [251, 113, 133, 255],
-    path: [244, 63, 94, 220],
-    pathGlow: [244, 63, 94, 80]
-  },
-  {
-    name: 'emerald',
-    bg: [5, 150, 105, 230], // Emerald
-    border: [52, 211, 153, 255],
-    path: [16, 185, 129, 220],
-    pathGlow: [16, 185, 129, 80]
-  },
-  {
-    name: 'violet',
-    bg: [124, 58, 237, 230], // Violet
-    border: [167, 139, 250, 255],
-    path: [139, 92, 246, 220],
-    pathGlow: [139, 92, 246, 80]
-  }
-];
+const COLLISION = new CollisionFilterExtension();
+const FLY_TO = new FlyToInterpolator({ speed: 1.35, curve: 1.6, maxDuration: 1800 });
+
+const MIN_ZOOM = 3.3;
+const MAX_ZOOM = 8;
+const BOUNDS = { west: 96, east: 126.5, south: 18.5, north: 43.5 };
+const CAPITALS = new Set(['洛阳', '长安', '建业', '成都', '邺城', '许昌']);
+const MAJOR_CITIES = new Set(['洛阳', '长安', '邺城', '建业', '许昌', '成都', '襄阳', '江陵', '汉中', '宛城']);
+const CITY_LABEL_PX = 56;
+const EVENT_CLUSTER_PX = 78;
+
+function clampViewState(vs: any) {
+  return {
+    longitude: Math.min(BOUNDS.east, Math.max(BOUNDS.west, vs.longitude)),
+    latitude: Math.min(BOUNDS.north, Math.max(BOUNDS.south, vs.latitude)),
+    zoom: Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, vs.zoom ?? MIN_ZOOM)),
+    pitch: 0,
+    bearing: 0,
+    minZoom: MIN_ZOOM,
+    maxZoom: MAX_ZOOM,
+  };
+}
+
+function mercatorX(lng: number, zoom: number) {
+  return ((lng + 180) / 360) * 256 * 2 ** zoom;
+}
+
+function mercatorY(lat: number, zoom: number) {
+  const clamped = Math.max(-85.05, Math.min(85.05, lat));
+  const s = Math.sin((clamped * Math.PI) / 180);
+  const y = 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+  return y * 256 * 2 ** zoom;
+}
+
+function pixelDistance(
+  a: { lng: number; lat: number },
+  b: { lng: number; lat: number },
+  zoom: number,
+) {
+  return Math.hypot(
+    mercatorX(a.lng, zoom) - mercatorX(b.lng, zoom),
+    mercatorY(a.lat, zoom) - mercatorY(b.lat, zoom),
+  );
+}
+
+function cityImportance(d: any, highlighted: boolean) {
+  if (highlighted) return 400;
+  if (CAPITALS.has(d.std_name)) return 300;
+  if (d.level === 'province') return 200;
+  if (MAJOR_CITIES.has(d.std_name)) return 150;
+  if (d.level === 'commandery') return 80;
+  return 20;
+}
 
 interface MapViewProps {
   viewState: any;
   onViewStateChange: (vs: any) => void;
+  cameraTick?: number;
   geoData: any[];
   highlightedLocNames: Set<string>;
   onLocationClick?: (location: any) => void;
@@ -137,56 +143,74 @@ interface MapViewProps {
   onMapClick?: () => void;
 }
 
-export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick, eventsList, allPersons, onEventClick, onEventHover, onMapClick }: MapViewProps) {
+export default function MapView({
+  viewState,
+  onViewStateChange,
+  cameraTick = 0,
+  geoData,
+  highlightedLocNames,
+  onLocationClick,
+  eventsList,
+  allPersons,
+  onEventClick,
+  onEventHover,
+  onMapClick,
+}: MapViewProps) {
+  const [internalView, setInternalView] = useState<any>(() => clampViewState(viewState));
+  const [hoveredEventKey, setHoveredEventKey] = useState<string | null>(null);
+  const lastCameraTick = useRef(cameraTick);
+
+  useEffect(() => {
+    if (cameraTick === lastCameraTick.current) return;
+    lastCameraTick.current = cameraTick;
+    setInternalView({
+      ...clampViewState(viewState),
+      transitionDuration: viewState.transitionDuration || 1100,
+      transitionInterpolator: FLY_TO,
+    });
+  }, [cameraTick, viewState]);
+
   const isHL = useCallback(
     (name: string) => [...highlightedLocNames].some(l => l && locationNameMatches(l, name)),
     [highlightedLocNames],
   );
 
+  const zoomBucket = Math.round((internalView.zoom ?? 4.2) * 2) / 2;
   const hasSelection = highlightedLocNames.size > 0;
-  const visibleData: any[] = [];
-  const overlapThreshold = 1.5 / viewState.zoom;
 
-  const sortedGeo = [...geoData].sort((a, b) => {
-    const aHL = isHL(a.std_name || '');
-    const bHL = isHL(b.std_name || '');
-    return (bHL ? 1 : 0) - (aHL ? 1 : 0);
-  });
+  const visibleData = useMemo(() => {
+    const ranked = [...geoData].sort(
+      (a, b) => cityImportance(b, isHL(b.std_name || '')) - cityImportance(a, isHL(a.std_name || '')),
+    );
+    const visible: any[] = [];
 
-  for (const d of sortedGeo) {
-    const name = d.std_name || '';
-    const highlighted = isHL(name);
-    const level = d.level || 'county';
-    let shouldShow = false;
+    for (const d of ranked) {
+      const name = d.std_name || '';
+      const highlighted = isHL(name);
+      const level = d.level || 'county';
+      let shouldShow = false;
 
-    if (hasSelection) {
-      shouldShow = highlighted || level === 'province' || ['洛阳', '长安', '建业', '成都', '邺城', '许昌'].includes(name);
-    } else {
-      if (viewState.zoom >= 5.0) {
-        shouldShow = level === 'province' || level === 'commandery' ||
-          ['洛阳', '长安', '邺城', '建业', '许昌', '成都', '襄阳', '江陵', '汉中', '宛城'].includes(name);
+      if (hasSelection) {
+        shouldShow = highlighted || level === 'province' || CAPITALS.has(name);
+      } else if (zoomBucket >= 6.5) {
+        shouldShow = true;
+      } else if (zoomBucket >= 5.0) {
+        shouldShow = level === 'province' || level === 'commandery' || MAJOR_CITIES.has(name);
       } else {
-        shouldShow = level === 'province' || ['洛阳', '长安', '建业', '成都', '邺城', '许昌'].includes(name);
+        shouldShow = level === 'province' || CAPITALS.has(name);
       }
+
+      if (!shouldShow) continue;
+      if (visible.some(v => pixelDistance(v, d, zoomBucket) < CITY_LABEL_PX)) continue;
+      visible.push(d);
     }
 
-    if (!shouldShow) continue;
-    const overlap = visibleData.some(
-      v => Math.abs(v.lng - d.lng) < overlapThreshold && Math.abs(v.lat - d.lat) < overlapThreshold,
-    );
-    if (!overlap) visibleData.push(d);
-  }
+    return visible;
+  }, [geoData, hasSelection, isHL, zoomBucket]);
 
-  const eventPoints: any[] = [];
-  const uniqueProtos: string[] = Array.from(new Set(eventsList?.map(e => e.protagonist).filter(Boolean) || [])) as string[];
-  const protagonistPaths: Record<string, [number, number][]> = {};
+  const eventPoints = useMemo(() => {
+    if (!eventsList || eventsList.length === 0) return [];
 
-  const getProtoColorStyle = (protoName: string) => {
-    const idx = uniqueProtos.indexOf(protoName);
-    return BIOGRAPHY_PALETTE[idx >= 0 ? idx % BIOGRAPHY_PALETTE.length : 0];
-  };
-
-  if (eventsList && eventsList.length > 0) {
     const TYPE_PRIORITY: Record<string, number> = {
       '军事征伐': 3,
       '政治谋虑': 2,
@@ -194,20 +218,14 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       '内政治理': 1,
     };
     const getPriority = (type?: string) => (type && TYPE_PRIORITY[type]) || 0;
-
     const seenTitles = new Set<string>();
     const validEvents: any[] = [];
 
     for (const evt of eventsList) {
       if (!evt.locations || evt.locations.length === 0) continue;
-
       if (seenTitles.has(evt.title)) continue;
       seenTitles.add(evt.title);
-
       if (evt.year == null) continue;
-
-      const prio = getPriority(evt.type);
-      // if (prio === 0) continue;
 
       const firstLoc = evt.locations.find((l: any) => l);
       if (!firstLoc) continue;
@@ -225,84 +243,102 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       }
 
       if (typeof lat === 'number' && typeof lng === 'number') {
-        validEvents.push({ ...evt, lng, lat, priority: prio });
+        validEvents.push({ ...evt, lng, lat, priority: getPriority(evt.type) });
       }
     }
 
-    // 展示所有匹配类型的事件
-    validEvents.sort((a, b) => b.priority - a.priority);
+    validEvents.sort((a, b) => b.priority - a.priority || (b.major_events?.length || 0) - (a.major_events?.length || 0));
 
-    // 计算重叠，将重叠的事件聚合
-    const lngThreshold = 6.0 / viewState.zoom;
-    const latThreshold = 2.0 / viewState.zoom;
     const groupedEvents: any[][] = [];
-
     for (const evt of validEvents) {
       let placed = false;
       for (const group of groupedEvents) {
-        const center = group[0];
-        if (Math.abs(center.lng - evt.lng) < lngThreshold && Math.abs(center.lat - evt.lat) < latThreshold) {
+        if (pixelDistance(group[0], evt, zoomBucket) < EVENT_CLUSTER_PX) {
           group.push(evt);
           placed = true;
           break;
         }
       }
-      if (!placed) {
-        groupedEvents.push([evt]);
-      }
+      if (!placed) groupedEvents.push([evt]);
     }
 
     const getShortLabel = (title: string) => {
       if (allPersons && allPersons.length > 0) {
         for (const p of allPersons) {
-          if (title.startsWith(p)) {
-            return p;
-          }
+          if (title.startsWith(p)) return p;
         }
       }
       return title.length > 4 ? title.substring(0, 4) : title;
     };
 
-    for (const group of groupedEvents) {
+    return groupedEvents.map((group, index) => {
       const topEvent = group[0];
       const shortTitle = getShortLabel(topEvent.title);
-
       const isRed = group.some((e: any) => e.major_events && e.major_events.length > 0);
-      const bgColor = isRed ? [185, 28, 28, 220] : [20, 83, 45, 220];
-      const borderColor = isRed ? [239, 68, 68, 255] : [34, 197, 94, 255];
-
-      eventPoints.push({
+      return {
+        id: `${topEvent.id || shortTitle}-${index}`,
         lng: topEvent.lng,
         lat: topEvent.lat,
         label: group.length > 1 ? `${shortTitle} 等${group.length}件` : shortTitle,
         events: group,
-        bgColor,
-        borderColor,
-      });
-    }
-  }
+        bgColor: isRed ? [185, 28, 28, 230] : [20, 83, 45, 230],
+        borderColor: isRed ? [248, 113, 113, 255] : [52, 211, 153, 255],
+        hoverBg: isRed ? [220, 38, 38, 245] : [22, 101, 52, 245],
+        collisionPriority: 80 + Math.min(group.length, 12),
+      };
+    });
+  }, [allPersons, eventsList, geoData, zoomBucket]);
 
-  const layers = [
+  const layers = useMemo(() => [
+    new PathLayer({
+      id: 'rivers-glow',
+      data: SMOOTHED_RIVERS,
+      getPath: (d: any) => d.path,
+      getColor: [70, 145, 196, 55],
+      getWidth: 7.5,
+      widthUnits: 'pixels',
+      widthMinPixels: 4,
+      rounded: true,
+      pickable: false,
+    }),
     new PathLayer({
       id: 'rivers-layer',
       data: SMOOTHED_RIVERS,
       getPath: (d: any) => d.path,
-      getColor: (d: any) => d.color,
-      getWidth: (d: any) => d.width || 3.0,
+      getColor: [64, 140, 196, 175],
+      getWidth: 2.1,
       widthUnits: 'pixels',
+      widthMinPixels: 1.5,
       rounded: true,
-      pickable: false
+      pickable: false,
     }),
-
+    new ScatterplotLayer({
+      id: 'cities-halo-layer',
+      data: visibleData,
+      getPosition: (d: any) => [d.lng, d.lat],
+      getFillColor: (d: any) => isHL(d.std_name) ? [34, 197, 94, 55] : [185, 28, 28, 45],
+      getRadius: (d: any) => isHL(d.std_name) ? 28000 : 14000,
+      radiusMinPixels: 7,
+      radiusMaxPixels: 16,
+      pickable: false,
+      updateTriggers: { getFillColor: [highlightedLocNames], getRadius: [highlightedLocNames] },
+    }),
     new ScatterplotLayer({
       id: 'cities-layer',
       data: visibleData,
       getPosition: (d: any) => [d.lng, d.lat],
-      getFillColor: (d: any) => isHL(d.std_name) ? [34, 197, 94, 255] : [185, 28, 28, 200],
+      getFillColor: (d: any) => isHL(d.std_name) ? [34, 197, 94, 255] : [185, 28, 28, 230],
+      getLineColor: [255, 252, 245, 230],
+      getLineWidth: 1.5,
+      lineWidthUnits: 'pixels',
+      stroked: true,
+      filled: true,
       getRadius: (d: any) => isHL(d.std_name) ? 18000 : 8000,
-      radiusMinPixels: 3,
+      radiusMinPixels: 4,
       radiusMaxPixels: 10,
       pickable: true,
+      autoHighlight: true,
+      highlightColor: [251, 191, 36, 180],
       updateTriggers: { getFillColor: [highlightedLocNames], getRadius: [highlightedLocNames] },
       onClick: (info: any) => {
         if (info.object) onLocationClick?.(info.object);
@@ -313,72 +349,116 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       data: visibleData,
       getPosition: (d: any) => [d.lng, d.lat],
       getText: (d: any) => d.std_name,
-      getSize: (d: any) => isHL(d.std_name) ? 16 : 12,
-      getColor: (d: any) => isHL(d.std_name) ? [245, 158, 11, 255] : [41, 37, 36, 255],
+      getSize: (d: any) => isHL(d.std_name) ? 16 : d.level === 'province' ? 14 : 12,
+      getColor: (d: any) => isHL(d.std_name) ? [180, 83, 9, 255] : [41, 37, 36, 255],
       getAlignmentBaseline: 'bottom',
-      getPixelOffset: [0, -10],
-      fontFamily: 'Noto Serif SC, serif',
+      getPixelOffset: [0, -11],
+      fontFamily: 'Noto Serif SC, Source Han Serif SC, serif',
       fontWeight: 'bold',
+      fontSettings: { sdf: true, radius: 12, cutoff: 0.25 },
+      outlineColor: [252, 248, 236, 235],
+      outlineWidth: 2.4,
       characterSet: 'auto',
       pickable: true,
+      extensions: [COLLISION],
+      collisionGroup: 'labels',
+      collisionTestProps: { sizeScale: 1.25 },
+      getCollisionPriority: (d: any) => {
+        if (isHL(d.std_name)) return 40;
+        if (d.level === 'province') return 20;
+        if (CAPITALS.has(d.std_name)) return 15;
+        return 0;
+      },
       onClick: (info: any) => {
         if (info.object) onLocationClick?.(info.object);
       },
-      updateTriggers: { getSize: [highlightedLocNames], getColor: [highlightedLocNames] },
+      updateTriggers: {
+        getSize: [highlightedLocNames],
+        getColor: [highlightedLocNames],
+        getCollisionPriority: [highlightedLocNames],
+      },
     }),
     new TextLayer({
       id: 'events-text-layer',
       data: eventPoints,
       getPosition: (d: any) => [d.lng, d.lat],
       getText: (d: any) => d.label,
-      getSize: 13,
+      getSize: (d: any) => d.id === hoveredEventKey ? 14.5 : 13,
       getColor: [255, 255, 255, 255],
-      getBackgroundColor: (d: any) => d.bgColor || [26, 47, 76, 230],
+      getBackgroundColor: (d: any) => (d.id === hoveredEventKey ? d.hoverBg : d.bgColor) || [26, 47, 76, 230],
       getBorderColor: (d: any) => d.borderColor || [245, 158, 11, 255],
       getBorderWidth: 1,
       background: true,
-      backgroundPadding: [6, 4, 6, 4],
-      backgroundBorderRadius: 4,
+      backgroundPadding: [8, 5, 8, 5],
+      backgroundBorderRadius: 6,
       getAlignmentBaseline: 'top',
-      getPixelOffset: [0, 15],
-      fontFamily: 'Noto Serif SC, serif',
+      getPixelOffset: [0, 16],
+      fontFamily: 'Noto Serif SC, Source Han Serif SC, serif',
       fontWeight: 'bold',
       characterSet: 'auto',
       pickable: true,
+      autoHighlight: false,
+      extensions: [COLLISION],
+      collisionGroup: 'labels',
+      collisionTestProps: { sizeScale: 1.2 },
+      getCollisionPriority: (d: any) => d.collisionPriority ?? 80,
       onClick: (info: any) => {
         if (onEventClick) onEventClick(info);
       },
       onHover: (info: any) => {
-        if (onEventHover) onEventHover(info);
+        const key = info.object?.id ?? null;
+        setHoveredEventKey(prev => (prev === key ? prev : key));
+        onEventHover?.(info);
       },
       updateTriggers: {
-        getText: [eventsList],
-        getBackgroundColor: [eventsList],
-        getBorderColor: [eventsList],
-      }
+        getText: [eventPoints],
+        getBackgroundColor: [eventPoints, hoveredEventKey],
+        getBorderColor: [eventPoints],
+        getSize: [hoveredEventKey],
+      },
+      transitions: {
+        getSize: 160,
+        getBackgroundColor: 160,
+      },
     }),
-  ];
+  ], [eventPoints, highlightedLocNames, hoveredEventKey, isHL, onEventClick, onEventHover, onLocationClick, visibleData]);
 
   return (
-    <div className="absolute inset-0 z-0 opacity-95">
+    <div className="absolute inset-0 z-0">
       <DeckGL
-        viewState={viewState}
-        onViewStateChange={({ viewState: vs }) => {
-          if ('longitude' in vs && 'latitude' in vs && 'zoom' in vs) {
-            onViewStateChange({
-              longitude: vs.longitude,
-              latitude: vs.latitude,
-              zoom: vs.zoom,
-              pitch: vs.pitch ?? 0,
-              bearing: vs.bearing ?? 0,
-            });
-          }
+        viewState={internalView}
+        onViewStateChange={({ viewState: vs, interactionState }) => {
+          if (!('longitude' in vs) || !('latitude' in vs) || !('zoom' in vs)) return;
+          const next = {
+            ...clampViewState(vs),
+            transitionDuration: 0,
+            transitionInterpolator: undefined,
+          };
+          setInternalView(next);
+          const interacting = !!(
+            interactionState?.isDragging
+            || interactionState?.isPanning
+            || interactionState?.isZooming
+            || interactionState?.inTransition
+          );
+          if (!interacting) onViewStateChange(next);
         }}
-        controller={true}
+        controller={{
+          dragRotate: false,
+          touchRotate: false,
+          keyboard: false,
+          inertia: 500,
+          scrollZoom: { speed: 0.02, smooth: true },
+          maxBounds: [
+            [BOUNDS.west, BOUNDS.south],
+            [BOUNDS.east, BOUNDS.north],
+          ],
+        }}
+        getCursor={({ isHovering, isDragging }) => (
+          isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'
+        )}
         onClick={(info) => {
-          if (!info.object) {
-            onMapClick?.();
-          }
+          if (!info.object) onMapClick?.();
         }}
         layers={layers}
       >
