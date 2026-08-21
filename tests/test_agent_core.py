@@ -45,16 +45,26 @@ class TestAgentCore(unittest.TestCase):
         mock_structured_llm = MagicMock()
         mock_structured_llm.ainvoke = AsyncMock(return_value=mock_intent_analysis)
         
-        from agent.qa_agent import DAGPlan
+        from agent.qa_agent import DAGPlan, DAGPlanNoNeo4j, StateUpdate
+
         def mock_with_structured_output(schema, **kwargs):
             m = MagicMock()
             if schema == IntentAnalysis:
                 m.ainvoke = AsyncMock(return_value=mock_intent_analysis)
+            elif schema == DAGPlanNoNeo4j:
+                m.ainvoke = AsyncMock(return_value=DAGPlanNoNeo4j(
+                    thought="test memory planning",
+                    tasks=[],
+                    is_finished=True,
+                ))
             elif schema == DAGPlan:
                 m.ainvoke = AsyncMock(return_value=DAGPlan(
                     thought="test memory planning",
-                    tasks=[]
+                    tasks=[],
+                    is_finished=True,
                 ))
+            else:
+                m.ainvoke = AsyncMock(return_value=StateUpdate())
             return m
         mock_llm.with_structured_output.side_effect = mock_with_structured_output
         
@@ -114,16 +124,25 @@ class TestAgentCore(unittest.TestCase):
         mock_structured_llm = MagicMock()
         mock_structured_llm.ainvoke = AsyncMock(return_value=mock_intent_analysis)
         
-        from agent.qa_agent import DAGPlan
+        from agent.qa_agent import DAGPlan, DAGPlanNoNeo4j, StateUpdate
         def mock_with_structured_output(schema, **kwargs):
             m = MagicMock()
             if schema == IntentAnalysis:
                 m.ainvoke = AsyncMock(return_value=mock_intent_analysis)
+            elif schema == DAGPlanNoNeo4j:
+                m.ainvoke = AsyncMock(return_value=DAGPlanNoNeo4j(
+                    thought="test complex planning",
+                    tasks=[],
+                    is_finished=True,
+                ))
             elif schema == DAGPlan:
                 m.ainvoke = AsyncMock(return_value=DAGPlan(
                     thought="test complex planning",
-                    tasks=[]
+                    tasks=[],
+                    is_finished=True,
                 ))
+            else:
+                m.ainvoke = AsyncMock(return_value=StateUpdate())
             return m
         mock_llm.with_structured_output.side_effect = mock_with_structured_output
         

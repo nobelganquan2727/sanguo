@@ -64,11 +64,14 @@ EXTRACTION_HUMAN_PROMPT = """
 """
 
 load_dotenv()
-from langfuse import Langfuse
 
 
 def _env_flag(name: str) -> bool:
     return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _langfuse_configured() -> bool:
+    return bool(os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"))
 
 from agent.tools import (
     get_llm,
@@ -604,7 +607,7 @@ class QAStreamPipeline:
                         else:
                             raise e
                             
-                    if getattr(plan, "is_finished", False) or not plan.tasks:
+                    if getattr(plan, "is_finished", False) is True or not getattr(plan, "tasks", None):
                         await self.send_event("status", "📋 [循迹规划] 规划器判定事实已搜集完备，结束迭代检索。")
                         break
                         
@@ -746,12 +749,18 @@ async def ask_question_stream(
             yield json.dumps({"type": "done", "content": ""}) + "\n"
             return
 
-    langfuse_client = Langfuse()
-    trace = langfuse_client.trace(name="qa_pipeline", input=question, dataset_item_id=dataset_item_id)
-    if trace_metadata is not None:
-        trace_metadata["trace_id"] = trace.id
-        
-    handler = trace.get_langchain_handler()
+    langfuse_client = None
+    handler = None
+    if _langfuse_configured():
+        from langfuse import Langfuse
+        langfuse_client = Langfuse()
+        trace = langfuse_client.trace(name="qa_pipeline", input=question, dataset_item_id=dataset_item_id)
+        if trace_metadata is not None:
+            trace_metadata["trace_id"] = trace.id
+        handler = trace.get_langchain_handler()
+    elif trace_metadata is not None:
+        trace_metadata["trace_id"] = None
+
     token = active_callback_var.set(handler)
     queue = asyncio.Queue()
     
@@ -800,7 +809,8 @@ async def ask_question_stream(
         finally:
             await queue.put(None)
             ans_str = "".join(pipeline.collected_text)
-            langfuse_client.flush()
+            if langfuse_client:
+                langfuse_client.flush()
             if not dataset_item_id and not _env_flag("AGENT_DISABLE_CACHE"):
                 save_cache(question, ans_str, extracted_events_to_cache)
             print("\n")
@@ -856,20 +866,15 @@ def ask_question(
             except Exception:
                 pass
         return "".join(chunks)
-    
+
     try:
-        loop = asyncio.get_event_loop()
+        asyncio.get_running_loop()
     except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-    if loop.is_running():
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(asyncio.run, _run())
-            return future.result()
-    else:
-        return loop.run_until_complete(_run())
+        return asyncio.run(_run())
+
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        return executor.submit(asyncio.run, _run()).result()
 
 
 if __name__ == "__main__":
