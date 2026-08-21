@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMapData } from './hooks/useMapData';
 import { useLinkify } from './hooks/useLinkify';
 import MapView from './components/MapView';
@@ -18,6 +18,7 @@ const EVENT_PAGE_SIZE = 100;
 
 export default function Home() {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
+  const [cameraTick, setCameraTick] = useState(0);
   const [timeRange, setTimeRange] = useState([190, 195]);
   const [timelineYear, setTimelineYear] = useState(190);
   const [showTimeline, setShowTimeline] = useState(true);
@@ -149,6 +150,19 @@ export default function Home() {
   const [editField, setEditField] = useState<'locations' | 'std_start_year'>('locations');
   const [editValue, setEditValue] = useState('');
 
+  const flyTo = useCallback((lng: number, lat: number, zoom: number, duration = 1200) => {
+    setViewState(vs => ({
+      ...vs,
+      longitude: lng,
+      latitude: lat,
+      zoom,
+      pitch: 0,
+      bearing: 0,
+      transitionDuration: duration,
+    }));
+    setCameraTick(t => t + 1);
+  }, []);
+
   const {
     geoData,
     eventsList,
@@ -203,51 +217,36 @@ export default function Home() {
     }
 
     if (eventCoords.length > 0) {
-      // Pan/zoom to the event locations
       if (eventCoords.length === 1) {
         const target = eventCoords[0];
-        setViewState((vs: any) => ({
-          ...vs,
-          longitude: target.lng,
-          latitude: target.lat,
-          zoom: 6.5,
-          transitionDuration: 1500,
-        }));
+        flyTo(target.lng, target.lat, 6.5, 1500);
       } else {
-        // Average coordinates for centering
         const sumLng = eventCoords.reduce((sum, l) => sum + l.lng, 0);
         const sumLat = eventCoords.reduce((sum, l) => sum + l.lat, 0);
         const avgLng = sumLng / eventCoords.length;
         const avgLat = sumLat / eventCoords.length;
-        
-        // Calculate appropriate zoom based on bounding box
+
         const lngs = eventCoords.map(l => l.lng);
         const lats = eventCoords.map(l => l.lat);
         const minLng = Math.min(...lngs);
         const maxLng = Math.max(...lngs);
         const minLat = Math.min(...lats);
         const maxLat = Math.max(...lats);
-        
+
         const deltaLng = maxLng - minLng;
         const deltaLat = maxLat - minLat;
         const maxDelta = Math.max(deltaLng, deltaLat);
-        
+
         let zoom = 5.0;
         if (maxDelta > 10) zoom = 4.0;
         else if (maxDelta > 5) zoom = 4.5;
         else if (maxDelta > 2) zoom = 5.5;
         else zoom = 6.0;
 
-        setViewState((vs: any) => ({
-          ...vs,
-          longitude: avgLng,
-          latitude: avgLat,
-          zoom: zoom,
-          transitionDuration: 1500,
-        }));
+        flyTo(avgLng, avgLat, zoom, 1500);
       }
     }
-  }, [chatHistory, isLoading, geoData, agentEventsList]);
+  }, [chatHistory, isLoading, geoData, agentEventsList, flyTo]);
 
   const replaceEvents = async (params: URLSearchParams) => {
     setMapLoading(true);
@@ -285,7 +284,7 @@ export default function Home() {
     const target = geoData.find((d: any) => locationMatchesGeoName(locName, d));
     if (target) {
       setHighlightedLocNames(new Set([target.std_name]));
-      setViewState((vs: any) => ({ ...vs, longitude: target.lng, latitude: target.lat, zoom: 6.5, transitionDuration: 1200 }));
+      flyTo(target.lng, target.lat, 6.5, 1200);
     }
   };
 
@@ -344,11 +343,11 @@ export default function Home() {
   };
 
   const handleMapEventHover = (info: any) => {
-    if (info.object && info.object.events && info.object.events.length === 1) {
+    if (info.object && info.object.events && info.object.events.length > 0) {
       cancelCloseTooltip();
       isInsideItemRef.current = true;
       setHoverTooltipTop(info.y);
-      setHoverTooltipLeft(info.x + 15);
+      setHoverTooltipLeft(info.x + 16);
       setTooltipMode('modern');
       setHoveredEvent(info.object.events);
       setTooltipOpenedViaClick(false);
@@ -369,7 +368,7 @@ export default function Home() {
       setSelectedEventIds(new Set());
       setHighlightedLocNames(new Set(expandedLocations.length > 0 ? expandedLocations : [location.std_name]));
       setShowEventPanel(true);
-      setViewState((vs: any) => ({ ...vs, longitude: location.lng, latitude: location.lat, zoom: Math.max(vs.zoom, 5.5), transitionDuration: 800 }));
+      flyTo(location.lng, location.lat, Math.max(viewState.zoom, 5.5), 800);
     } finally {
       setMapLoading(false);
     }
@@ -473,7 +472,7 @@ export default function Home() {
       return name && locationMatchesGeoName(name, d);
     }));
     if (firstTarget) {
-      setViewState((vs: any) => ({ ...vs, longitude: firstTarget.lng, latitude: firstTarget.lat, zoom: 6.0, transitionDuration: 1200 }));
+      flyTo(firstTarget.lng, firstTarget.lat, 6.0, 1200);
     }
   };
 
@@ -505,7 +504,7 @@ export default function Home() {
     });
     setHighlightedLocNames(allLocs);
     if (firstTarget && newSelected.size > 0) {
-      setViewState((vs: any) => ({ ...vs, longitude: firstTarget.lng, latitude: firstTarget.lat, zoom: 6.0, transitionDuration: 1200 }));
+      flyTo(firstTarget.lng, firstTarget.lat, 6.0, 1200);
     }
   };
 
@@ -549,6 +548,7 @@ export default function Home() {
         <MapView
           viewState={viewState}
           onViewStateChange={setViewState}
+          cameraTick={cameraTick}
           geoData={geoData}
           highlightedLocNames={highlightedLocNames}
           onLocationClick={handleLocationClick}
@@ -559,29 +559,28 @@ export default function Home() {
           onMapClick={() => { setHoveredEvent(null); setTooltipOpenedViaClick(false); }}
         />
 
+        <div className="absolute bottom-3 left-3 z-10 pointer-events-none hidden md:flex items-center gap-3 px-3 py-1.5 rounded-full bg-[#0a1628]/80 border border-[#4a5f78]/50 backdrop-blur-sm text-[10px] font-serif text-[#e2ddce]/90 shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#b91c1c] ring-1 ring-[#f87171]" />
+            重大事件
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#14532d] ring-1 ring-[#34d399]" />
+            一般事件
+          </span>
+          <span className="text-[#8c9bab]">滚轮缩放 · 点击标签查看</span>
+        </div>
+
         {mapLoading && (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#041527]/35 backdrop-blur-[2px] transition-all duration-300">
-            <style dangerouslySetInnerHTML={{
-              __html: `
-              @keyframes spin-reverse {
-                from { transform: rotate(360deg); }
-                to { transform: rotate(0deg); }
-              }
-              .animate-spin-reverse {
-                animation: spin-reverse 1.5s linear infinite;
-              }
-            `}} />
-            <div className="relative flex items-center justify-center">
-              {/* Outer ring */}
-              <div className="w-16 h-16 border-4 border-t-[#f59e0b] border-r-transparent border-b-[#f59e0b]/30 border-l-transparent rounded-full animate-spin"></div>
-              {/* Inner ring spinning opposite direction */}
-              <div className="absolute w-10 h-10 border-4 border-r-[#e2ddce] border-t-transparent border-l-[#e2ddce]/30 border-b-transparent rounded-full animate-spin-reverse"></div>
-              {/* Center dot */}
-              <div className="absolute w-3 h-3 bg-[#f59e0b] rounded-full animate-ping"></div>
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+            <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#0a1628]/90 border border-[#f59e0b]/30 shadow-[0_4px_20px_rgba(0,0,0,0.45)] backdrop-blur-md">
+              <div className="relative w-4 h-4">
+                <div className="absolute inset-0 border-2 border-t-[#f59e0b] border-r-transparent border-b-[#f59e0b]/30 border-l-transparent rounded-full animate-spin" />
+              </div>
+              <p className="text-[#e2ddce] text-[11px] font-serif tracking-[0.18em] font-bold select-none">
+                正在筹画沙盘
+              </p>
             </div>
-            <p className="mt-4 text-[#e2ddce] text-xs font-serif tracking-[0.2em] font-bold select-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] animate-pulse">
-              「正在筹画沙盘，请稍候...」
-            </p>
           </div>
         )}
 

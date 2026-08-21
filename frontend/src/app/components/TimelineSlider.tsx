@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ChevronLeft, ChevronRight, EyeOff } from 'lucide-react';
 
 interface TimelineSliderProps {
@@ -25,6 +25,32 @@ export default function TimelineSlider({ currentYear, onYearChange, onYearCommit
     }
   };
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (e.repeat) return;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (currentYear > 184) {
+          const nextY = currentYear - 1;
+          onYearChange(nextY);
+          onYearCommit(nextY);
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (currentYear < 280) {
+          const nextY = currentYear + 1;
+          onYearChange(nextY);
+          onYearCommit(nextY);
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [currentYear, onYearChange, onYearCommit]);
+
   return (
     <div 
       className="absolute bottom-3 md:bottom-8 left-1/2 md:left-[32%] landscape:left-[30%] -translate-x-1/2 z-10 w-[88vw] md:w-[55vw] landscape:w-[45vw] min-w-[280px] landscape:min-w-[240px] md:min-w-[320px] max-w-2xl transition-all duration-300"
@@ -46,6 +72,9 @@ export default function TimelineSlider({ currentYear, onYearChange, onYearCommit
 
         <div className="text-[#e2ddce] font-serif text-base tracking-wider font-bold drop-shadow-md select-none leading-none">
           {currentYear} 年
+        </div>
+        <div className="text-[9px] text-[#8c9bab]/80 font-sans tracking-wider select-none -mt-0.5">
+          左右方向键可逐年切换
         </div>
         <div className="flex items-center gap-3 w-full px-2">
           <button
