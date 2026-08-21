@@ -49,9 +49,18 @@ async def startup_event():
         print(f"⚠️ [Database] Failed to initialize MySQL tables: {e}")
 
 # Add CORS for Next.js frontend
+_frontend_origins = [
+    o.strip()
+    for o in os.getenv(
+        "FRONTEND_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000,http://www.sanguo-insight.site,https://www.sanguo-insight.site",
+    ).split(",")
+    if o.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_frontend_origins,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|(\d{1,3}\.){3}\d{1,3}|www\.sanguo-insight\.site)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -4,7 +4,7 @@ import DeckGL from '@deck.gl/react';
 import MapGL from 'react-map-gl/maplibre';
 import { ScatterplotLayer, TextLayer, PathLayer } from '@deck.gl/layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { locationNameMatches, locationMatchesGeoName } from '../utils/locationMatch';
 
 // ESRI World Physical Map — 无需 API Key，国内直连，古贴地形风格
@@ -124,6 +124,15 @@ const BIOGRAPHY_PALETTE: {
   }
 ];
 
+const KEY_CITIES_LOW = ['洛阳', '长安', '建业', '成都', '邺城', '许昌'];
+const KEY_CITIES_HIGH = ['洛阳', '长安', '邺城', '建业', '许昌', '成都', '襄阳', '江陵', '汉中', '宛城'];
+const TYPE_PRIORITY: Record<string, number> = {
+  '军事征伐': 3,
+  '政治谋虑': 2,
+  '政治谋略': 2,
+  '内政治理': 1,
+};
+
 interface MapViewProps {
   viewState: any;
   onViewStateChange: (vs: any) => void;
@@ -139,75 +148,71 @@ interface MapViewProps {
 
 export default function MapView({ viewState, onViewStateChange, geoData, highlightedLocNames, onLocationClick, eventsList, allPersons, onEventClick, onEventHover, onMapClick }: MapViewProps) {
   const isHL = useCallback(
-    (name: string) => [...highlightedLocNames].some(l => l && locationNameMatches(l, name)),
+    (name: string) => {
+      for (const l of highlightedLocNames) {
+        if (l && locationNameMatches(l, name)) return true;
+      }
+      return false;
+    },
     [highlightedLocNames],
   );
 
-  const hasSelection = highlightedLocNames.size > 0;
-  const visibleData: any[] = [];
-  const overlapThreshold = 1.5 / viewState.zoom;
-
-  const sortedGeo = [...geoData].sort((a, b) => {
-    const aHL = isHL(a.std_name || '');
-    const bHL = isHL(b.std_name || '');
-    return (bHL ? 1 : 0) - (aHL ? 1 : 0);
-  });
-
-  for (const d of sortedGeo) {
-    const name = d.std_name || '';
-    const highlighted = isHL(name);
-    const level = d.level || 'county';
-    let shouldShow = false;
-
-    if (hasSelection) {
-      shouldShow = highlighted || level === 'province' || ['洛阳', '长安', '建业', '成都', '邺城', '许昌'].includes(name);
-    } else {
-      if (viewState.zoom >= 5.0) {
-        shouldShow = level === 'province' || level === 'commandery' ||
-          ['洛阳', '长安', '邺城', '建业', '许昌', '成都', '襄阳', '江陵', '汉中', '宛城'].includes(name);
-      } else {
-        shouldShow = level === 'province' || ['洛阳', '长安', '建业', '成都', '邺城', '许昌'].includes(name);
-      }
+  const geoByName = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const d of geoData) {
+      if (d?.std_name) m.set(d.std_name, d);
     }
+    return m;
+  }, [geoData]);
 
-    if (!shouldShow) continue;
-    const overlap = visibleData.some(
-      v => Math.abs(v.lng - d.lng) < overlapThreshold && Math.abs(v.lat - d.lat) < overlapThreshold,
-    );
-    if (!overlap) visibleData.push(d);
-  }
+  const zoomBucket = Math.round((viewState?.zoom ?? 4) * 2);
 
-  const eventPoints: any[] = [];
-  const uniqueProtos: string[] = Array.from(new Set(eventsList?.map(e => e.protagonist).filter(Boolean) || [])) as string[];
-  const protagonistPaths: Record<string, [number, number][]> = {};
+  const visibleData = useMemo(() => {
+    const hasSelection = highlightedLocNames.size > 0;
+    const overlapThreshold = 1.5 / (viewState.zoom || 1);
+    const out: any[] = [];
+    const sortedGeo = [...geoData].sort((a, b) => {
+      const aHL = isHL(a.std_name || '');
+      const bHL = isHL(b.std_name || '');
+      return (bHL ? 1 : 0) - (aHL ? 1 : 0);
+    });
 
-  const getProtoColorStyle = (protoName: string) => {
-    const idx = uniqueProtos.indexOf(protoName);
-    return BIOGRAPHY_PALETTE[idx >= 0 ? idx % BIOGRAPHY_PALETTE.length : 0];
-  };
+    for (const d of sortedGeo) {
+      const name = d.std_name || '';
+      const highlighted = isHL(name);
+      const level = d.level || 'county';
+      let shouldShow = false;
 
-  if (eventsList && eventsList.length > 0) {
-    const TYPE_PRIORITY: Record<string, number> = {
-      '军事征伐': 3,
-      '政治谋虑': 2,
-      '政治谋略': 2,
-      '内政治理': 1,
-    };
+      if (hasSelection) {
+        shouldShow = highlighted || level === 'province' || KEY_CITIES_LOW.includes(name);
+      } else if (viewState.zoom >= 5.0) {
+        shouldShow = level === 'province' || level === 'commandery' || KEY_CITIES_HIGH.includes(name);
+      } else {
+        shouldShow = level === 'province' || KEY_CITIES_LOW.includes(name);
+      }
+
+      if (!shouldShow) continue;
+      const overlap = out.some(
+        v => Math.abs(v.lng - d.lng) < overlapThreshold && Math.abs(v.lat - d.lat) < overlapThreshold,
+      );
+      if (!overlap) out.push(d);
+    }
+    return out;
+  }, [geoData, highlightedLocNames, isHL, viewState.zoom, zoomBucket]);
+
+  const eventPoints = useMemo(() => {
+    const points: any[] = [];
+    if (!eventsList || eventsList.length === 0) return points;
+
     const getPriority = (type?: string) => (type && TYPE_PRIORITY[type]) || 0;
-
     const seenTitles = new Set<string>();
     const validEvents: any[] = [];
 
     for (const evt of eventsList) {
       if (!evt.locations || evt.locations.length === 0) continue;
-
       if (seenTitles.has(evt.title)) continue;
       seenTitles.add(evt.title);
-
       if (evt.year == null) continue;
-
-      const prio = getPriority(evt.type);
-      // if (prio === 0) continue;
 
       const firstLoc = evt.locations.find((l: any) => l);
       if (!firstLoc) continue;
@@ -217,7 +222,7 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
 
       if (typeof lat !== 'number' || typeof lng !== 'number') {
         const firstLocName = typeof firstLoc === 'object' ? firstLoc.name : firstLoc;
-        const geo = geoData.find(d => locationMatchesGeoName(firstLocName, d));
+        const geo = geoByName.get(firstLocName) || geoData.find(d => locationMatchesGeoName(firstLocName, d));
         if (geo) {
           lat = geo.lat;
           lng = geo.lng;
@@ -225,16 +230,14 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
       }
 
       if (typeof lat === 'number' && typeof lng === 'number') {
-        validEvents.push({ ...evt, lng, lat, priority: prio });
+        validEvents.push({ ...evt, lng, lat, priority: getPriority(evt.type) });
       }
     }
 
-    // 展示所有匹配类型的事件
     validEvents.sort((a, b) => b.priority - a.priority);
 
-    // 计算重叠，将重叠的事件聚合
-    const lngThreshold = 6.0 / viewState.zoom;
-    const latThreshold = 2.0 / viewState.zoom;
+    const lngThreshold = 6.0 / (viewState.zoom || 1);
+    const latThreshold = 2.0 / (viewState.zoom || 1);
     const groupedEvents: any[][] = [];
 
     for (const evt of validEvents) {
@@ -247,17 +250,13 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
           break;
         }
       }
-      if (!placed) {
-        groupedEvents.push([evt]);
-      }
+      if (!placed) groupedEvents.push([evt]);
     }
 
     const getShortLabel = (title: string) => {
       if (allPersons && allPersons.length > 0) {
         for (const p of allPersons) {
-          if (title.startsWith(p)) {
-            return p;
-          }
+          if (title.startsWith(p)) return p;
         }
       }
       return title.length > 4 ? title.substring(0, 4) : title;
@@ -266,23 +265,20 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
     for (const group of groupedEvents) {
       const topEvent = group[0];
       const shortTitle = getShortLabel(topEvent.title);
-
       const isRed = group.some((e: any) => e.major_events && e.major_events.length > 0);
-      const bgColor = isRed ? [185, 28, 28, 220] : [20, 83, 45, 220];
-      const borderColor = isRed ? [239, 68, 68, 255] : [34, 197, 94, 255];
-
-      eventPoints.push({
+      points.push({
         lng: topEvent.lng,
         lat: topEvent.lat,
         label: group.length > 1 ? `${shortTitle} 等${group.length}件` : shortTitle,
         events: group,
-        bgColor,
-        borderColor,
+        bgColor: isRed ? [185, 28, 28, 220] : [20, 83, 45, 220],
+        borderColor: isRed ? [239, 68, 68, 255] : [34, 197, 94, 255],
       });
     }
-  }
+    return points;
+  }, [eventsList, geoData, geoByName, allPersons, viewState.zoom, zoomBucket]);
 
-  const layers = [
+  const layers = useMemo(() => [
     new PathLayer({
       id: 'rivers-layer',
       data: SMOOTHED_RIVERS,
@@ -357,7 +353,16 @@ export default function MapView({ viewState, onViewStateChange, geoData, highlig
         getBorderColor: [eventsList],
       }
     }),
-  ];
+  ], [
+    visibleData,
+    eventPoints,
+    highlightedLocNames,
+    eventsList,
+    isHL,
+    onLocationClick,
+    onEventClick,
+    onEventHover,
+  ]);
 
   return (
     <div className="absolute inset-0 z-0 opacity-95">

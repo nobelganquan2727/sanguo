@@ -2,6 +2,7 @@
 
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import { X, ChevronDown, Copy, Check, Share2 } from 'lucide-react';
+import { getApiBase } from '../utils/apiBase';
 
 interface AgentPanelProps {
   show: boolean;
@@ -75,11 +76,8 @@ export default function AgentPanel({
   };
 
   const handleShare = async (question: string, answer: string, index: number) => {
-    const API_BASE = typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE
-      ? `http://${window.location.hostname}:8000`
-      : (process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000');
     try {
-      const res = await fetch(`${API_BASE}/api/shares`, {
+      const res = await fetch(`${getApiBase()}/api/shares`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question, answer }),
@@ -170,12 +168,9 @@ export default function AgentPanel({
   }, [show]);
 
   useEffect(() => {
-    const API_BASE = typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE
-      ? `http://${window.location.hostname}:8000`
-      : (process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000');
     const checkStatus = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/status`);
+        const res = await fetch(`${getApiBase()}/api/status`);
         const data = await res.json();
         setIsConnected(data.status === 'connected');
       } catch (err) {
