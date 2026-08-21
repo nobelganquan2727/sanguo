@@ -15,10 +15,11 @@ from agent.prompts import (
     INTENT_ANALYSIS_SYSTEM,
     INTENT_ANALYSIS_PROMPT,
     ANSWER_TEMPLATE,
+    MEM_SUMMARY_PROMPT,
 )
 from agent.schema import COMPACT_GRAPH_SCHEMA
 from agent.observability import active_callback_var
-from agent.cache import save_cache
+from agent.cache import lookup_cache, save_cache
 
 from agent.utils import (
     has_valid_db_records,
@@ -27,7 +28,8 @@ from agent.utils import (
     resolve_args_placeholders,
     clean_obs_for_synthesis,
     clean_obs_for_react,
-    consolidate_and_deduplicate_observations
+    consolidate_and_deduplicate_observations,
+    clean_ai_message_for_history,
 )
 
 from pydantic import BaseModel, Field
@@ -63,6 +65,10 @@ EXTRACTION_HUMAN_PROMPT = """
 
 load_dotenv()
 from langfuse import Langfuse
+
+
+def _env_flag(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 from agent.tools import (
     get_llm,
@@ -430,8 +436,7 @@ class QAStreamPipeline:
         self.history = history
         self.event_callback = event_callback
         self.handler = handler
-        # 【调试开关】暂时禁用长期历史记忆以聚焦独立单次问题。恢复请改回: self.user_memory_block = user_memory_block or ""
-        self.user_memory_block = ""
+        self.user_memory_block = "" if _env_flag("AGENT_DISABLE_LTM") else (user_memory_block or "")
         self.llm_cheap = get_llm("cheap")
         self.llm_complex = get_llm("complex")
         self.collected_text = []
@@ -462,33 +467,82 @@ class QAStreamPipeline:
     async def check_characters_exist(self, names: List[str]) -> dict[str, bool]:
         if not names:
             return {}
-        cypher = """
+        # 先按 Person 节点精确匹配，避免对 Event 全文做 CONTAINS 全表扫描
+        cypher_persons = """
         UNWIND $names AS name
         OPTIONAL MATCH (p:Person {name: name})
-        WITH name, p IS NOT NULL AS person_exists
-        OPTIONAL MATCH (e:Event)
-        WHERE e.title CONTAINS name 
-           OR e.source_text CONTAINS name 
-           OR e.translation CONTAINS name 
-           OR e.description CONTAINS name
-        WITH name, person_exists, count(e) > 0 AS text_exists
-        RETURN name, (person_exists OR text_exists) AS exists
+        RETURN name, p IS NOT NULL AS exists
         """
         try:
-            results = await run_query_async(cypher, {"names": names})
-            return {r["name"]: r["exists"] for r in results}
+            results = await run_query_async(cypher_persons, {"names": names})
+            found = {r["name"]: bool(r["exists"]) for r in results}
+            missing = [n for n in names if not found.get(n)]
+            if missing:
+                # 仅对未命中人物查事件标题，不再扫 source_text/translation/description
+                cypher_titles = """
+                UNWIND $names AS name
+                OPTIONAL MATCH (e:Event)
+                WHERE e.title CONTAINS name
+                RETURN name, count(e) > 0 AS exists
+                """
+                title_hits = await run_query_async(cypher_titles, {"names": missing})
+                for row in title_hits:
+                    found[row["name"]] = bool(row["exists"])
+            return {name: found.get(name, False) for name in names}
         except Exception as e:
             await self.send_event("status", f"⚠️ [检查人物] 数据库查询失败 ({str(e)})")
             return {name: True for name in names}
 
     async def process_history(self):
-        # ==========================================
-        # 【调试开关】暂时禁用短期对话历史上下文，以专注于单次独立问题的调试
-        # 若需要重新启用历史上下文，请删除或注释掉以下两行，并取消下方原逻辑的注释：
-        self.history_to_process = []
-        self.history_text = "（无历史对话）"
-        return
-        # ==========================================
+        if _env_flag("AGENT_DISABLE_HISTORY"):
+            self.history_to_process = []
+            self.history_text = "（无历史对话）"
+            return
+
+        if self.history:
+            for msg in self.history:
+                role = msg.get("role")
+                content = msg.get("content")
+                if role in ("user", "ai", "assistant") and content:
+                    if role in ("ai", "assistant"):
+                        content = clean_ai_message_for_history(content)
+                    self.history_to_process.append((role, content))
+
+            if (
+                self.history_to_process
+                and self.history_to_process[-1][0] == "user"
+                and self.history_to_process[-1][1] == self.question
+            ):
+                self.history_to_process.pop()
+
+            self.history_to_process = self.history_to_process[-20:]
+
+        history_summary = ""
+        recent_messages = self.history_to_process
+
+        if len(self.history_to_process) > 6:
+            await self.send_event("status", "📝 [记忆整理] 对话历史较长，正在提炼前文要旨...")
+            older_messages = self.history_to_process[:-4]
+            recent_messages = self.history_to_process[-4:]
+            older_text = "\n".join([f"{'用户' if r == 'user' else 'AI'}: {c}" for r, c in older_messages])
+            summary_prompt = MEM_SUMMARY_PROMPT.format(history_text=older_text)
+            try:
+                summary_res = await self.llm_cheap.ainvoke([HumanMessage(content=summary_prompt)])
+                history_summary = (summary_res.content or "").strip()
+                await self.send_event("status", f"📝 [记忆整理] 提炼完毕: '{history_summary}'")
+            except Exception as e:
+                await self.send_event("status", f"⚠️ 提炼失败: {str(e)}，将使用未压缩历史。")
+                history_summary = ""
+                recent_messages = self.history_to_process
+
+        if history_summary:
+            self.history_text = f"=== 历史对话摘要 ===\n{history_summary}\n\n"
+        else:
+            self.history_text = ""
+
+        self.history_text += "\n".join([f"{'用户' if r == 'user' else 'AI'}: {c}" for r, c in recent_messages])
+        if not self.history_text:
+            self.history_text = "（无历史对话）"
 
     async def execute_pipeline(self) -> str:
         q_type = None
@@ -502,22 +556,8 @@ class QAStreamPipeline:
             rewritten_q = analysis.rewritten_question
             self.rewritten_q = rewritten_q
 
-            # 一次性检索出与当前重写问题最相关的 Top 80 个事件 ID 作为全局语义过滤器
+            # 语义过滤器改为按需填充：时间线过长时再检索，避免每问必打 embedding + Chroma Top-80
             self.relevant_ids = set()
-            if q_type != "generic_chat":
-                try:
-                    from agent.tools import get_bge_m3_embedding_async
-                    from agent.cache import get_event_embeddings_collection
-                    q_emb = await get_bge_m3_embedding_async(rewritten_q)
-                    loop = asyncio.get_running_loop()
-                    def _query_chroma_filter():
-                        coll = get_event_embeddings_collection()
-                        return coll.query(query_embeddings=[q_emb], n_results=80)
-                    chroma_filter_res = await loop.run_in_executor(None, _query_chroma_filter)
-                    if chroma_filter_res and chroma_filter_res.get("ids") and len(chroma_filter_res["ids"][0]) > 0:
-                        self.relevant_ids = set(chroma_filter_res["ids"][0])
-                except Exception as e:
-                    await self.send_event("status", f"⚠️ 初始化全局语义过滤器失败: {e}")
 
             # 1.5 验证提及的历史人物是否在图数据库中
             self.historical_characters = getattr(analysis, "historical_characters", None) or []
@@ -573,6 +613,9 @@ class QAStreamPipeline:
                     observations.extend(step_obs)
                     self.all_observations.extend(step_obs)
                     
+                    # 最后一轮无需再提取状态（不会再规划）
+                    if turn >= 2:
+                        continue
                     # 记录并提取本轮事实，更新 state_info
                     try:
                         obs_summary = []
@@ -636,24 +679,13 @@ class QAStreamPipeline:
                         except Exception:
                             pass
                 
-                if has_neo4j and neo4j_count < 3:
-                    await self.send_event("status", f"⚠️ 图数据库查询结果较少 (共 {neo4j_count} 条记录)，触发语义向量补充检索...")
-                    config = {"callbacks": [self.handler]} if self.handler else {}
-                    try:
-                        supp_obs = await search_vector_graph_async.ainvoke({"query": rewritten_q, "k": 6}, config=config)
-                        synthesis_obs_str = truncate_tool_output(clean_obs_for_synthesis(supp_obs))
-                        self.all_observations.append({
-                            "tool": "search_vector_graph",
-                            "query": {"query": rewritten_q, "k": 6},
-                            "result": synthesis_obs_str,
-                            "raw_result": supp_obs
-                        })
-                    except Exception as e:
-                        await self.send_event("status", f"⚠️ 语义向量补充检索失败: {str(e)}")
+                need_vector_fallback = (has_neo4j and neo4j_count < 3) or not has_valid_db_records(self.all_observations, rewritten_q)
+            else:
+                need_vector_fallback = not has_valid_db_records(self.all_observations, rewritten_q)
 
-            # 2.5 检查是否检索到任何有效的数据库记录，若无，则启动向量库进行兜底
-            if not has_valid_db_records(self.all_observations, rewritten_q):
-                await self.send_event("status", "⚠️ 未检索到任何有效的 Neo4j 数据库记录，启动向量库进行兜底检索...")
+            already_has_vector = any(obs.get("tool") == "search_vector_graph" for obs in self.all_observations)
+            if need_vector_fallback and not already_has_vector:
+                await self.send_event("status", "⚠️ 图检索结果不足，启动一次语义向量补充检索...")
                 config = {"callbacks": [self.handler]} if self.handler else {}
                 try:
                     fallback_obs = await search_vector_graph_async.ainvoke({"query": rewritten_q, "k": 8}, config=config)
@@ -662,17 +694,17 @@ class QAStreamPipeline:
                         "tool": "search_vector_graph",
                         "query": {"query": rewritten_q, "k": 8},
                         "result": synthesis_obs_str,
-                        "raw_result": fallback_obs  # 保留原始结果以防地图事件过滤掉年份和地点
+                        "raw_result": fallback_obs
                     })
                 except Exception as e:
-                    await self.send_event("status", f"⚠️ 向量库兜底检索失败: {str(e)}")
+                    await self.send_event("status", f"⚠️ 语义向量补充检索失败: {str(e)}")
 
-                if not has_valid_db_records(self.all_observations, rewritten_q):
-                    await self.send_event("status", "⚠️ 向量库检索也未找到任何有效记录，直接拒绝回答。")
-                    answer = "抱歉，在正史《三国志》及相关史料库中未搜寻到任何与该问题相关的史实记录，老夫无从考证。"
-                    await self.send_event("text", answer)
-                    self.collected_text.append(answer)
-                    return q_type
+            if not has_valid_db_records(self.all_observations, rewritten_q):
+                await self.send_event("status", "⚠️ 向量库检索也未找到任何有效记录，直接拒绝回答。")
+                answer = "抱歉，在正史《三国志》及相关史料库中未搜寻到任何与该问题相关的史实记录，老夫无从考证。"
+                await self.send_event("text", answer)
+                self.collected_text.append(answer)
+                return q_type
 
             # 3. 最终汇总与答复
             await self.synthesis_agent.synthesize(rewritten_q, q_type, self.all_observations)
@@ -699,7 +731,7 @@ async def ask_question_stream(
     支持实时上报思索轨迹（status）与打字机文本（text）。
     """
     # 0. Check Semantic Cache
-    if not dataset_item_id and False:
+    if not dataset_item_id and not _env_flag("AGENT_DISABLE_CACHE"):
         cached_ans, cached_events, similarity = lookup_cache(question)
         if cached_ans:
             print(f"⚡ [语义缓存] 命中缓存 (相似度: {similarity * 100:.1f}%)，流式返回历史回答与地图事件。")
@@ -769,7 +801,7 @@ async def ask_question_stream(
             await queue.put(None)
             ans_str = "".join(pipeline.collected_text)
             langfuse_client.flush()
-            if not dataset_item_id:
+            if not dataset_item_id and not _env_flag("AGENT_DISABLE_CACHE"):
                 save_cache(question, ans_str, extracted_events_to_cache)
             print("\n")
 

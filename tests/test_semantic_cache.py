@@ -20,6 +20,11 @@ class TestSemanticCache(unittest.TestCase):
             with open(CACHE_FILE, "r", encoding="utf-8") as f:
                 self.backup_content = f.read()
             os.remove(CACHE_FILE)
+        try:
+            from agent.cache import client
+            client.delete_collection("semantic_cache")
+        except Exception:
+            pass
 
     def tearDown(self):
         # Restore cache file

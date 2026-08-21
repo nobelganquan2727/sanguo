@@ -73,7 +73,11 @@ def serialize_event_rows(results: list[dict]) -> list[dict]:
 def check_neo4j_status():
     run_query("RETURN 1 AS val")
 
-def query_events(
+def _split_csv_names(raw: str) -> list[str]:
+    return [n.strip() for n in raw.split(",") if n.strip()]
+
+
+def build_events_query(
     start: int, end: int,
     person_include: str = "",
     person_or: str = "",
@@ -83,42 +87,65 @@ def query_events(
     biography_only: bool = False,
     limit: int = 100,
     offset: int = 0,
-) -> tuple[list[dict], bool]:
+) -> tuple[str, dict]:
     safe_limit = 1000 if biography_only else max(1, min(limit, 100))
     safe_offset = max(0, offset)
-    
+    params: dict = {
+        "start": start,
+        "end": end,
+        "limit": safe_limit,
+        "offset": safe_offset,
+    }
     where_clauses = []
-    
+
     if biography_only and person_include:
-        names = [n.strip() for n in person_include.split(',') if n.strip()]
+        names = _split_csv_names(person_include)
         if names:
-            cond = ' OR '.join([f"(e.protagonist = '{n}' AND e.is_main_biography = true)" for n in names])
-            where_clauses.append(f"({cond})")
+            params["bio_names"] = names
+            where_clauses.append("(e.protagonist IN $bio_names AND e.is_main_biography = true)")
     else:
         where_clauses.append(
-            f"(e.std_start_year IS NULL OR (e.std_start_year >= {start} AND e.std_start_year <= {end}))"
+            "(e.std_start_year IS NULL OR (e.std_start_year >= $start AND e.std_start_year <= $end))"
         )
         if person_include:
-            names = [n.strip() for n in person_include.split(',') if n.strip()]
-            for n in names:
-                where_clauses.append(f"EXISTS {{ MATCH (per:Person)-[:PARTICIPATED_IN]->(e) WHERE per.name CONTAINS '{n}' }}")
+            for i, n in enumerate(_split_csv_names(person_include)):
+                key = f"pinc_{i}"
+                params[key] = n
+                where_clauses.append(
+                    f"EXISTS {{ MATCH (per:Person)-[:PARTICIPATED_IN]->(e) WHERE per.name CONTAINS ${key} }}"
+                )
 
     if person_or and not (biography_only and person_include):
-        names = [n.strip() for n in person_or.split(',') if n.strip()]
-        if names:
-            cond = ' OR '.join([f"per.name CONTAINS '{n}'" for n in names])
-            where_clauses.append(f"EXISTS {{ MATCH (per:Person)-[:PARTICIPATED_IN]->(e) WHERE {cond} }}")
+        or_names = _split_csv_names(person_or)
+        if or_names:
+            or_parts = []
+            for i, n in enumerate(or_names):
+                key = f"por_{i}"
+                params[key] = n
+                or_parts.append(f"per.name CONTAINS ${key}")
+            where_clauses.append(
+                f"EXISTS {{ MATCH (per:Person)-[:PARTICIPATED_IN]->(e) WHERE {' OR '.join(or_parts)} }}"
+            )
 
     if person_exclude:
-        names = [n.strip() for n in person_exclude.split(',') if n.strip()]
-        if names:
-            cond = ' OR '.join([f"per.name CONTAINS '{n}'" for n in names])
-            where_clauses.append(f"NOT EXISTS {{ MATCH (per:Person)-[:PARTICIPATED_IN]->(e) WHERE {cond} }}")
+        for i, n in enumerate(_split_csv_names(person_exclude)):
+            key = f"pex_{i}"
+            params[key] = n
+            where_clauses.append(
+                f"NOT EXISTS {{ MATCH (per:Person)-[:PARTICIPATED_IN]->(e) WHERE per.name CONTAINS ${key} }}"
+            )
 
     if event_type:
-        where_clauses.append(f"e.type = '{event_type}'")
+        params["event_type"] = event_type
+        where_clauses.append("e.type = $event_type")
 
-    loc_filter = f"WHERE any(loc IN locations WHERE loc.name = '{location}')" if location else ""
+    loc_filter = ""
+    if location:
+        params["location"] = location
+        loc_filter = "WHERE any(loc IN locations WHERE loc.name = $location)"
+
+    if not where_clauses:
+        where_clauses.append("true")
 
     cypher = f"""
     MATCH (e:Event)
@@ -147,10 +174,36 @@ def query_events(
            COALESCE(e.translation, e.description) AS desc, e.source_text AS source_text, e.translation AS translation, e.type AS type, 
            locations, characters, major_events, e.protagonist AS protagonist, e.is_main_biography AS is_main_biography
     ORDER BY e.std_start_year ASC, e.seq_index ASC, e.id ASC
-    SKIP {safe_offset}
-    LIMIT {safe_limit}
+    SKIP $offset
+    LIMIT $limit
     """
-    results = run_query(cypher)
+    return cypher, params
+
+
+def query_events(
+    start: int, end: int,
+    person_include: str = "",
+    person_or: str = "",
+    person_exclude: str = "",
+    location: str = "",
+    event_type: str = "",
+    biography_only: bool = False,
+    limit: int = 100,
+    offset: int = 0,
+) -> tuple[list[dict], bool]:
+    cypher, params = build_events_query(
+        start=start, end=end,
+        person_include=person_include,
+        person_or=person_or,
+        person_exclude=person_exclude,
+        location=location,
+        event_type=event_type,
+        biography_only=biography_only,
+        limit=limit,
+        offset=offset,
+    )
+    safe_limit = params["limit"]
+    results = run_query(cypher, params)
     events = serialize_event_rows(results)
     has_more = len(events) == safe_limit if not biography_only else False
     return events, has_more
@@ -348,12 +401,12 @@ def get_person_relations(name: str, limit: int = 80) -> dict:
     }
 
 def get_force_graph(limit: int = 150) -> dict:
-    cypher = f"""
+    cypher = """
     MATCH (p:Person)-[r:PARTICIPATED_IN]->(e:Event)
     RETURN p.name AS person, e.title AS event, e.type AS type
-    LIMIT {limit}
+    LIMIT $limit
     """
-    results = run_query(cypher)
+    results = run_query(cypher, {"limit": max(1, min(limit, 500))})
     nodes = []
     links = []
     added_nodes = set()

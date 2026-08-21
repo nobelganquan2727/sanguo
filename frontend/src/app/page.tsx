@@ -10,14 +10,11 @@ import AgentPanel from './components/AgentPanel';
 import EditModal from './components/EditModal';
 import TimelineSlider from './components/TimelineSlider';
 import { locationMatchesGeoName } from './utils/locationMatch';
+import { getApiBase } from './utils/apiBase';
 import { Calendar } from 'lucide-react';
 
 const INITIAL_VIEW_STATE = { longitude: 108.5, latitude: 34.0, zoom: 4.2, pitch: 0, bearing: 0 };
-const API_BASE = typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000');
 const EVENT_PAGE_SIZE = 100;
-console.log('API_BASE:', API_BASE, process.env.NEXT_PUBLIC_API_BASE);
 
 export default function Home() {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
@@ -49,7 +46,7 @@ export default function Home() {
     const shareId = urlParams.get('share');
     if (shareId) {
       setShareLoading(true);
-      fetch(`${API_BASE}/api/shares/${shareId}`)
+      fetch(`${getApiBase()}/api/shares/${shareId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.share) {

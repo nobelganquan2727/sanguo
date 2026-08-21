@@ -370,12 +370,11 @@ def evaluate_expression(expr: str, raw_results: dict) -> Any:
         # 用实际的数值替换占位符
         resolved_expr = resolved_expr.replace(f"{{{{{m}}}}}", str(resolved_val))
     
-    # 支持简单安全的加减法运算，如 "211 + 5"，过滤非法字符防止安全隐患
-    if re.match(r"^\d+\s*[\+\-]\s*\d+$", resolved_expr.strip()):
-        try:
-            return int(eval(resolved_expr))
-        except Exception:
-            return resolved_expr
+    # 支持简单安全的加减法运算，如 "211 + 5"
+    m = re.match(r"^(\d+)\s*([\+\-])\s*(\d+)$", resolved_expr.strip())
+    if m:
+        left, op, right = int(m.group(1)), m.group(2), int(m.group(3))
+        return left + right if op == "+" else left - right
             
     if resolved_expr.strip().isdigit():
         return int(resolved_expr.strip())
@@ -392,7 +391,7 @@ def clean_obs_for_synthesis(obs_str: str) -> str:
             if isinstance(data, dict):
                 has_node_fields = any(k in data for k in ["description", "translation", "source_text", "source"])
                 if has_node_fields:
-                    keep_keys = ["title", "source", "source_text", "content", "name", "relationship", "chapter", "source_quote"]
+                    keep_keys = ["title", "source", "source_text", "content", "name", "relationship", "chapter", "source_quote", "year", "time", "locations", "id"]
                     return {k: _keep_synthesis_fields(v) for k, v in data.items() if k in keep_keys}
                 else:
                     return {k: _keep_synthesis_fields(v) for k, v in data.items()}
@@ -635,4 +634,4 @@ def consolidate_and_deduplicate_observations(
     if other_records:
         consolidated["other_retrievals"] = other_records
         
-    return json.dumps(consolidated, ensure_ascii=False, indent=2)
+    return json.dumps(consolidated, ensure_ascii=False, separators=(",", ":"))

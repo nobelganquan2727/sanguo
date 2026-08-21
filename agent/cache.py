@@ -6,9 +6,8 @@ import requests
 import chromadb
 from typing import Optional, Tuple
 
-# Suppress urllib3 warnings when verify=False is used
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+# Embeddings HTTP session (connection reuse; TLS verification enabled)
+_embedding_session = requests.Session()
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_FILE = os.path.join(PROJECT_ROOT, "logs", "semantic_cache.json")
@@ -57,7 +56,7 @@ def get_bge_m3_embedding(text: str) -> list[float]:
         "encoding_format": "float"
     }
     
-    res = requests.post(url, json=payload, headers=headers, verify=False, timeout=10)
+    res = _embedding_session.post(url, json=payload, headers=headers, timeout=15)
     res.raise_for_status()
     
     response = res.json()
@@ -72,13 +71,13 @@ def lookup_cache(question: str, threshold: float = 0.92) -> Tuple[Optional[str],
     Returns (cached_answer, map_events, similarity_score) if a match above the threshold is found,
     otherwise (None, None, best_similarity_score).
     """
-    if not os.path.exists(CACHE_FILE):
-        try:
-            client.delete_collection("semantic_cache")
-        except Exception:
-            pass
+    try:
+        collection = _get_collection()
+        if collection.count() == 0:
+            return None, None, 0.0
+    except Exception:
         return None, None, 0.0
-        
+
     try:
         q_vector = get_bge_m3_embedding(question)
     except Exception as e:
@@ -86,7 +85,6 @@ def lookup_cache(question: str, threshold: float = 0.92) -> Tuple[Optional[str],
         return None, None, 0.0
         
     try:
-        collection = _get_collection()
         results = collection.query(
             query_embeddings=[q_vector],
             n_results=1
