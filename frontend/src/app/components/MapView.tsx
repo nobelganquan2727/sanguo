@@ -171,9 +171,22 @@ export default function MapView({
   }, [cameraTick, viewState]);
 
   const isHL = useCallback(
-    (name: string) => [...highlightedLocNames].some(l => l && locationNameMatches(l, name)),
+    (name: string) => {
+      for (const l of highlightedLocNames) {
+        if (l && locationNameMatches(l, name)) return true;
+      }
+      return false;
+    },
     [highlightedLocNames],
   );
+
+  const geoByName = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const d of geoData) {
+      if (d?.std_name) m.set(d.std_name, d);
+    }
+    return m;
+  }, [geoData]);
 
   const zoomBucket = Math.round((internalView.zoom ?? 4.2) * 2) / 2;
   const hasSelection = highlightedLocNames.size > 0;
@@ -235,7 +248,7 @@ export default function MapView({
 
       if (typeof lat !== 'number' || typeof lng !== 'number') {
         const firstLocName = typeof firstLoc === 'object' ? firstLoc.name : firstLoc;
-        const geo = geoData.find(d => locationMatchesGeoName(firstLocName, d));
+        const geo = geoByName.get(firstLocName) || geoData.find(d => locationMatchesGeoName(firstLocName, d));
         if (geo) {
           lat = geo.lat;
           lng = geo.lng;
@@ -287,7 +300,7 @@ export default function MapView({
         collisionPriority: 80 + Math.min(group.length, 12),
       };
     });
-  }, [allPersons, eventsList, geoData, zoomBucket]);
+  }, [allPersons, eventsList, geoByName, geoData, zoomBucket]);
 
   const layers = useMemo(() => [
     new PathLayer({

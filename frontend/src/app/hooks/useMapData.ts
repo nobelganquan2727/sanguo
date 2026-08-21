@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000';
+import { getApiBase } from '../utils/apiBase';
 const DEFAULT_EVENT_PAGE_SIZE = 100;
 
 type AdminPoint = {
@@ -117,18 +117,18 @@ export function useMapData() {
     setSessionId(`sess_${Math.random().toString(36).substring(2, 15)}_${Date.now().toString(36)}`);
 
     setMapLoading(true);
-    const p1 = fetch(`${API_BASE}/api/eastern-han-admin`).then(r => r.json()).then(data => {
+    const p1 = fetch(`${getApiBase()}/api/eastern-han-admin`).then(r => r.json()).then(data => {
       setGeoData(flattenAdminGeo(data));
     }).catch(() => {});
 
-    const p2 = fetch(`${API_BASE}/api/filter-meta`).then(r => r.json()).then(setFilterMeta).catch(() => { });
+    const p2 = fetch(`${getApiBase()}/api/filter-meta`).then(r => r.json()).then(setFilterMeta).catch(() => { });
 
-    const p3 = fetch(`${API_BASE}/api/persons`).then(r => r.json()).then((d: any) => {
+    const p3 = fetch(`${getApiBase()}/api/persons`).then(r => r.json()).then((d: any) => {
       const sorted = [...(d.persons || [])].sort((a: string, b: string) => b.length - a.length);
       setAllPersons(sorted);
     }).catch(() => { });
 
-    const p4 = fetch(`${API_BASE}/api/events?start=190&end=195&limit=${DEFAULT_EVENT_PAGE_SIZE}&offset=0`).then(r => r.json()).then((d: any) => {
+    const p4 = fetch(`${getApiBase()}/api/events?start=190&end=195&limit=${DEFAULT_EVENT_PAGE_SIZE}&offset=0`).then(r => r.json()).then((d: any) => {
       setEventsList(d.events || []);
     }).catch(() => { });
 
@@ -142,7 +142,7 @@ export function useMapData() {
       const pageParams = new URLSearchParams(params);
       pageParams.set('limit', String(limit));
       pageParams.set('offset', String(offset));
-      const res = await fetch(`${API_BASE}/api/events?${pageParams}`);
+      const res = await fetch(`${getApiBase()}/api/events?${pageParams}`);
       const data = await res.json();
       return { events: data.events || [], hasMore: Boolean(data.has_more) };
     } catch (err) {
@@ -166,7 +166,7 @@ export function useMapData() {
         ...(location.province && { province: location.province }),
         ...(location.commandery && { commandery: location.commandery }),
       });
-      const res = await fetch(`${API_BASE}/api/location-events?${params}`);
+      const res = await fetch(`${getApiBase()}/api/location-events?${params}`);
       const data = await res.json();
       return { events: data.events || [], expandedLocations: data.expanded_locations || [] };
     } catch (err) {
@@ -177,7 +177,7 @@ export function useMapData() {
 
   const fetchPersonRelations = async (name: string) => {
     try {
-      const res = await fetch(`${API_BASE}/api/person-relations/${encodeURIComponent(name)}`);
+      const res = await fetch(`${getApiBase()}/api/person-relations/${encodeURIComponent(name)}`);
       const data = await res.json();
       return data;
     } catch (err) {
@@ -195,7 +195,7 @@ export function useMapData() {
 
   const fetchEventDetail = async (eventId: string) => {
     try {
-      const res = await fetch(`${API_BASE}/api/events/${encodeURIComponent(eventId)}`);
+      const res = await fetch(`${getApiBase()}/api/events/${encodeURIComponent(eventId)}`);
       const data = await res.json();
       return data.event || null;
     } catch (err) {
@@ -211,7 +211,7 @@ export function useMapData() {
     signal?: AbortSignal
   ) => {
     const currentUserId = getOrCreateUserId();
-    const res = await fetch(`${API_BASE}/api/ask`, {
+    const res = await fetch(`${getApiBase()}/api/ask`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -261,7 +261,7 @@ export function useMapData() {
     field_name: string;
     proposed_value: string;
   }) => {
-    const res = await fetch(`${API_BASE}/api/feedback`, {
+    const res = await fetch(`${getApiBase()}/api/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

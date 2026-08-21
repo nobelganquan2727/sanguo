@@ -1,7 +1,6 @@
 import os
 import json
 import asyncio
-import requests
 from typing import Callable, Awaitable, Optional, Any, List, Union
 from contextvars import ContextVar
 from langchain_openai import ChatOpenAI
@@ -48,36 +47,49 @@ class ToolCallsFixerCallback(BaseCallbackHandler):
                 for tc in tool_calls
             ]
 
-def get_llm(model_type: str = "complex"):
-    handler = active_callback_var.get()
-    callbacks = [ToolCallsFixerCallback(), handler] if handler else []
-    
+_TOOL_CALLS_FIXER = ToolCallsFixerCallback()
+_LLM_BASE: dict[str, ChatOpenAI] = {}
+_LLM_RUN_NAMES = {
+    "cheap": "DeepSeek-Cheap",
+    "reasoner": "DeepSeek-Reasoner",
+    "complex": "DeepSeek-Complex",
+}
+
+
+def _build_base_llm(model_type: str) -> ChatOpenAI:
+    common = {
+        "api_key": os.environ.get("DEEPSEEK_API_KEY"),
+        "base_url": "https://api.deepseek.com/v1",
+    }
     if model_type == "cheap":
         return ChatOpenAI(
             model="deepseek-v4-flash",
-            api_key=os.environ.get("DEEPSEEK_API_KEY"),
-            base_url="https://api.deepseek.com/v1",
             temperature=0,
-            callbacks=callbacks,
-            extra_body={"thinking": {"type": "disabled"}}
-        ).with_config(run_name="DeepSeek-Cheap")
-    elif model_type == "reasoner":
-        return ChatOpenAI(
-            model="deepseek-reasoner",
-            api_key=os.environ.get("DEEPSEEK_API_KEY"),
-            base_url="https://api.deepseek.com/v1",
-            callbacks=callbacks,
-        ).with_config(run_name="DeepSeek-Reasoner")
-    else:
-        return ChatOpenAI(
-            model="deepseek-chat", 
-            api_key=os.environ.get("DEEPSEEK_API_KEY"), 
-            base_url="https://api.deepseek.com/v1",
-            max_tokens=8192,
-            temperature=0,
-            callbacks=callbacks,
-            extra_body={"thinking": {"type": "disabled"}}
-        ).with_config(run_name="DeepSeek-Complex")
+            extra_body={"thinking": {"type": "disabled"}},
+            **common,
+        )
+    if model_type == "reasoner":
+        return ChatOpenAI(model="deepseek-reasoner", **common)
+    return ChatOpenAI(
+        model="deepseek-chat",
+        max_tokens=8192,
+        temperature=0,
+        extra_body={"thinking": {"type": "disabled"}},
+        **common,
+    )
+
+
+def get_llm(model_type: str = "complex"):
+    if model_type not in _LLM_BASE:
+        _LLM_BASE[model_type] = _build_base_llm(model_type)
+    handler = active_callback_var.get()
+    callbacks = [_TOOL_CALLS_FIXER]
+    if handler:
+        callbacks.append(handler)
+    return _LLM_BASE[model_type].with_config(
+        callbacks=callbacks,
+        run_name=_LLM_RUN_NAMES.get(model_type, "DeepSeek-Complex"),
+    )
 
 def truncate_tool_output(output: Any, max_chars: int = 12000, extra_warning: Optional[str] = None) -> str:
     """
@@ -284,6 +296,7 @@ async def _get_single_person_timeline(name: str, start_year: Optional[int] = Non
     ORDER BY e.std_start_year ASC, e.seq_index ASC
     RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, 
            e.std_start_year AS year, e.source_text AS source, locations, major_event, e.id AS id
+    LIMIT 80
     """
     filter_desc = f" (时间范围: {start_year or ''} 至 {end_year or ''})" if (start_year or end_year) else ""
     try:
@@ -292,38 +305,9 @@ async def _get_single_person_timeline(name: str, start_year: Optional[int] = Non
         if not results:
             return f"未找到关于人物 '{name}' 的生平事件记录。"
             
-        # 如果指定了语义 query，先在内存中利用向量进行精筛（先从图捞，再用向量过滤）
         if query and len(results) > 12:
             try:
-                import math
-                embedding = await get_bge_m3_embedding_async(query)
-                from agent.cache import get_event_embeddings_collection
-                loop = asyncio.get_running_loop()
-                
-                event_ids = [r["id"] for r in results if r.get("id")]
-                def _get_embeddings():
-                    collection = get_event_embeddings_collection()
-                    return collection.get(ids=event_ids, include=["embeddings"])
-                chroma_res = await loop.run_in_executor(None, _get_embeddings)
-                
-                if chroma_res is not None and chroma_res.get("embeddings") is not None and len(chroma_res["embeddings"]) > 0:
-                    chroma_ids = chroma_res["ids"]
-                    chroma_embs = chroma_res["embeddings"]
-                    
-                    scores_map = {}
-                    for idx, cid in enumerate(chroma_ids):
-                        v1 = embedding
-                        v2 = chroma_embs[idx]
-                        dot = sum(a*b for a, b in zip(v1, v2))
-                        norm1 = math.sqrt(sum(a*a for a in v1))
-                        norm2 = math.sqrt(sum(b*b for b in v2))
-                        sim = dot / (norm1 * norm2) if norm1 and norm2 else 0.0
-                        scores_map[cid] = sim
-                        
-                    for r in results:
-                        r["score"] = scores_map.get(r["id"], 0.0)
-                    results.sort(key=lambda x: x.get("score", 0.0), reverse=True)
-                    results = results[:12]
+                results = await _rerank_events_by_query(results, query, top_k=12)
             except Exception as e:
                 print(f"⚠️ [get_person_timeline] 语义过滤未生效，退回到全量列表。原因: {e}")
                 
@@ -450,6 +434,7 @@ async def _get_single_location_timeline(
     ORDER BY e.std_start_year ASC, e.seq_index ASC
     RETURN e.title AS title, COALESCE(e.translation, e.description) AS description, e.time_text AS time, 
            e.std_start_year AS year, e.source_text AS source, locations, major_event, e.id AS id
+    LIMIT 80
     """
     filter_desc = f" (时间范围: {start_year or ''} 至 {end_year or ''})" if (start_year or end_year) else ""
     try:
@@ -458,38 +443,9 @@ async def _get_single_location_timeline(
         if not results:
             return f"未找到关于地点 '{location}' 的事件记录。"
             
-        # 如果指定了语义 query，先在内存中利用向量做精准相关性过滤（Graph-first, Vector-second）
         if query and len(results) > 12:
             try:
-                import math
-                embedding = await get_bge_m3_embedding_async(query)
-                from agent.cache import get_event_embeddings_collection
-                loop = asyncio.get_running_loop()
-                
-                event_ids = [r["id"] for r in results if r.get("id")]
-                def _get_embeddings():
-                    collection = get_event_embeddings_collection()
-                    return collection.get(ids=event_ids, include=["embeddings"])
-                chroma_res = await loop.run_in_executor(None, _get_embeddings)
-                
-                if chroma_res is not None and chroma_res.get("embeddings") is not None and len(chroma_res["embeddings"]) > 0:
-                    chroma_ids = chroma_res["ids"]
-                    chroma_embs = chroma_res["embeddings"]
-                    
-                    scores_map = {}
-                    for idx, cid in enumerate(chroma_ids):
-                        v1 = embedding
-                        v2 = chroma_embs[idx]
-                        dot = sum(a*b for a, b in zip(v1, v2))
-                        norm1 = math.sqrt(sum(a*a for a in v1))
-                        norm2 = math.sqrt(sum(b*b for b in v2))
-                        sim = dot / (norm1 * norm2) if norm1 and norm2 else 0.0
-                        scores_map[cid] = sim
-                        
-                    for r in results:
-                        r["score"] = scores_map.get(r["id"], 0.0)
-                    results.sort(key=lambda x: x.get("score", 0.0), reverse=True)
-                    results = results[:12]
+                results = await _rerank_events_by_query(results, query, top_k=12)
             except Exception as e:
                 print(f"⚠️ [get_location_timeline] 语义过滤未生效，退回到全量列表。原因: {e}")
                 
@@ -572,30 +528,53 @@ async def search_historical_text_async(keyword: str) -> str:
     except Exception as e:
         return f"查询出错: {str(e)}"
 
+async def _rerank_events_by_query(results: list[dict], query: str, top_k: int = 12) -> list[dict]:
+    embedding = await get_bge_m3_embedding_async(query)
+    from agent.cache import get_event_embeddings_collection
+    loop = asyncio.get_running_loop()
+    event_ids = [r["id"] for r in results if r.get("id")]
+    if not event_ids:
+        return results
+
+    def _get_embeddings():
+        collection = get_event_embeddings_collection()
+        return collection.get(ids=event_ids, include=["embeddings"])
+
+    chroma_res = await loop.run_in_executor(None, _get_embeddings)
+    if not chroma_res or not chroma_res.get("embeddings"):
+        return results
+
+    chroma_ids = chroma_res["ids"]
+    chroma_embs = chroma_res["embeddings"]
+    scores_map = {}
+    try:
+        import numpy as np
+        q = np.asarray(embedding, dtype=np.float32)
+        qn = np.linalg.norm(q)
+        if qn:
+            q = q / qn
+        mat = np.asarray(chroma_embs, dtype=np.float32)
+        norms = np.linalg.norm(mat, axis=1, keepdims=True)
+        norms = np.where(norms == 0, 1.0, norms)
+        sims = (mat / norms) @ q
+        for idx, cid in enumerate(chroma_ids):
+            scores_map[cid] = float(sims[idx])
+    except Exception:
+        from agent.cache import cosine_similarity
+        for idx, cid in enumerate(chroma_ids):
+            scores_map[cid] = cosine_similarity(embedding, chroma_embs[idx])
+
+    for r in results:
+        r["score"] = scores_map.get(r["id"], 0.0)
+    results.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+    return results[:top_k]
+
+
 async def get_bge_m3_embedding_async(text: str) -> list[float]:
     """Fetch BGE-M3 embedding from SiliconFlow API asynchronously."""
-    api_key = os.environ.get("SILICONFLOW_API_KEY")
-    if not api_key:
-        raise ValueError("SILICONFLOW_API_KEY not found in environment!")
-        
-    url = "https://api.siliconflow.cn/v1/embeddings"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": "BAAI/bge-m3",
-        "input": text,
-        "encoding_format": "float"
-    }
-    
     loop = asyncio.get_running_loop()
-    def _post():
-        res = requests.post(url, json=payload, headers=headers, timeout=15)
-        res.raise_for_status()
-        return res.json()["data"][0]["embedding"]
-        
-    return await loop.run_in_executor(None, _post)
+    from agent.cache import get_bge_m3_embedding
+    return await loop.run_in_executor(None, get_bge_m3_embedding, text)
 
 @tool
 async def search_vector_graph_async(query: str, k: Optional[int] = 5) -> str:

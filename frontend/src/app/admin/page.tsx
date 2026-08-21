@@ -19,7 +19,7 @@ import {
   FileText
 } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://127.0.0.1:8000';
+import { getApiBase } from '../utils/apiBase';
 
 interface Feedback {
   id: number;
@@ -66,7 +66,7 @@ export default function AdminPage() {
     setLoading(true);
     setAuthError('');
     try {
-      const res = await fetch(`${API_BASE}/api/admin/feedback`, {
+      const res = await fetch(`${getApiBase()}/api/admin/feedback`, {
         headers: {
           'X-Admin-Password': pwdToVerify,
         },
@@ -111,7 +111,7 @@ export default function AdminPage() {
     if (!savedPass) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/feedback`, {
+      const res = await fetch(`${getApiBase()}/api/admin/feedback`, {
         headers: {
           'X-Admin-Password': savedPass,
         },
@@ -163,7 +163,7 @@ export default function AdminPage() {
 
     setBulkActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/feedback/apply`, {
+      const res = await fetch(`${getApiBase()}/api/admin/feedback/apply`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +203,7 @@ export default function AdminPage() {
 
     setBulkActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/feedback/delete`, {
+      const res = await fetch(`${getApiBase()}/api/admin/feedback/delete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -244,7 +244,7 @@ export default function AdminPage() {
 
     setBulkActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/feedback/apply`, {
+      const res = await fetch(`${getApiBase()}/api/admin/feedback/apply`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -277,7 +277,7 @@ export default function AdminPage() {
 
     setBulkActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/feedback/delete`, {
+      const res = await fetch(`${getApiBase()}/api/admin/feedback/delete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
