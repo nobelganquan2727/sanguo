@@ -110,6 +110,10 @@ function isViewStateSame(a: any, b: any) {
   );
 }
 
+function hasActiveTransition(vs: any) {
+  return !!vs?.transitionInterpolator || Number(vs?.transitionDuration || 0) > 0;
+}
+
 function mercatorX(lng: number, zoom: number) {
   return ((lng + 180) / 360) * 256 * 2 ** zoom;
 }
@@ -459,7 +463,10 @@ export default function MapView({
             transitionDuration: 0,
             transitionInterpolator: undefined,
           };
-          setInternalView((prev: any) => (isViewStateSame(prev, next) ? prev : next));
+          setInternalView((prev: any) => {
+            if (isViewStateSame(prev, next) && !hasActiveTransition(prev)) return prev;
+            return next;
+          });
           const interacting = !!(
             interactionState?.isDragging
             || interactionState?.isPanning
