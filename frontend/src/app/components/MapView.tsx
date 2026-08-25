@@ -98,6 +98,18 @@ function clampViewState(vs: any) {
   };
 }
 
+function isViewStateSame(a: any, b: any) {
+  if (!a || !b) return false;
+  const EPS = 1e-6;
+  return (
+    Math.abs((a.longitude ?? 0) - (b.longitude ?? 0)) < EPS
+    && Math.abs((a.latitude ?? 0) - (b.latitude ?? 0)) < EPS
+    && Math.abs((a.zoom ?? 0) - (b.zoom ?? 0)) < EPS
+    && Math.abs((a.pitch ?? 0) - (b.pitch ?? 0)) < EPS
+    && Math.abs((a.bearing ?? 0) - (b.bearing ?? 0)) < EPS
+  );
+}
+
 function mercatorX(lng: number, zoom: number) {
   return ((lng + 180) / 360) * 256 * 2 ** zoom;
 }
@@ -447,14 +459,14 @@ export default function MapView({
             transitionDuration: 0,
             transitionInterpolator: undefined,
           };
-          setInternalView(next);
+          setInternalView((prev: any) => (isViewStateSame(prev, next) ? prev : next));
           const interacting = !!(
             interactionState?.isDragging
             || interactionState?.isPanning
             || interactionState?.isZooming
             || interactionState?.inTransition
           );
-          if (!interacting) onViewStateChange(next);
+          if (!interacting && !isViewStateSame(viewState, next)) onViewStateChange(next);
         }}
         controller={{
           dragRotate: false,
